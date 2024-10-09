@@ -1,0 +1,104 @@
+{
+    "users": {
+        "20240115001": {
+            "id": "20240115001",
+            "firstname": "Aarav",
+            "lastname": "Sharma",
+            "phonenumber": "+917234567890",
+            "email": "aarav.sharma@example.com",
+            "dateOfEnrollment": "2024-01-15",
+            "isLifeMember": true,
+            "isMembershipActive": true
+        },
+        "20230620002": {
+            "id": "20230620002",
+            "firstname": "Vihaan",
+            "lastname": "Patel",
+            "phonenumber": "+918765432109",
+            "email": "vivaan.patel@example.com",
+            "dateOfEnrollment": "2023-06-20",
+            "isLifeMember": false,
+            "isMembershipActive": true
+        },
+        "20221030003": {
+            "id": "20221030003",
+            "firstname": "Aditya",
+            "lastname": "Kumar",
+            "phonenumber": "+917345678901",
+            "email": "aditya.kumar@example.com",
+            "dateOfEnrollment": "2022-10-30",
+            "isLifeMember": true,
+            "isMembershipActive": true
+        },
+        "20221105004": {
+            "id": "20221105004",
+            "firstname": "Ayaan",
+            "lastname": "Singh",
+            "phonenumber": "+911234567890",
+            "email": "ayaan.singh@example.com",
+            "dateOfEnrollment": "2022-11-05",
+            "isLifeMember": false,
+            "isMembershipActive": false
+        },
+        "20240822005": {
+            "id": "20240822005",
+            "firstname": "Reyansh",
+            "lastname": "Mehta",
+            "phonenumber": "+919876543210",
+            "email": "reyansh.mehta@example.com",
+            "dateOfEnrollment": "2024-08-22",
+            "isLifeMember": true,
+            "isMembershipActive": true
+        },
+        "20230110006": {
+            "id": "20230110006",
+            "firstname": "Aarav",
+            "lastname": "Verma",
+            "phonenumber": "+917654321098",
+            "email": "aarav.verma@example.com",
+            "dateOfEnrollment": "2023-01-10",
+            "isLifeMember": true,
+            "isMembershipActive": true
+        },
+        "20221215007": {
+            "id": "20221215007",
+            "firstname": "Vivaan",
+            "lastname": "Kumar",
+            "phonenumber": "+918888888888",
+            "email": "vivaan.kumar@example.com",
+            "dateOfEnrollment": "2022-12-15",
+            "isLifeMember": false,
+            "isMembershipActive": false
+        },
+        "20230330008": {
+            "id": "20230330008",
+            "firstname": "Aditya",
+            "lastname": "Sharma",
+            "phonenumber": "+917777777777",
+            "email": "aditya.sharma@example.com",
+            "dateOfEnrollment": "2023-03-30",
+            "isLifeMember": false,
+            "isMembershipActive": true
+        },
+        "20240901009": {
+            "id": "20240901009",
+            "firstname": "Ayaan",
+            "lastname": "Patel",
+            "phonenumber": "+919999999999",
+            "email": "ayaan.patel@example.com",
+            "dateOfEnrollment": "2024-09-01",
+            "isLifeMember": true,
+            "isMembershipActive": true
+        },
+        "20220725010": {
+            "id": "20220725010",
+            "firstname": "Vihaan",
+            "lastname": "Singh",
+            "phonenumber": "+917111111111",
+            "email": "vihaan.singh@example.com",
+            "dateOfEnrollment": "2022-07-25",
+            "isLifeMember": false,
+            "isMembershipActive": false
+        }
+    }
+}

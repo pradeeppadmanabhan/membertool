@@ -1,0 +1,24 @@
+{
+    "users": {
+        "user1": {
+            "id": 1,
+            "firstname": "",
+            "lastname": "",
+            "phonenumber": "",
+            "email": "Floyd9@hotmail.com",
+            "dateOfEnrollment": "07. 10. 24",
+            "isLifeMember": true,
+            "isMembershipActive": false
+        },
+        "user2": {
+            "id": 2,
+            "firstname": "",
+            "lastname": "",
+            "phonenumber": "",
+            "email": "Vincent.Bailey34@hotmail.com",
+            "dateOfEnrollment": "07. 10. 24",
+            "isLifeMember": false,
+            "isMembershipActive": false
+        }
+    }
+}
