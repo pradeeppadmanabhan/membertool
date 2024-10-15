@@ -11,11 +11,25 @@ const DataDisplay = () => {
     phonenumber: "",
   });
   const [filteredUser, setFilteredUser] = useState(null);
+  const [showNoUserMessage, setShowNoUserMessage] = useState(false); // New state for the message
 
   useEffect(() => {
     const dataRef = ref(database, "users"); // Adjust the path as necessary
+
+    // Check for connection status
+    const connectedRef = ref(database, ".info/connected");
+    onValue(connectedRef, (snapshot) => {
+      if (snapshot.val() === true) {
+        console.log("Firebase connection is established.");
+      } else {
+        console.error("Firebase connection is lost or not established.");
+      }
+    });
+
     onValue(dataRef, (snapshot) => {
       const fetchedData = snapshot.val();
+      //console.log("Fetched data from Firebase:", fetchedData); // Log the fetched data
+
       setData(fetchedData);
     });
 
@@ -45,12 +59,22 @@ const DataDisplay = () => {
         );
       });
       setFilteredUser(result || null);
+      setShowNoUserMessage(!result); // Set the message state based on the result
     }
+  };
+
+  const handleClear = () => {
+    setSearchParams({
+      firstname: "",
+      lastname: "",
+      phonenumber: "",
+    });
+    setFilteredUser(null); // Reset the filtered user
   };
 
   return (
     <div>
-      <h1>User Data</h1>
+      <h1>Search Member Details</h1>
       <div>
         <input
           type="text"
@@ -74,8 +98,8 @@ const DataDisplay = () => {
           onChange={handleChange}
         />
         <button onClick={handleSearch}>Search</button>
+        <button onClick={handleClear}>Clear</button> {/* Add Clear button */}
       </div>
-
       {filteredUser ? (
         <div>
           <h2>User ID: {filteredUser.id}</h2>
@@ -89,9 +113,10 @@ const DataDisplay = () => {
             Membership Active: {filteredUser.isMembershipActive ? "Yes" : "No"}
           </p>
         </div>
-      ) : (
+      ) : showNoUserMessage ? ( // Show the message only if showNoUserMessage is true
         <p>No user found or enter search parameters.</p>
-      )}
+      ) : null}{" "}
+      {/* Otherwise, show nothing */}
     </div>
   );
 };

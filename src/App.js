@@ -1,26 +1,34 @@
-import logo from "./logo.svg";
+import React, { useState } from "react";
 import "./App.css";
 import DataDisplay from "./DataDisplay.js";
+import InputForm from "./InputForm";
 
 function App() {
+  const [showForm, setShowForm] = useState(false); // State to manage which component to show
+  const [showData, setShowData] = useState(false);
+
+  const handleShowForm = () => {
+    setShowForm(true);
+    setShowData(false);
+  };
+
+  const handleShowData = () => {
+    setShowData(true);
+    setShowForm(false);
+  };
+
   return (
     <div className="App">
       <header className="App-header">
-        {/* <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a> */}
-        <h1>My Firebase App</h1>
-        <DataDisplay />
+        <h1>Membership Tool</h1>
       </header>
+      <div className="button-container">
+        {/* Apply the CSS class */}
+        <button onClick={handleShowForm}>New Member Form</button>
+        <button onClick={handleShowData}>View Member Data</button>
+        {showForm && <InputForm />}
+        {showData && <DataDisplay />}
+      </div>
     </div>
   );
 }
