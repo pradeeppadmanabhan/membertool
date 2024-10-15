@@ -1,0 +1,45 @@
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px; /* Adjust spacing between cards */
+}
+
+.member-card {
+  width: 250px; /* Adjust card width */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  cursor: pointer;
+  background-color: #fff; /* Optional: Add a background color */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow */
+}
+
+.card-content {
+  text-align: center;
+}
+
+.member-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Optional: Enhance shadow on hover */
+}
+
+.search-results {
+  margin-top: 20px; /* Add margin to create space above results */
+}
+
+.details-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px; /* Add margin for spacing */
+}
+
+.details-card p {
+  /* Style for all <p> tags inside .details-card */
+  margin: 5px 0; /* Add some space between detail lines */
+}
+
+.details-card strong {
+  /* Make field names bolder */
+  font-weight: bold;
+}

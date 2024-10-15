@@ -1,0 +1,290 @@
+/* global.css */
+
+.App {
+  text-align: center;
+}
+
+body {
+  background-color: #f0f0f0; /* Light grey background */
+  font-family: Arial, sans-serif;
+}
+
+form {
+  background-color: #ffffff; /* White background for the form */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 700px; /* Increased max width for the form */
+  margin: 20px auto; /* Center the form horizontally & add top/bottom margin*/
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+label {
+  display: block; /* Block display for labels */
+  margin-bottom: 8px; /* Space between label and input */
+  color: #333; /* Dark text color for labels */
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+textarea {
+  width: calc(100% - 22px); /* Full width minus padding/border */
+  padding: 10px; /* Padding for inputs */
+  margin-bottom: 15px; /* Space between inputs */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 4px; /* Rounded corners */
+  font-size: 16px; /* Font size for inputs */
+}
+
+input[type="radio"] {
+  margin-right: 5px; /* Space between radio and label */
+}
+
+.error {
+  color: red; /* Red color for error messages */
+  font-size: 14px; /* Font size for error messages */
+}
+
+.status-message {
+  margin-top: 10px; /* Space above status message */
+  color: green; /* Green color for success messages */
+}
+
+.declaration-text {
+  color: black; /* Change text color to black */
+}
+
+button {
+  background-color: #007bff; /* Button color */
+  color: white; /* Text color on button */
+  padding: 10px 15px; /* Padding for button */
+  border: none; /* No border */
+  border-radius: 4px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-size: 16px; /* Font size for button */
+  margin-right: 10px; /* Add space between buttons */
+}
+
+button:disabled {
+  background-color: #c0c0c0; /* Light gray for disabled */
+  color: #666; /* Darker gray text */
+  cursor: not-allowed; /* Change cursor */
+  opacity: 0.6; /* Reduce opacity */
+}
+
+button:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+.radio-group {
+  display: flex; /* Use flexbox to align radio buttons in one line */
+  justify-content: center; /* Center align items */
+  gap: 10px; /* Optional: Add gap between radio buttons */
+  margin-top: 10px; /* Add margin for spacing above */
+}
+
+/* Styles for DataDisplay component */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px; /* Adjust spacing between cards */
+}
+
+.member-card {
+  width: 250px; /* Adjust card width */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  cursor: pointer;
+  background-color: #fff; /* Optional: Add a background color */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow */
+}
+
+.card-content {
+  text-align: center;
+}
+
+.member-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Optional: Enhance shadow on hover */
+}
+
+.search-results {
+  margin-top: 20px; /* Add margin to create space above results */
+}
+
+.details-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px; /* Add margin for spacing */
+}
+
+.details-card p {
+  /* Style for all <p> tags inside .details-card */
+  margin: 5px 0; /* Add some space between detail lines */
+}
+
+.details-card strong {
+  /* Make field names bolder */
+  font-weight: bold;
+}
+
+.App-header .button-container {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  gap: 20px;
+}
+/* global.css */
+
+body {
+  background-color: #f0f0f0; /* Light grey background */
+  font-family: Arial, sans-serif;
+}
+
+form {
+  background-color: #ffffff; /* White background for the form */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 700px; /* Increased max width for the form */
+  margin: 20px auto; /* Center the form horizontally & add top/bottom margin*/
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+label {
+  display: block; /* Block display for labels */
+  margin-bottom: 8px; /* Space between label and input */
+  color: #333; /* Dark text color for labels */
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+input[type="date"],
+textarea {
+  width: calc(100% - 22px); /* Full width minus padding/border */
+  padding: 10px; /* Padding for inputs */
+  margin-bottom: 15px; /* Space between inputs */
+  border: 1px solid #ccc; /* Light grey border */
+  border-radius: 4px; /* Rounded corners */
+  font-size: 16px; /* Font size for inputs */
+}
+
+input[type="radio"] {
+  margin-right: 5px; /* Space between radio and label */
+}
+
+.error {
+  color: red; /* Red color for error messages */
+  font-size: 14px; /* Font size for error messages */
+}
+
+.status-message {
+  margin-top: 10px; /* Space above status message */
+  color: green; /* Green color for success messages */
+}
+
+.declaration-text {
+  color: black; /* Change text color to black */
+}
+
+button {
+  background-color: #007bff; /* Button color */
+  color: white; /* Text color on button */
+  padding: 10px 15px; /* Padding for button */
+  border: none; /* No border */
+  border-radius: 4px; /* Rounded corners */
+  cursor: pointer; /* Pointer cursor on hover */
+  font-size: 16px; /* Font size for button */
+  margin-right: 10px; /* Add space between buttons */
+}
+
+button:disabled {
+  background-color: #c0c0c0; /* Light gray for disabled */
+  color: #666; /* Darker gray text */
+  cursor: not-allowed; /* Change cursor */
+  opacity: 0.6; /* Reduce opacity */
+}
+
+button:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+.radio-group {
+  display: flex; /* Use flexbox to align radio buttons in one line */
+  justify-content: center; /* Center align items */
+  gap: 10px; /* Optional: Add gap between radio buttons */
+  margin-top: 10px; /* Add margin for spacing above */
+}
+
+/* Styles for DataDisplay component */
+.card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px; /* Adjust spacing between cards */
+}
+
+.member-card {
+  width: 250px; /* Adjust card width */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 15px;
+  cursor: pointer;
+  background-color: #fff; /* Optional: Add a background color */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow */
+}
+
+.card-content {
+  text-align: center;
+}
+
+.member-card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Optional: Enhance shadow on hover */
+}
+
+.search-results {
+  margin-top: 20px; /* Add margin to create space above results */
+}
+
+.details-card {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  margin-bottom: 20px; /* Add margin for spacing */
+}
+
+.details-card p {
+  /* Style for all <p> tags inside .details-card */
+  margin: 5px 0; /* Add some space between detail lines */
+}
+
+.details-card strong {
+  /* Make field names bolder */
+  font-weight: bold;
+}
+
+.App-header .button-container {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+  gap: 20px;
+}
+
+.center-text {
+  text-align: center;
+}
