@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "./global.css";
 import DataDisplay from "./DataDisplay.js";
-//import InputForm from "./InputForm";
+import InputForm from "./InputForm";
 
 function App() {
   const [showForm, setShowForm] = useState(false); // State to manage which component to show
@@ -23,10 +23,8 @@ function App() {
         <h1>Membership Tool</h1>
       </header>
       <div className="button-container">
-        {/* Apply the CSS class */}
-        {/*<button onClick={handleShowForm}>New Member Form</button>
-        
-         {showForm && <InputForm />} Temporarily blocking this */}
+        <button onClick={handleShowForm}>New Member Form</button>
+        {showForm && <InputForm />}
         <button onClick={handleShowData}>View Member Data</button>
         {showData && <DataDisplay />}
       </div>

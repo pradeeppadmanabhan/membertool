@@ -54,6 +54,11 @@ input[type="radio"] {
 
 .declaration-text {
   color: black; /* Change text color to black */
+  text-align: left; /* Align all text within the declaration to the left */
+}
+
+h3 {
+  text-align: center;
 }
 
 button {
@@ -76,6 +81,10 @@ button:disabled {
 
 button:hover {
   background-color: #0056b3; /* Darker shade on hover */
+}
+
+h1 {
+  color: #0056b3;
 }
 
 .radio-group {
@@ -144,6 +153,17 @@ button:hover {
   gap: 20px;
 }
 /* global.css */
+
+.header-container {
+  /* Target the container */
+  display: flex; /* Enable flexbox layout */
+  align-items: center; /* Vertically align items to the center */
+}
+
+.logo-image {
+  height: 100px; /* Adjust the height as needed */
+  margin-right: 10px; /* Add some spacing between the image and heading */
+}
 
 body {
   background-color: #f0f0f0; /* Light grey background */
@@ -287,4 +307,48 @@ button:hover {
 
 .center-text {
   text-align: center;
+}
+
+/* global.css */
+
+/* Add these styles to the existing global styles */
+.image-uploader .button-group {
+  display: flex; /* Enable flexbox layout */
+  justify-content: space-between; /* Distribute space between buttons */
+  align-items: center; /* Vertically align items */
+  margin-bottom: 10px; /* Add some spacing below the buttons */
+}
+
+.image-uploader .file-name {
+  margin: 0 10px; /* Add spacing around the filename */
+  text-align: center; /* Center the filename text */
+  flex-grow: 1; /* Allow filename to grow and take up available space */
+  overflow: hidden; /* Hide any text overflow */
+  text-overflow: ellipsis; /* Add ellipsis (...) for long filenames */
+  white-space: nowrap; /* Prevent filename from wrapping */
+}
+
+.choose-file-btn,
+.upload-btn,
+.delete-btn {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.upload-btn {
+  margin-left: 10px;
+}
+
+.file-name {
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.delete-btn {
+  background-color: #dc3545;
+  margin-top: 10px;
 }
