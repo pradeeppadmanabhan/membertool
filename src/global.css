@@ -51,6 +51,9 @@ input[type="radio"] {
   margin-top: 10px; /* Space above status message */
   color: green; /* Green color for success messages */
 }
+.status-message.error {
+  color: red; /* Green color for success messages */
+}
 
 .declaration-text {
   color: black; /* Change text color to black */
