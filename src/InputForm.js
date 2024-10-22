@@ -30,13 +30,13 @@ const getNextUserNodeNumber = async () => {
     );
 
     const lastUserSnapshot = await get(lastUserQuery);
-    console.log("Last User Snapshot:", lastUserSnapshot.val());
+    //console.log("Last User Snapshot:", lastUserSnapshot.val());
 
     if (lastUserSnapshot.exists()) {
       const lastUserKey = Object.keys(lastUserSnapshot.val())[0]; // Get the key (e.g., 'user10')
-      console.log("Last User Key:", lastUserKey);
+      //console.log("Last User Key:", lastUserKey);
       const lastUserNumber = parseInt(lastUserKey.substring(4), 10); // Extract the number
-      console.log("Last User Number:", lastUserNumber);
+      //console.log("Last User Number:", lastUserNumber);
       return lastUserNumber + 1;
     } else {
       return 1; // Start from 1 if there are no users
@@ -127,16 +127,16 @@ const InputForm = () => {
         const nextUserNumber = await getNextUserNodeNumber();
         const userKey = `user${nextUserNumber.toString().padStart(5, "0")}`;
 
-        console.log("New ID:", newId);
-        console.log("Next User Number:", nextUserNumber);
-        console.log("User Key:", userKey);
+        //console.log("New ID:", newId);
+        //console.log("Next User Number:", nextUserNumber);
+        //console.log("User Key:", userKey);
 
         setFormData((prevData) => ({
           ...prevData,
           id: newId,
           key: userKey, // Set the generated user key here
         }));
-        console.log("Form data initialized:", formData);
+        //console.log("Form data initialized:", formData);
       } catch (error) {
         console.error("Error initializing form data:", error);
         // Handle error appropriately
@@ -147,6 +147,7 @@ const InputForm = () => {
   }, [formData.membershipType]);
 
   const validate = () => {
+    //console.log("Validating form data:", formData);
     let newErrors = {};
     if (!formData.name) newErrors.name = "Name is required.";
     if (!formData.age || formData.age <= 0)
@@ -253,12 +254,16 @@ const InputForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    //console.log(formData);
+    ////console.log(formData);
     const validationErrors = validate();
     setErrors(validationErrors); //update errors state immediately
 
     if (Object.keys(validationErrors).length > 0) {
+      console.error("Validation errors:", validationErrors);
       //Don't submit if there are errors
+      setStatusMessage(
+        "Error submitting application. Please fix errors & try again."
+      );
       return;
     }
 
@@ -274,7 +279,7 @@ const InputForm = () => {
         //key: formData.id, // Add the ID as a key,
         date: new Date().toISOString(), // Add current date
       };
-      console.log("Submitting data...", userData);
+      //console.log("Submitting data...", userData);
       //await addDoc(collection(database, "users"), userData);
       /*TODO: Update the JSON Packaging before uploading to DB.*/
       const userRef = ref(database, `users/${formData.key}`); // Use formData.key for the database reference
@@ -388,7 +393,7 @@ const InputForm = () => {
       <br />
       {/* <label>ID:</label>
       <input type="text" name="id" value={formData.id} readOnly /> */}
-      <label>Applicant's Full Name:</label>
+      <label>Applicant's Full Name*:</label>
       <input
         type="text"
         name="name"
@@ -397,7 +402,7 @@ const InputForm = () => {
         required
       />
       {errors.name && <span className="error">{errors.name}</span>}
-      <label>Date of Birth:</label>
+      <label>Date of Birth*:</label>
       <input
         type="date"
         name="dob"
@@ -406,7 +411,7 @@ const InputForm = () => {
         required
       />
       {errors.dob && <span className="error">{errors.dob}</span>}
-      <label>Age:</label>
+      <label>Age*:</label>
       <input
         type="number"
         name="age"
@@ -483,7 +488,7 @@ const InputForm = () => {
         onChange={handleChange}
       />
       {errors.mobile && <span className="error">{errors.mobile}</span>}
-      <label>E-mail ID:</label>
+      <label>E-mail ID*:</label>
       <input
         type="email"
         name="email"
@@ -535,7 +540,7 @@ const InputForm = () => {
         value={formData.generalHealth}
         onChange={handleChange}
       />
-      <label>Blood Group:</label>
+      <label>Blood Group*:</label>
       <input
         type="text"
         name="bloodGroup"
@@ -615,7 +620,16 @@ const InputForm = () => {
       <button type="button" onClick={handleClear}>
         Clear
       </button>
-      {statusMessage && <p className="status-message">{statusMessage}</p>}
+      {statusMessage && (
+        <p
+          className={`status-message ${
+            Object.keys(errors).length > 0 ? "error" : ""
+          }`}
+        >
+          {statusMessage}
+        </p>
+      )}
+      {/* {statusMessage && <p className="status-message">{statusMessage}</p>} */}
     </form>
   );
 };

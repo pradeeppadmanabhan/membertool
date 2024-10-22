@@ -44,7 +44,7 @@ const ImageUploader = React.forwardRef(
 
         // Get the download URL
         const downloadURL = await getDownloadURL(snapshot.ref);
-        console.log("File available at", downloadURL);
+        //console.log("File available at", downloadURL);
 
         // Call the callback function to update the image URL in the form data
         onUploadSuccess(downloadURL);
