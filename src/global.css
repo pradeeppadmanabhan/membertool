@@ -355,3 +355,9 @@ button:hover {
   background-color: #dc3545;
   margin-top: 10px;
 }
+
+consent-message {
+  margin-top: 10px; /* Add some space above the message */
+  color: #d9534f; /* Use a noticeable color, like red */
+  font-weight: bold; /* Make the message bold */
+}

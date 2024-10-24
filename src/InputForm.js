@@ -17,7 +17,7 @@ import "./global.css";
 import logo from "./KMALogo.png"; // Import the image
 import ImageUploader from "./ImageUploader";
 
-const STATUS_TIMEOUT = 5000; // 5 seconds in milliseconds
+const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
 
 // Reusable function to get the next available user node number
 const getNextUserNodeNumber = async () => {
@@ -150,6 +150,7 @@ const InputForm = () => {
     //console.log("Validating form data:", formData);
     let newErrors = {};
     if (!formData.name) newErrors.name = "Name is required.";
+    if (!formData.dob) newErrors.dob = "Date of Birth is required.";
     if (!formData.age || formData.age <= 0)
       newErrors.age = "Age must be a positive number.";
     if (!formData.gender) newErrors.gender = "Gender is required.";
@@ -161,19 +162,20 @@ const InputForm = () => {
       newErrors.addressLine2 = "Address Line 2 is required.";
     if (!formData.addressLine3)
       newErrors.addressLine3 = "Address Line 3 is required.";
-    if (!formData.landline && !formData.mobile) {
-      newErrors.mobile = "Landline or Mobile is required.";
+    if (!formData.mobile) {
+      newErrors.mobile = "Mobile is required.";
     }
-    if (!formData.dob) newErrors.dob = "Date of Birth is required.";
-    if (!formData.email) newErrors.email = "Email is required.";
-    if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Email format is invalid.";
     if (formData.mobile && !/^\d{10}$/.test(formData.mobile))
       newErrors.mobile = "Mobile number must be 10 digits.";
+
+    if (!formData.email) newErrors.email = "Email is required.";
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = "Email format is invalid.";
+
     if (formData.landline && !/^\d+$/.test(formData.landline))
       newErrors.landline = "Landline number must be numeric.";
     if (!formData.bloodGroup) newErrors.bloodGroup = "Blood Group is required.";
-    if (!formData.consent) newErrors.consent = "Consent is required."; // Consent validation
+    //if (!formData.consent) newErrors.consent = "Consent is required."; // Consent validation
     // Image validation
     if (!formData.imageURL) {
       newErrors.imageURL = "Please upload a passport size photo.";
@@ -212,6 +214,7 @@ const InputForm = () => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: "" });
+    setStatusMessage(""); // Clear the status message
   };
 
   const handleClear = () => {
@@ -254,15 +257,28 @@ const InputForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    ////console.log(formData);
+    //console.log("handleSubmit - Form data:", formData);
     const validationErrors = validate();
     setErrors(validationErrors); //update errors state immediately
 
     if (Object.keys(validationErrors).length > 0) {
       console.error("Validation errors:", validationErrors);
       //Don't submit if there are errors
+      // 1. Create a String of Errors
+      const errorMessages = Object.values(validationErrors).join("<br />"); // Join with line breaks
+
+      // 2. Display the Combined Errors
       setStatusMessage(
-        "Error submitting application. Please fix errors & try again."
+        <React.Fragment>
+          <b>Please fix the errors before submitting:</b>
+          <br />
+          {errorMessages.split("<br />").map((message, index) => (
+            <React.Fragment key={index}>
+              {message}
+              <br />
+            </React.Fragment>
+          ))}
+        </React.Fragment>
       );
       return;
     }
@@ -293,9 +309,22 @@ const InputForm = () => {
       }, STATUS_TIMEOUT); // Adjust the delay (in milliseconds) as needed
     } catch (error) {
       console.error("Error submitting application: ", error);
-      setStatusMessage(
-        "Error submitting application. " + error.message + " Please try again."
-      );
+      // Improved Error Handling:
+      let errorMessage = "Error submitting application. Please try again.";
+
+      // Check for common Firebase errors and provide specific messages
+      if (error.code === "permission-denied") {
+        errorMessage =
+          "Permission denied to write to the database. Please contact the administrator.";
+      } else if (error.code === "unavailable") {
+        errorMessage =
+          "Database is temporarily unavailable. Please try again later.";
+      } else if (error.message) {
+        // If Firebase provides a message, use it, but consider sanitizing for user-friendliness
+        errorMessage = `Error: ${error.message}`;
+      }
+
+      setStatusMessage(errorMessage);
     }
   };
 
@@ -366,7 +395,7 @@ const InputForm = () => {
         <div className="radio-group">
           {" "}
           {/* Use the new class for alignment */}
-          <label>Consent:</label>
+          <label>Consent*:</label>
           <label>
             <input
               type="radio"
@@ -399,28 +428,28 @@ const InputForm = () => {
         name="name"
         value={formData.name}
         onChange={handleChange}
-        required
       />
       {errors.name && <span className="error">{errors.name}</span>}
+      <br />
       <label>Date of Birth*:</label>
       <input
         type="date"
         name="dob"
         value={formData.dob}
         onChange={handleChange}
-        required
       />
       {errors.dob && <span className="error">{errors.dob}</span>}
+      <br />
       <label>Age*:</label>
       <input
         type="number"
         name="age"
         value={formData.age}
         onChange={handleChange}
-        required
       />
       {errors.age && <span className="error">{errors.age}</span>}
-      <label>Gender:</label>
+      <br />
+      <label>Gender*:</label>
       <div className="radio-group">
         <label>
           <input
@@ -443,35 +472,52 @@ const InputForm = () => {
           Female
         </label>
       </div>
+      {errors.gender && <span className="error">{errors.gender}</span>}
       <br />
-      <label>Name of Father/Guardian/Husband:</label>
+      <label>Name of Father/Guardian/Husband*:</label>
       <input
         type="text"
         name="fatherGuardianName"
         value={formData.fatherGuardianName}
         onChange={handleChange}
       />
-      <label>Address Line1:</label>
+      {errors.fatherGuardianName && (
+        <span className="error">{errors.fatherGuardianName}</span>
+      )}
+      <br />
+      <label>Address Line1*:</label>
       <input
         type="text"
         name="addressLine1"
         value={formData.addressLine1}
         onChange={handleChange}
       />
-      <label>Address Line2:</label>
+      {errors.addressLine1 && (
+        <span className="error">{errors.addressLine1}</span>
+      )}
+      <br />
+      <label>Address Line2*:</label>
       <input
         type="text"
         name="addressLine2"
         value={formData.addressLine2}
         onChange={handleChange}
       />
-      <label>Address Line3:</label>
+      {errors.addressLine2 && (
+        <span className="error">{errors.addressLine2}</span>
+      )}
+      <br />
+      <label>Address Line3*:</label>
       <input
         type="text"
         name="addressLine3"
         value={formData.addressLine3}
         onChange={handleChange}
       />
+      {errors.addressLine3 && (
+        <span className="error">{errors.addressLine3}</span>
+      )}
+      <br />
       <label>Landline:</label>
       <input
         type="text"
@@ -480,7 +526,8 @@ const InputForm = () => {
         onChange={handleChange}
       />
       {errors.landline && <span className="error">{errors.landline}</span>}
-      <label>Mobile:</label>
+      <br />
+      <label>Mobile*:</label>
       <input
         type="text"
         name="mobile"
@@ -488,15 +535,16 @@ const InputForm = () => {
         onChange={handleChange}
       />
       {errors.mobile && <span className="error">{errors.mobile}</span>}
+      <br />
       <label>E-mail ID*:</label>
       <input
         type="email"
         name="email"
         value={formData.email}
         onChange={handleChange}
-        required
       />
       {errors.email && <span className="error">{errors.email}</span>}
+      <br />
       <label>Academic Qualifications:</label>
       <textarea
         name="qualifications"
@@ -546,10 +594,10 @@ const InputForm = () => {
         name="bloodGroup"
         value={formData.bloodGroup}
         onChange={handleChange}
-        required
       />
       {errors.bloodGroup && <span className="error">{errors.bloodGroup}</span>}
-      <label>Membership Type:</label>
+      <br />
+      <label>Membership Type*:</label>
       <div className="radio-group">
         <label>
           <input
@@ -579,8 +627,7 @@ const InputForm = () => {
         name="paymentTransactionNumber"
         value={formData.paymentTransactionNumber}
         onChange={handleChange}
-        pattern="[A-Za-z0-9]+" // Alphanumeric pattern
-        required
+        pattern="[A-Za-z0-9]+" // Alphanumeric pattern        
       /> */}
       <div>
         <label>Recommended By:</label>
@@ -599,7 +646,7 @@ const InputForm = () => {
           onChange={handleChange}
         />
       </div>
-      <label>Upload Passport Size Photo</label>
+      <label>Upload Passport Size Photo*</label>
       <ImageUploader
         userKey={formData.key}
         onUploadSuccess={handleImageUploadSuccess}
@@ -620,6 +667,12 @@ const InputForm = () => {
       <button type="button" onClick={handleClear}>
         Clear
       </button>
+      {/* Conditional message for consent */}
+      {!formData.consent && (
+        <p className="consent-message">
+          Please accept the declaration to submit the form.
+        </p>
+      )}
       {statusMessage && (
         <p
           className={`status-message ${
