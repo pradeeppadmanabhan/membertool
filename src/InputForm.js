@@ -50,7 +50,7 @@ const getNextUserNodeNumber = async () => {
 const InputForm = () => {
   const [formData, setFormData] = useState({
     id: "",
-    name: "",
+    memberName: "",
     age: "",
     dob: "",
     gender: "",
@@ -149,7 +149,7 @@ const InputForm = () => {
   const validate = () => {
     //console.log("Validating form data:", formData);
     let newErrors = {};
-    if (!formData.name) newErrors.name = "Name is required.";
+    if (!formData.memberName) newErrors.memberName = "Name is required.";
     if (!formData.dob) newErrors.dob = "Date of Birth is required.";
     if (!formData.age || formData.age <= 0)
       newErrors.age = "Age must be a positive number.";
@@ -221,7 +221,7 @@ const InputForm = () => {
     setFormData((prevData) => ({
       ...prevData,
       // Reset only specific fields while keeping the ID and defaults
-      name: "",
+      memberName: "",
       age: "",
       dob: "",
       gender: "",
@@ -425,11 +425,11 @@ const InputForm = () => {
       <label>Applicant's Full Name*:</label>
       <input
         type="text"
-        name="name"
-        value={formData.name}
+        name="memberName"
+        value={formData.memberName}
         onChange={handleChange}
       />
-      {errors.name && <span className="error">{errors.name}</span>}
+      {errors.memberName && <span className="error">{errors.memberName}</span>}
       <br />
       <label>Date of Birth*:</label>
       <input

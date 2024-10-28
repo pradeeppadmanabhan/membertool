@@ -51,11 +51,14 @@ const DataDisplay = () => {
   const handleSearch = () => {
     if (data) {
       const results = Object.values(data).filter((user) => {
+        // Filter users based on search criteria
+        //console.log("User:", user); // Log the user object
+        //console.log("Search Params:", searchParams); // Log the search parameters)
         return (
           (searchParams.memberName &&
             user.memberName
-              .toLowerCase()
-              .includes(searchParams.memberName.toLowerCase())) ||
+              ?.toLowerCase()
+              ?.includes(searchParams.memberName.toLowerCase())) ||
           (searchParams.mobile && user.mobile.includes(searchParams.mobile))
         );
       });
