@@ -14,8 +14,12 @@ import {
   limitToLast,
 } from "firebase/database"; // Import necessary functions - , push
 import "./global.css";
-import logo from "./KMALogo.png"; // Import the image
-import ImageUploader from "./ImageUploader";
+import DeclarationConsent from "./components/DeclarationConsent";
+import PersonalInfo from "./components/PersonalInfo";
+import ContactInfo from "./components/ContactInfo";
+import BackgroundHealth from "./components/BackgroundHealth";
+import MembershipDetails from "./components/MembershipDetails";
+import ImageUploader from "./components/ImageUploader";
 
 const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
 
@@ -123,17 +127,14 @@ const InputForm = () => {
   useEffect(() => {
     const initializeFormData = async () => {
       try {
-        const newId = await generateMemberId();
         const nextUserNumber = await getNextUserNodeNumber();
         const userKey = `user${nextUserNumber.toString().padStart(5, "0")}`;
 
-        //console.log("New ID:", newId);
         //console.log("Next User Number:", nextUserNumber);
         //console.log("User Key:", userKey);
 
         setFormData((prevData) => ({
           ...prevData,
-          id: newId,
           key: userKey, // Set the generated user key here
         }));
         //console.log("Form data initialized:", formData);
@@ -144,7 +145,7 @@ const InputForm = () => {
     };
 
     initializeFormData();
-  }, [formData.membershipType]);
+  }, []);
 
   const validate = () => {
     //console.log("Validating form data:", formData);
@@ -257,6 +258,15 @@ const InputForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 1. Generate Member ID
+    try {
+      formData.id = await generateMemberId();
+    } catch (error) {
+      console.error("Error generating member ID:", error);
+      // Handle error appropriately (e.g., set a default ID or show an error message)
+    }
+
+    // 2. Validation
     //console.log("handleSubmit - Form data:", formData);
     const validationErrors = validate();
     setErrors(validationErrors); //update errors state immediately
@@ -283,11 +293,13 @@ const InputForm = () => {
       return;
     }
 
+    // 3. Consent Check
     if (!formData.consent) {
       setErrors({ consent: "Consent is required." }); // Show error if not accepted
       return;
     }
 
+    // 4. Submit Data to Firebase
     try {
       // Add the data to Firestore
       const userData = {
@@ -333,319 +345,42 @@ const InputForm = () => {
 
   return (
     <form onSubmit={handleSubmit}>
-      {/* <h1>Application for Membership</h1> */}
-      <div>
-        <div className="header-container">
-          {/* Add a container for the header */}
-          <img src={logo} alt="KMA Logo" className="logo-image" />
-          <h1>THE KARNATAKA MOUNTAINEERING ASSOCIATION (R)</h1>
-        </div>
-        Room No 205, I Floor, Kanteerava Sports Complex – 2, Kanteerava Stadium
-        premises, Kasturba Road, Bangalore – 560 001
-        <br />
-        T: +91 80 22113333 E: info@kmaindia.org
-        <br />
-        W: www.kmaindia.org FB: www.facebook.com\kmaindia
-        <h3>APPLICATION FOR MEMBERSHIP </h3>
-        <div className="declaration-text">
-          {" "}
-          {/*Add class for styling */}
-          <br />
-          To, <br />
-          The Honorary Secretary <br />
-          Karnataka Mountaineering Association <br />
-          ‘Room No.205, I Floor, Kanteerava Sports Complex – 2, <br />
-          Kanteerava Stadium premises, Kasturba Road, <br />
-          <br />
-          Bangalore – 560 001
-          <br />
-          <br />
-          Dear Sir / Madam,
-          <br />
-          I hereby apply for Membership of your Association, subscribing to the
-          DECLARATION below and furnishing my particulars overleaf which are
-          true to the best of my knowledge and belief.
-          <br />I am interested in Mountaineering and undertake to abide by the
-          Rules and Regulations and as per the by laws / memorandum of the
-          Association.{" "}
-          <b>I provide my consent by "accepting" this declaration.</b>
-          <br />
-          <br />
-          <h3>DECLARATION</h3>
-          <br />
-          <br />
-          I, as Member of the above Association hereby undertake to absolve the
-          Association, its Office bearers and any other person, or persons
-          acting on its behalf, of any disability or calamity to my person due
-          to any accident during the outings, expeditions, training and other
-          activities held under the auspices of the Association. I undertake and
-          sign this declaration will fully and with all my senses under control.
-          <br />
-          <br />I hope you will kindly accept my membership.
-          {/* <br />
-          Yours faithfully
-          <br />
-          Note – In case of Minor, Guardian should sign.
-          <br />
-          Signature and date */}
-          <br />
-          <br />
-          {/* <i>Digital Form, hence no Signature required.</i> */}
-        </div>
-        <div className="radio-group">
-          {" "}
-          {/* Use the new class for alignment */}
-          <label>Consent*:</label>
-          <label>
-            <input
-              type="radio"
-              name="consent"
-              value="accept"
-              checked={formData.consent === true}
-              onChange={() => setFormData({ ...formData, consent: true })}
-            />
-            I Accept
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="consent"
-              value="decline"
-              checked={formData.consent === false}
-              onChange={() => setFormData({ ...formData, consent: false })}
-            />
-            I Decline
-          </label>
-          {errors.consent && <span className="error">{errors.consent}</span>}
-        </div>
-      </div>
+      {/* Declaration and Consent */}
+      <DeclarationConsent
+        formData={formData}
+        errors={errors}
+        setFormData={setFormData}
+      />
       <br />
-      {/* <label>ID:</label>
-      <input type="text" name="id" value={formData.id} readOnly /> */}
-      <label>Applicant's Full Name*:</label>
-      <input
-        type="text"
-        name="memberName"
-        value={formData.memberName}
-        onChange={handleChange}
+      {/* Personal Information */}
+      <PersonalInfo
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
       />
-      {errors.memberName && <span className="error">{errors.memberName}</span>}
       <br />
-      <label>Date of Birth*:</label>
-      <input
-        type="date"
-        name="dob"
-        value={formData.dob}
-        onChange={handleChange}
+      {/* Contact Information */}
+      <ContactInfo
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
       />
-      {errors.dob && <span className="error">{errors.dob}</span>}
       <br />
-      <label>Age*:</label>
-      <input
-        type="number"
-        name="age"
-        value={formData.age}
-        onChange={handleChange}
+      {/* Background & Health */}
+      <BackgroundHealth
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
       />
-      {errors.age && <span className="error">{errors.age}</span>}
       <br />
-      <label>Gender*:</label>
-      <div className="radio-group">
-        <label>
-          <input
-            type="radio"
-            name="gender"
-            value="Male"
-            checked={formData.gender === "Male"}
-            onChange={handleChange}
-          />
-          Male
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="gender"
-            value="Female"
-            checked={formData.gender === "Female"}
-            onChange={handleChange}
-          />
-          Female
-        </label>
-      </div>
-      {errors.gender && <span className="error">{errors.gender}</span>}
+      {/* Membership Details */}
+      <MembershipDetails
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
+      />
       <br />
-      <label>Name of Father/Guardian/Husband*:</label>
-      <input
-        type="text"
-        name="fatherGuardianName"
-        value={formData.fatherGuardianName}
-        onChange={handleChange}
-      />
-      {errors.fatherGuardianName && (
-        <span className="error">{errors.fatherGuardianName}</span>
-      )}
-      <br />
-      <label>Address Line1*:</label>
-      <input
-        type="text"
-        name="addressLine1"
-        value={formData.addressLine1}
-        onChange={handleChange}
-      />
-      {errors.addressLine1 && (
-        <span className="error">{errors.addressLine1}</span>
-      )}
-      <br />
-      <label>Address Line2*:</label>
-      <input
-        type="text"
-        name="addressLine2"
-        value={formData.addressLine2}
-        onChange={handleChange}
-      />
-      {errors.addressLine2 && (
-        <span className="error">{errors.addressLine2}</span>
-      )}
-      <br />
-      <label>Address Line3*:</label>
-      <input
-        type="text"
-        name="addressLine3"
-        value={formData.addressLine3}
-        onChange={handleChange}
-      />
-      {errors.addressLine3 && (
-        <span className="error">{errors.addressLine3}</span>
-      )}
-      <br />
-      <label>Landline:</label>
-      <input
-        type="text"
-        name="landline"
-        value={formData.landline}
-        onChange={handleChange}
-      />
-      {errors.landline && <span className="error">{errors.landline}</span>}
-      <br />
-      <label>Mobile*:</label>
-      <input
-        type="text"
-        name="mobile"
-        value={formData.mobile}
-        onChange={handleChange}
-      />
-      {errors.mobile && <span className="error">{errors.mobile}</span>}
-      <br />
-      <label>E-mail ID*:</label>
-      <input
-        type="email"
-        name="email"
-        value={formData.email}
-        onChange={handleChange}
-      />
-      {errors.email && <span className="error">{errors.email}</span>}
-      <br />
-      <label>Academic Qualifications:</label>
-      <textarea
-        name="qualifications"
-        value={formData.qualifications}
-        onChange={handleChange}
-      />
-      <label>Profession:</label>
-      <input
-        type="text"
-        name="profession"
-        value={formData.profession}
-        onChange={handleChange}
-      />
-      <label>Athletic Background, if any:</label>
-      <textarea
-        name="athleticBackground"
-        value={formData.athleticBackground}
-        onChange={handleChange}
-      />
-      <label>Experience in Trekking & Mountaineering, if any:</label>
-      <textarea
-        name="trekkingExperience"
-        value={formData.trekkingExperience}
-        onChange={handleChange}
-      />
-      <label>Hobbies:</label>
-      <textarea
-        name="hobbies"
-        value={formData.hobbies}
-        onChange={handleChange}
-      />
-      <label>History of serious illness/injury, if any:</label>
-      <textarea
-        name="illnessHistory"
-        value={formData.illnessHistory}
-        onChange={handleChange}
-      />
-      <label>Present General Health:</label>
-      <textarea
-        name="generalHealth"
-        value={formData.generalHealth}
-        onChange={handleChange}
-      />
-      <label>Blood Group*:</label>
-      <input
-        type="text"
-        name="bloodGroup"
-        value={formData.bloodGroup}
-        onChange={handleChange}
-      />
-      {errors.bloodGroup && <span className="error">{errors.bloodGroup}</span>}
-      <br />
-      <label>Membership Type*:</label>
-      <div className="radio-group">
-        <label>
-          <input
-            type="radio"
-            name="membershipType"
-            value="Life"
-            checked={formData.membershipType === "Life"}
-            onChange={handleChange}
-          />
-          Life (Rs.2000 + charges)
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="membershipType"
-            value="Annual"
-            checked={formData.membershipType === "Annual"}
-            onChange={handleChange}
-          />
-          Annual (Rs.250 + charges)
-        </label>
-      </div>
-      <br />
-      {/* <label>Payment Transaction Number:</label>
-      <input
-        type="text"
-        name="paymentTransactionNumber"
-        value={formData.paymentTransactionNumber}
-        onChange={handleChange}
-        pattern="[A-Za-z0-9]+" // Alphanumeric pattern        
-      /> */}
-      <div>
-        <label>Recommended By:</label>
-        <label>Name of the person recommending you:</label>
-        <input
-          type="text"
-          name="recommendedByName"
-          value={formData.recommendedByName}
-          onChange={handleChange}
-        />
-        <label>KMA Member ID of the person recommending you:</label>
-        <input
-          type="text"
-          name="recommendedByID"
-          value={formData.recommendedByID}
-          onChange={handleChange}
-        />
-      </div>
+      {/* Image Uploader */}
       <label>Upload Passport Size Photo*</label>
       <ImageUploader
         userKey={formData.key}

@@ -6,8 +6,8 @@ import {
   deleteObject,
 } from "firebase/storage";
 //import { ref as dbRef, push, update } from "firebase/database";
-import { storage } from "./firebase"; // Update the path according to your config file location
-import "./global.css";
+import { storage } from "../firebase"; // Update the path according to your config file location
+import "../global.css";
 
 const ImageUploader = React.forwardRef(
   ({ userKey, onUploadSuccess, onDeleteSuccess }, ref) => {
