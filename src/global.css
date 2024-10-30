@@ -19,6 +19,14 @@ body {
 
 h1 {
   color: #0056b3;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+h2 {
+  color: #007bff;
+  text-align: center;
+  margin-bottom: 15px;
 }
 
 h3 {
@@ -31,7 +39,7 @@ form {
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 20px;
-  max-width: 700px;
+  max-width: 90%; /* 700px; */
   margin: 20px auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -170,6 +178,17 @@ button:hover {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 }
 
+.search-container {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 90%;
+  margin: 20px auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-collapse: collapse; /* Collapse borders for a cleaner look */
+}
+
 .search-results {
   margin-top: 20px;
 }
@@ -191,12 +210,20 @@ button:hover {
 
 .header-container {
   display: flex;
-  align-items: center;
+  align-items: center; /* Vertically center logo and text */
+  justify-content: center; /* Horizontally center the entire header */
+  text-align: left; /* Align text to the left within its container */
+  margin-bottom: 20px; /* Add some spacing below the header */
 }
 
 .logo-image {
-  height: 100px;
-  margin-right: 10px;
+  height: 150px; /* Adjust logo height as needed */
+  margin-right: 20px; /* Add spacing between logo and text */
+}
+
+.header-text {
+  /* You can add more specific styles for the text content here */
+  text-align: center;
 }
 
 .image-uploader .button-group {
@@ -230,4 +257,71 @@ consent-message {
   margin-top: 10px;
   color: #d9534f;
   font-weight: bold;
+}
+
+table {
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-collapse: collapse; /* Collapse borders for a cleaner look */
+  width: 80%; /* Adjust width as needed */
+  margin: 20px auto; /* Center the table */
+  font-size: 16px; /* Set font size */
+}
+
+th,
+td {
+  border: 1px solid #ddd; /* Add borders to cells */
+  padding: 10px; /* Add padding to cells */
+  text-align: left; /* Align text to the left */
+}
+
+th {
+  background-color: #f2f2f2; /* Light gray background for header */
+  font-weight: bold; /* Make header text bold */
+}
+
+.application-details-container {
+  /* Container for the entire component */
+  padding: 20px;
+}
+
+.admin-controls {
+  /* Admin button group styling */
+  margin-top: 20px;
+}
+
+.admin-controls button {
+  /* Spacing between Approve/Reject buttons */
+  margin-right: 10px;
+}
+
+.generate-pdf-button {
+  /* Generate PDF button styling */
+  margin-top: 20px;
+}
+/* Print Styles */
+
+@media print {
+  .header-container {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .logo-image {
+    height: 25px;
+    margin-right: 10px;
+  }
+
+  .header-text {
+    font-size: 10px;
+  }
+
+  .header-text h1 {
+    font-size: 12px;
+  }
+
+  /* Add more print-specific styles as needed */
 }

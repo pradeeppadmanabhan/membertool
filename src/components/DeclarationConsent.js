@@ -1,21 +1,12 @@
 import React from "react";
 import logo from "../KMALogo.png"; // Import the image
+import Header from "./Header";
 
 const DeclarationConsent = ({ formData, errors, setFormData }) => {
   return (
     <div>
-      <div className="header-container">
-        {/* Add a container for the header */}
-        <img src={logo} alt="KMA Logo" className="logo-image" />
-        <h1>THE KARNATAKA MOUNTAINEERING ASSOCIATION (R)</h1>
-      </div>
-      Room No 205, I Floor, Kanteerava Sports Complex – 2, Kanteerava Stadium
-      premises, Kasturba Road, Bangalore – 560 001
-      <br />
-      T: +91 80 22113333 E: info@kmaindia.org
-      <br />
-      W: www.kmaindia.org FB: www.facebook.com\kmaindia
-      <h3>APPLICATION FOR MEMBERSHIP </h3>
+      <Header /> {/* Render the Header component */}
+      <h2>APPLICATION FOR MEMBERSHIP </h2>
       <div className="declaration-text">
         {" "}
         {/*Add class for styling */}
