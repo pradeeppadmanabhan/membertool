@@ -32,7 +32,7 @@ const ApplicationsList = () => {
 
   return (
     <div>
-      <h2>Submitted Applications</h2>
+      <h2>List of Applications</h2>
 
       {/* Filter Controls */}
       <label htmlFor="statusFilter">Filter by Status:</label>
