@@ -64,12 +64,6 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
       />
       {errors.email && <span className="error">{errors.email}</span>}
       <br />
-      <label>Academic Qualifications:</label>
-      <textarea
-        name="qualifications"
-        value={formData.qualifications}
-        onChange={handleChange}
-      />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { ref, onValue } from "firebase/database";
 import { database } from "./firebase";
 import "./global.css"; // Import your CSS file
+import Header from "./components/Header";
 
 const DataDisplay = () => {
   const [data, setData] = useState(null);
@@ -94,7 +95,8 @@ const DataDisplay = () => {
   };
 
   return (
-    <div>
+    <div className="search-container">
+      <Header />
       <h1>Search Member Details</h1>
       <div>
         <input

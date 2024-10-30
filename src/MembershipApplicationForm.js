@@ -1,4 +1,4 @@
-// src/InputForm.js
+// src/MembershipApplicationForm.js
 import React, { useState, useEffect, useRef } from "react";
 import { database } from "./firebase"; // Import the Firebase config
 //import { collection, addDoc, getDocs } from "firebase/firestore";
@@ -51,7 +51,7 @@ const getNextUserNodeNumber = async () => {
   }
 };
 
-const InputForm = () => {
+const MembershipApplicationForm = () => {
   const [formData, setFormData] = useState({
     id: "",
     memberName: "",
@@ -79,6 +79,17 @@ const InputForm = () => {
     recommendedByID: "",
     imageURL: "", // New field for image URL
     consent: false, // New field for consent
+
+    // New fields with initial values
+    applicationStatus: "Submitted", // Default status on submission
+    approvedBy: null,
+    dateOfSubmission: new Date().toISOString(), // Set on form submission
+    dateOfApproval: null,
+    dateOfPayment: null,
+    renewalDueOn: null,
+    transactionDetail: null,
+    receiptNo: null,
+    amount: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -305,7 +316,7 @@ const InputForm = () => {
       const userData = {
         ...formData,
         //key: formData.id, // Add the ID as a key,
-        date: new Date().toISOString(), // Add current date
+        dateOfSubmission: new Date().toISOString(), // Add current date
       };
       //console.log("Submitting data...", userData);
       //await addDoc(collection(database, "users"), userData);
@@ -422,4 +433,4 @@ const InputForm = () => {
   );
 };
 
-export default InputForm;
+export default MembershipApplicationForm;
