@@ -8,19 +8,6 @@ import MembershipApplicationForm from "./MembershipApplicationForm.js";
 import RenewalDueList from "./admin/RenewalDueList";
 
 function App() {
-  const [showForm, setShowForm] = useState(false); // State to manage which component to show
-  const [showData, setShowData] = useState(false);
-
-  const handleShowForm = () => {
-    setShowForm(true);
-    setShowData(false);
-  };
-
-  const handleShowData = () => {
-    setShowData(true);
-    setShowForm(false);
-  };
-
   return (
     <Router>
       <div className="App">
@@ -52,12 +39,10 @@ function App() {
           <Route path="/admin/applications" element={<ApplicationsList />} />
           <Route path="/admin/renewals-due" element={<RenewalDueList />} />
           <Route path="/view-data" element={<DataDisplay />} />
-          {/* Add route for DataDisplay */}
           <Route
             path="/admin/application/:applicationKey"
             element={<ApplicationDetails />}
           />
-          {/* Add route for ApplicationDetails */}
         </Routes>
       </div>
     </Router>

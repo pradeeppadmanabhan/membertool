@@ -44,6 +44,7 @@ const ApplicationsList = () => {
         <option value="all">All</option>
         <option value="Submitted">Submitted</option>
         <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
         <option value="Paid">Paid</option>
       </select>
 
