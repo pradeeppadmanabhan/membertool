@@ -82,12 +82,12 @@ const DataDisplay = () => {
     setSelectedUser(null); // Reset selectedUser to clear the detailed view
   };
 
-  // Function to convert camelCase to regular text
+  /* // Function to convert camelCase to regular text
   const camelCaseToText = (str) => {
     return str
       .replace(/([A-Z])/g, " $1")
       .replace(/^./, (str) => str.toUpperCase());
-  };
+  }; */
 
   // Helper function to display values, handling "No Data"
   const displayValue = (value) => {
@@ -118,7 +118,6 @@ const DataDisplay = () => {
         <button onClick={handleClear}>Clear</button>
       </div>
       <div className="search-results">
-        {" "}
         {/* Add a container for search results */}
         {filteredUsers.length > 0 && !selectedUser ? ( // Show the list only if there are filtered users and no user is selected
           <div className="card-container">
@@ -137,32 +136,62 @@ const DataDisplay = () => {
           </div>
         ) : selectedUser ? (
           <div className="details-card">
-            {" "}
             {/* Add a class for the details card */}
             {/* Display ID as the first row in bold */}
-            <p>
-              <strong>ID: {selectedUser.id}</strong>
-            </p>
-            {/* Display key fields */}
-            <p>
-              {camelCaseToText("memberName")}:{" "}
-              {displayValue(selectedUser.memberName)}
-            </p>
-            <p>
-              {camelCaseToText("membershipType")}:{" "}
-              {displayValue(selectedUser.membershipType)}
-            </p>
-            <p>Mobile: {displayValue(selectedUser.mobile)}</p>
-            <p>Landline: {displayValue(selectedUser.landline)}</p>
-            <p>Email: {displayValue(selectedUser.email)}</p>
-            <p>Address Line 1: {displayValue(selectedUser.addressLine1)}</p>
-            <p>Address Line 2: {displayValue(selectedUser.addressLine2)}</p>
-            <p>Address Line 3: {displayValue(selectedUser.addressLine3)}</p>
-            <p>
-              {camelCaseToText("bloodGroup")}:{" "}
-              {displayValue(selectedUser.bloodGroup)}
-            </p>
-            <p>Year of Joining: {displayValue(selectedUser.year)}</p>
+            <table className="application-details-table">
+              <tbody>
+                <tr>
+                  <td className="field-name">ID:</td>
+                  <td>
+                    <strong>{selectedUser.id}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="field-name">Name:</td>
+                  <td>
+                    <strong>{selectedUser.memberName}</strong>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="field-name">Date Of Birth:</td>
+                  <td>{selectedUser.dob}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Gender:</td>
+                  <td>{selectedUser.gender}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">
+                    Name of Father / Guardian / Husband:
+                  </td>
+                  <td>{selectedUser.fatherGuardianName}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Address Line1:</td>
+                  <td>{selectedUser.addressLine1}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Address Line2:</td>
+                  <td>{selectedUser.addressLine2}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Address Line3:</td>
+                  <td>{selectedUser.addressLine3}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Landline:</td>
+                  <td>{selectedUser.landline}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Mobile:</td>
+                  <td>{selectedUser.mobile}</td>
+                </tr>
+                <tr>
+                  <td className="field-name">Email ID:</td>
+                  <td>{selectedUser.email}</td>
+                </tr>
+              </tbody>
+            </table>
             {/* Show More/Less button */}
             <button onClick={() => setShowMore(!showMore)}>
               {showMore ? "Show Less" : "Show More"}
@@ -170,28 +199,74 @@ const DataDisplay = () => {
             {/* Conditionally display additional details */}
             {showMore && (
               <div>
-                {Object.entries(selectedUser)
-                  .filter(
-                    ([key]) =>
-                      ![
-                        "id",
-                        "memberName",
-                        "membershipType",
-                        "mobile",
-                        "landline",
-                        "email",
-                        "addressLine1",
-                        "addressLine2",
-                        "addressLine3",
-                        "bloodGroup",
-                        "year",
-                      ].includes(key)
-                  )
-                  .map(([key, value]) => (
-                    <p key={key}>
-                      {camelCaseToText(key)}: {displayValue(value)}
-                    </p>
-                  ))}
+                <table className="application-details-table">
+                  <tbody>
+                    <tr>
+                      <td className="field-name">Academic Qualification:</td>
+                      <td>{selectedUser.qualifications}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Profession:</td>
+                      <td>{selectedUser.profession}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Athletic Background:</td>
+                      <td>{selectedUser.athleticBackground}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Hobbies:</td>
+                      <td>{selectedUser.hobbies}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">
+                        History of serious illness:
+                      </td>
+                      <td>{selectedUser.illnessHistory}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Present General Health:</td>
+                      <td>{selectedUser.generalHealth}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Blood Group:</td>
+                      <td>{selectedUser.bloodGroup}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Membership Type:</td>
+                      <td>{selectedUser.membershipType}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Recommended By:</td>
+                      <td>{selectedUser.recommendedByName}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Recommended By ID:</td>
+                      <td>{selectedUser.recommendedByID}</td>
+                    </tr>
+                    {selectedUser.membershipType === "Annual" && ( // Conditional rendering
+                      <tr>
+                        <td className="field-name">Renewal Due On:</td>
+                        <td>{selectedUser.renewalDueOn}</td>
+                      </tr>
+                    )}
+                    <tr>
+                      <td className="field-name">Transaction Detail:</td>
+                      <td>{selectedUser.transactionDetail}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Receipt No:</td>
+                      <td>{selectedUser.receiptNo}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Amount:</td>
+                      <td>{selectedUser.amount}</td>
+                    </tr>
+                    <tr>
+                      <td className="field-name">Approved By:</td>
+                      <td>{selectedUser.approvedBy}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

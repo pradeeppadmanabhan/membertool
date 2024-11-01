@@ -145,6 +145,9 @@ const ApplicationDetails = () => {
       <h2>Application Details</h2>
       <button onClick={() => navigate(-1)}>Back to List</button>{" "}
       {/* Back button */}
+      <div>
+        <img src={applicationData.imageURL} alt="Uploaded" width="200" />
+      </div>
       <table className="application-details-table">
         <tbody>
           <tr>

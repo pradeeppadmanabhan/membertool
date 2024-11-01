@@ -1,5 +1,4 @@
 import React from "react";
-import logo from "../KMALogo.png"; // Import the image
 import Header from "./Header";
 
 const DeclarationConsent = ({ formData, errors, setFormData }) => {

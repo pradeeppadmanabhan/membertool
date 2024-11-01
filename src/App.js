@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import "./global.css";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import ApplicationsList from "./admin/ApplicationsList.js"; // Update the path if needed
