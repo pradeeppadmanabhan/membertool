@@ -4,6 +4,7 @@ import { database } from "../firebase";
 import { ref, get, update } from "firebase/database";
 //import PrintApplication from "../utils/PrintApplication";
 import Header from "../components/Header";
+import sendEmail from "../utils/SendEmail";
 
 const ApplicationDetails = () => {
   const { applicationKey } = useParams();
@@ -11,6 +12,7 @@ const ApplicationDetails = () => {
   const [applicationData, setApplicationData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [statusMessage, setStatusMessage] = useState(null); // Add status message state
 
   useEffect(() => {
     const fetchApplicationData = async () => {
@@ -34,39 +36,95 @@ const ApplicationDetails = () => {
     fetchApplicationData();
   }, [applicationKey]);
 
-  const handleApprove = async () => {
+  const handleStatusChange = async (status) => {
+    // Function to handle both approval and rejection
     try {
+      // Update application status in Firebase
       const applicationRef = ref(database, `users/${applicationKey}`);
-      await update(applicationRef, {
-        applicationStatus: "Approved",
-        approvedBy: "Admin User", // Replace with actual admin user details
-        dateOfApproval: new Date().toISOString(),
-      });
+      await update(
+        applicationRef,
+        {
+          applicationStatus: status,
+          approvedBy: "Admin User", // Replace with actual admin user details
+          dateOfApproval: new Date().toISOString(),
+        },
+        () => {
+          // Update applicationData after the update is complete
+          setApplicationData({ ...applicationData, applicationStatus: status });
+        }
+      );
 
-      console.log("Application approved!");
-      // Optionally update the UI or navigate to another page
+      // Prepare email data based on status
+      let subject = "";
+      let message = "";
+      /* if (status === "Approved") {
+        subject =
+          "Congratulations! Your KMA Membership Application is Approved";
+        message = `Dear ${applicationData.memberName},\n\nWe are pleased to inform you that your application for membership with the Karnataka Mountaineering Association has been approved.`;
+      } else if (status === "Rejected") {
+        subject = "KMA Membership Application Update";
+        message = `Dear ${applicationData.memberName},\n\nWe regret to inform you that your application for membership with the Karnataka Mountaineering Association has been rejected.`;
+      } else {
+        console.error("Invalid application status:", status);
+        return; // Don't proceed if status is invalid
+      } */
+      switch (status) {
+        case "Approved":
+          subject =
+            "Congratulations! Your KMA Membership Application is Approved";
+          message = `Dear ${applicationData.memberName},\n\nWe are pleased to inform you that your application for membership with the Karnataka Mountaineering Association has been approved.`;
+          break;
+
+        case "Rejected":
+          subject = "KMA Membership Application Update";
+          message = `Dear ${applicationData.memberName},\n\nWe regret to inform you that your application for membership with the Karnataka Mountaineering Association has been rejected.`;
+          break;
+
+        default:
+          console.error("Invalid application status:", status);
+          return; // Don't proceed if status is invalid
+      }
+
+      const emailData = {
+        to_name: applicationData.memberName,
+        to_email: applicationData.email,
+        subject: subject,
+        message: message,
+      };
+
+      // Send the email
+      const emailSent = await sendEmail(emailData);
+      if (emailSent) {
+        console.log(`${status} email sent successfully!`);
+        setStatusMessage(`Application ${status.toLowerCase()}ed successfully!`); // Set success message
+      } else {
+        console.error(`Failed to send ${status} email.`);
+        setStatusMessage(`Failed to send ${status.toLowerCase()} email.`); // Set error message
+      }
+
+      // Navigate back to the list after 10 seconds
+      setTimeout(() => {
+        navigate(-1); // Go back to the previous page (ApplicationsList)
+      }, 10000); // 10 seconds timeout
     } catch (error) {
-      console.error("Error approving application:", error);
+      console.error(
+        `Error ${
+          status === "Approved" ? "approving" : "rejecting"
+        } application:`,
+        error
+      );
       // Handle error (e.g., show an error message)
+      setStatusMessage(`Error ${status.toLowerCase()}ing application.`); // Set error message
     }
+  };
+
+  const handleApprove = async () => {
+    await handleStatusChange("Approved");
   };
 
   const handleReject = async () => {
     // Similar logic to handleApprove, but update applicationStatus to 'Rejected'
-    try {
-      const applicationRef = ref(database, `users/${applicationKey}`);
-      await update(applicationRef, {
-        applicationStatus: "Rejected",
-        approvedBy: "Admin User", // Replace with actual admin user details
-        dateOfApproval: new Date().toISOString(),
-      });
-
-      console.log("Application Rejected!");
-      // Optionally update the UI or navigate to another page
-    } catch (error) {
-      console.error("Error approving application:", error);
-      // Handle error (e.g., show an error message)
-    }
+    await handleStatusChange("Rejected");
   };
 
   /* const handlePrintApplication = () => {
@@ -186,6 +244,8 @@ const ApplicationDetails = () => {
       {/* <div className="generate-pdf-button">
         <button onClick={handlePrintApplication}>Print Application</button>
       </div> */}
+      {/* Display the status message */}
+      {statusMessage && <div className="status-message">{statusMessage}</div>}
     </div>
   );
 };
