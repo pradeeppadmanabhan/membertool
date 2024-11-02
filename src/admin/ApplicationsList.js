@@ -6,6 +6,10 @@ import { Link } from "react-router-dom"; // Import Link
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
   const [filterStatus, setFilterStatus] = useState("Submitted");
+  const [sortConfig, setSortConfig] = useState({
+    key: "dateOfSubmission",
+    direction: "descending",
+  });
 
   useEffect(() => {
     const applicationsRef = ref(database, "users");
@@ -22,6 +26,15 @@ const ApplicationsList = () => {
     });
   }, []);
 
+  // Sorting Logic
+  const requestSort = (key) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
   const filteredApplications = applications.filter((application) => {
     if (filterStatus === "all") {
       return true;
@@ -29,6 +42,37 @@ const ApplicationsList = () => {
       return application.applicationStatus === filterStatus;
     }
   });
+
+  const sortedApplications = [...filteredApplications]
+    .sort((a, b) => {
+      const dateA =
+        a[sortConfig.key] && a[sortConfig.key] !== "No Data"
+          ? new Date(a[sortConfig.key])
+          : new Date(0); // Use 0 for "No Data" to push them to the end
+      const dateB =
+        b[sortConfig.key] && b[sortConfig.key] !== "No Data"
+          ? new Date(b[sortConfig.key])
+          : new Date(0);
+
+      if (sortConfig.direction === "ascending") {
+        return dateA - dateB;
+      } else {
+        return dateB - dateA;
+      }
+    })
+    .sort((a, b) => {
+      // Second sort to handle "No Data" placement
+      const aNoData = a[sortConfig.key] === "No Data";
+      const bNoData = b[sortConfig.key] === "No Data";
+
+      if (aNoData && !bNoData) {
+        return 1; // Push "No Data" to the end
+      } else if (!aNoData && bNoData) {
+        return -1;
+      } else {
+        return 0;
+      }
+    });
 
   return (
     <div>
@@ -54,13 +98,18 @@ const ApplicationsList = () => {
             <th>ID</th>
             <th>Name</th>
             <th>Status</th>
-            <th>Date of Submission</th> {/* New column */}
-            <th>Date of Approval</th> {/* New column */}
+            <th onClick={() => requestSort("dateOfSubmission")}>
+              Date of Submission{" "}
+              {sortConfig.key === "dateOfSubmission" && (
+                <span>{sortConfig.direction === "ascending" ? "▲" : "▼"}</span>
+              )}
+            </th>
+            <th>Date of Approval</th>
             {/* Add more columns as needed */}
           </tr>
         </thead>
         <tbody>
-          {filteredApplications.map((application) => (
+          {sortedApplications.map((application) => (
             <tr key={application.key}>
               {console.log("Application Key:", application.key)}
               {console.log("Application ID:", application.id)}
@@ -71,8 +120,7 @@ const ApplicationsList = () => {
                 </Link>
               </td>
               <td>{application.memberName}</td>
-              <td>{application.applicationStatus}</td>{" "}
-              {/* No more optional chaining */}
+              <td>{application.applicationStatus}</td>
               <td>
                 {application.dateOfSubmission &&
                 application.dateOfSubmission !== "No Data" // Check for "No Data"
