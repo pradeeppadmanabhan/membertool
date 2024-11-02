@@ -11,7 +11,7 @@ function App() {
     <Router>
       <div className="App">
         <header className="App-header">
-          <h1>Membership Tool</h1>
+          <h1>KMA Membership Management System</h1>
         </header>
         <div className="button-container">
           <Link to="/new-application">
