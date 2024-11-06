@@ -7,6 +7,8 @@ import sendEmail from "../utils/SendEmail";
 
 const RenewalDueList = () => {
   const [membersDue, setMembersDue] = useState([]);
+  const [emailStatus, setEmailStatus] = useState(null); // State to track email status
+  const [sentInvites, setSentInvites] = useState([]); // Array to track sent invites
 
   useEffect(() => {
     const dataRef = ref(database, "users");
@@ -104,9 +106,89 @@ const RenewalDueList = () => {
     }
   };
 
+  const handleElevateToLifeMember = async (user) => {
+    try {
+      // 1. Construct the payment link
+      const paymentLink = `https://your-payment-gateway.com/checkout?userId=${user.id}&membershipType=Life`; // Replace with your actual payment gateway URL
+
+      // 2. Prepare email content
+      const subjectLine = "Invitation to Upgrade to KMA Life Membership";
+      const message = `Dear ${user.memberName},
+
+We are pleased to offer you an exclusive opportunity to upgrade your KMA membership to a Life Membership!
+
+As a valued member, we recognize your continued support and dedication to our association. Upgrading to a Life Membership offers numerous benefits, including:
+
+* Lifetime access to KMA events and activities
+* Exemption from annual renewal fees
+* ... And a host of other benefits
+
+To upgrade your membership, simply click on the following link, which will direct you to our secure payment portal:
+
+${paymentLink}
+
+We encourage you to seize this opportunity and join our esteemed community of Life Members.
+
+If you have any questions or require further assistance, please do not hesitate to contact us.
+
+Sincerely,
+The KMA Team`;
+
+      // 3. Prepare email data
+      const emailData = {
+        to_name: user.memberName,
+        to_email: user.email,
+        subject: subjectLine,
+        message: message,
+      };
+
+      // 4. Send the email
+      const success = await sendEmail(emailData);
+
+      if (success) {
+        console.log("Life membership invitation email sent successfully!");
+        setEmailStatus(`Invitation sent successfully to ${user.memberName}!`); // Set success message with name
+        setSentInvites([...sentInvites, user.id]);
+      } else {
+        console.error("Failed to send life membership invitation email.");
+        setEmailStatus(`Failed to send invitation to ${user.memberName}.`); // Set error message with name
+      }
+
+      // Set a timeout to clear the emailStatus after 5 seconds
+      setTimeout(() => {
+        setEmailStatus(null);
+      }, 5000); // 5000 milliseconds = 5 seconds
+    } catch (error) {
+      console.error("Error sending life membership invitation:", error);
+      setEmailStatus(
+        `Error sending invitation to ${user.memberName}, due to ${error.message}`
+      ); // Set error message with name
+    }
+  };
+
+  const isApproachingSecondAnniversary = (joiningDate) => {
+    const today = new Date();
+    const secondAnniversary = new Date(joiningDate);
+    secondAnniversary.setFullYear(secondAnniversary.getFullYear() + 2);
+    secondAnniversary.setMonth(secondAnniversary.getMonth() - 1); // Set to the last month of the 2nd year
+
+    return today >= secondAnniversary;
+  };
+
   return (
     <div>
       <h2>Members Due for Renewal</h2>
+      {/* Display email status message above the table */}
+      {emailStatus && (
+        <p
+          className={`status-message ${
+            emailStatus.includes("Failed") ? "error" : ""
+          }`}
+        >
+          {emailStatus}
+        </p>
+      )}
+      <br />
       {membersDue.length > 0 ? (
         <table>
           <thead>
@@ -118,6 +200,7 @@ const RenewalDueList = () => {
               <th>Renewal Due On</th>
               <th>Renewal Status</th>
               <th>Reminder</th>
+              <th>Life Membership</th>
             </tr>
           </thead>
           <tbody>
@@ -133,6 +216,24 @@ const RenewalDueList = () => {
                   <button onClick={() => handleSendReminder(user)}>
                     Send Reminder
                   </button>
+                </td>
+                <td>
+                  {/* Conditionally render the "Elevate to Life Member" button */}
+                  {user.membershipType === "Annual" &&
+                    isApproachingSecondAnniversary(
+                      new Date(user.dateOfSubmission)
+                    ) && (
+                      <button
+                        onClick={() => handleElevateToLifeMember(user)}
+                        className={
+                          sentInvites.includes(user.id)
+                            ? "invite-sent-button"
+                            : ""
+                        }
+                      >
+                        Send Invite
+                      </button>
+                    )}
                 </td>
               </tr>
             ))}

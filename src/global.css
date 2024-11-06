@@ -278,6 +278,11 @@ td {
   text-align: left; /* Align text to the left */
 }
 
+td button {
+  display: block;
+  margin: 0 auto;
+}
+
 th {
   background-color: #f2f2f2; /* Light gray background for header */
   font-weight: bold; /* Make header text bold */
@@ -302,6 +307,45 @@ th {
   /* Generate PDF button styling */
   margin-top: 20px;
 }
+
+/* src/global.css */
+.filter-select {
+  /* Apply this class to your select element */
+  width: 150px; /* Adjust width as needed */
+  padding: 8px 12px; /* Adjust padding for better appearance */
+  border: 1px solid #ced4da; /* Match the border style of react-datepicker */
+  border-radius: 4px; /* Match the border radius of react-datepicker */
+  font-size: 16px; /* Adjust font size to match other inputs */
+  /* Add any other styles you want to match react-datepicker */
+}
+
+date-range-picker {
+  text-align: center; /* Center align the entire date range picker */
+  margin-bottom: 20px; /* Add margin below the date picker */
+}
+
+.date-range-picker label {
+  display: block; /* Make the label take up the full width */
+  margin-bottom: 5px; /* Add spacing between label and pickers */
+}
+
+.date-range-picker > div {
+  display: flex;
+  justify-content: center; /* Center align the pickers horizontally */
+  align-items: center; /* Vertically align items */
+}
+
+.date-range-picker .react-datepicker__input-container input {
+  margin-right: 20px; /* Add spacing between the pickers */
+  width: auto;
+  min-width: 100px;
+}
+
+.invite-sent-button {
+  background-color: green; /* Or any shade of green you prefer */
+  color: white; /* Adjust text color for contrast */
+}
+
 /* Print Styles */
 
 @media print {

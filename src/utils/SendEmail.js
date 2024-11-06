@@ -17,11 +17,11 @@ const sendEmail = async (templateParams) => {
     );
 
     console.log("Email sent successfully:", response);
-    alert("Email sent successfully!");
+    //alert("Email sent successfully!");
     return true;
   } catch (error) {
     console.error("Error sending email:", error);
-    alert("Error sending email:", error);
+    //alert("Error sending email:", error);
     return false;
   }
 };
