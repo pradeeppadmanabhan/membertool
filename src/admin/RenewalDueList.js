@@ -201,6 +201,7 @@ The KMA Team`;
               <th>Renewal Status</th>
               <th>Reminder</th>
               <th>Life Membership</th>
+              <th>Life Membership</th>
             </tr>
           </thead>
           <tbody>

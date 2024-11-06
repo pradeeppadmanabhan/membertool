@@ -283,6 +283,11 @@ td button {
   margin: 0 auto;
 }
 
+td button {
+  display: block;
+  margin: 0 auto;
+}
+
 th {
   background-color: #f2f2f2; /* Light gray background for header */
   font-weight: bold; /* Make header text bold */
