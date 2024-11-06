@@ -20,6 +20,7 @@ import ContactInfo from "./components/ContactInfo";
 import BackgroundHealth from "./components/BackgroundHealth";
 import MembershipDetails from "./components/MembershipDetails";
 import ImageUploader from "./components/ImageUploader";
+import PropTypes from "prop-types"; // Import PropTypes
 
 const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
 
@@ -51,7 +52,12 @@ const getNextUserNodeNumber = async () => {
   }
 };
 
-const MembershipApplicationForm = () => {
+const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
+  // Prop Validation using PropTypes
+  MembershipApplicationForm.propTypes = {
+    initialMembershipType: PropTypes.oneOf(["Annual", "Life", "Honorary"])
+      .isRequired,
+  };
   const [formData, setFormData] = useState({
     id: "",
     memberName: "",
@@ -73,7 +79,7 @@ const MembershipApplicationForm = () => {
     illnessHistory: "",
     generalHealth: "",
     bloodGroup: "",
-    membershipType: "Annual", // Default value
+    membershipType: initialMembershipType, // Default value - Annual
     paymentTransactionNumber: "",
     recommendedByName: "",
     recommendedByID: "",
@@ -252,7 +258,7 @@ const MembershipApplicationForm = () => {
       illnessHistory: "",
       generalHealth: "",
       bloodGroup: "",
-      membershipType: "Annual",
+      membershipType: initialMembershipType,
       //paymentTransactionNumber: "",
       imageURL: "", // Reset image URL
       recommendedByName: "",

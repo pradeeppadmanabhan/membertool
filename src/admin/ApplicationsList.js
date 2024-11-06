@@ -2,10 +2,16 @@ import React, { useState, useEffect } from "react";
 import { database } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import { Link } from "react-router-dom"; // Import Link
+import DatePicker from "react-datepicker"; // Import the date picker
+import "react-datepicker/dist/react-datepicker.css";
+import "../global.css"; // Import your CSS file
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
-  const [filterStatus, setFilterStatus] = useState("Submitted");
+  const [filterType, setFilterType] = useState("all"); // Filter by type
+  const [startDate, setStartDate] = useState(null); // State for start date
+  const [endDate, setEndDate] = useState(null); // State for end date
+
   const [sortConfig, setSortConfig] = useState({
     key: "dateOfSubmission",
     direction: "descending",
@@ -36,11 +42,21 @@ const ApplicationsList = () => {
   };
 
   const filteredApplications = applications.filter((application) => {
-    if (filterStatus === "all") {
-      return true;
-    } else {
-      return application.applicationStatus === filterStatus;
+    if (startDate && endDate) {
+      // Check if dates are selected
+      const submissionDate = new Date(application.dateOfSubmission);
+      const matchesDateRange =
+        submissionDate >= startDate && submissionDate <= endDate;
+
+      if (!matchesDateRange) {
+        return false; // Exclude if outside the date range
+      }
     }
+
+    // Now apply the type filter
+    const matchesType =
+      filterType === "all" || application.membershipType === filterType;
+    return matchesType;
   });
 
   const sortedApplications = [...filteredApplications]
@@ -79,32 +95,77 @@ const ApplicationsList = () => {
       <h2>List of Applications</h2>
 
       {/* Filter Controls */}
-      <label htmlFor="statusFilter">Filter by Status:</label>
-      <select
-        id="statusFilter"
-        value={filterStatus}
-        onChange={(e) => setFilterStatus(e.target.value)}
-      >
-        <option value="all">All</option>
-        <option value="Submitted">Submitted</option>
-        <option value="Approved">Approved</option>
-        <option value="Rejected">Rejected</option>
-        <option value="Paid">Paid</option>
-      </select>
+
+      <div>
+        <label htmlFor="typeFilter">Filter by Membership Type:</label>
+        <select
+          id="typeFilter"
+          className="filter-select"
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value)}
+        >
+          <option value="all">All</option>
+          <option value="Annual">Annual</option>
+          <option value="Life">Life</option>
+          <option value="Honorary">Honorary</option>
+        </select>
+      </div>
+
+      {/* Date Range Picker */}
+      <div className="date-range-picker">
+        <br />
+        <label htmlFor="dateFilter">Filter by Month:</label>
+        <div>
+          <label htmlFor="startDate">Start Month:</label>
+          <DatePicker
+            id="startDate"
+            selected={startDate}
+            onChange={(date) => setStartDate(date)}
+            selectsStart
+            startDate={startDate}
+            endDate={endDate}
+            maxDate={new Date()}
+            showMonthYearPicker
+            shouldCloseOnSelect={true}
+            // Optional: Prevent selecting start date after end date
+          />
+
+          <label htmlFor="endDate">End Month:</label>
+          <DatePicker
+            id="endDate"
+            selected={endDate}
+            onChange={(date) => setEndDate(date)}
+            selectsEnd
+            startDate={startDate}
+            endDate={endDate}
+            minDate={startDate}
+            maxDate={new Date()}
+            shouldCloseOnSelect={true}
+            showMonthYearPicker
+            // Optional: Prevent selecting end date before start date
+          />
+        </div>
+      </div>
 
       <table>
         <thead>
           <tr>
             <th>ID</th>
             <th>Name</th>
-            <th>Status</th>
+            <th>Membership Type</th>
             <th onClick={() => requestSort("dateOfSubmission")}>
-              Date of Submission{" "}
+              Date of Submission
               {sortConfig.key === "dateOfSubmission" && (
                 <span>{sortConfig.direction === "ascending" ? "▲" : "▼"}</span>
               )}
             </th>
-            <th>Date of Approval</th>
+            <th onClick={() => requestSort("dateOfPayment")}>
+              {/* New header */}
+              Date of Last Payment
+              {sortConfig.key === "dateOfPayment" && (
+                <span>{sortConfig.direction === "ascending" ? "▲" : "▼"}</span>
+              )}
+            </th>
             {/* Add more columns as needed */}
           </tr>
         </thead>
@@ -120,7 +181,7 @@ const ApplicationsList = () => {
                 </Link>
               </td>
               <td>{application.memberName}</td>
-              <td>{application.applicationStatus}</td>
+              <td>{application.membershipType}</td>
               <td>
                 {application.dateOfSubmission &&
                 application.dateOfSubmission !== "No Data" // Check for "No Data"
@@ -128,9 +189,10 @@ const ApplicationsList = () => {
                   : "--/--/----"}
               </td>
               <td>
-                {application.dateOfApproval &&
-                application.dateOfApproval !== "No Data" // Check for "No Data"
-                  ? new Date(application.dateOfApproval).toLocaleDateString()
+                {/* Updated cell */}
+                {application.dateOfPayment &&
+                application.dateOfPayment !== "No Data"
+                  ? new Date(application.dateOfPayment).toLocaleDateString()
                   : "--/--/----"}
               </td>
               {/* Format date */}

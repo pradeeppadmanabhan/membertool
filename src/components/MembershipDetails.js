@@ -3,7 +3,7 @@ import React from "react";
 const MembershipDetails = ({ formData, errors, handleChange }) => {
   return (
     <div>
-      <label>Membership Type*:</label>
+      {/* <label>Membership Type*:</label>
       <div className="radio-group">
         <label>
           <input
@@ -26,7 +26,7 @@ const MembershipDetails = ({ formData, errors, handleChange }) => {
           Annual (Rs.250 + charges)
         </label>
       </div>
-      <br />
+      <br /> */}
       {/* <label>Payment Transaction Number:</label>
       <input
         type="text"

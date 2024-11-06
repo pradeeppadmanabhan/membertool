@@ -5,6 +5,7 @@ import ApplicationDetails from "./admin/ApplicationDetails.js"; // Update the pa
 import DataDisplay from "./DataDisplay.js";
 import MembershipApplicationForm from "./MembershipApplicationForm.js";
 import RenewalDueList from "./admin/RenewalDueList";
+import HonoraryMemberInvite from "./admin/HonoraryMemberInvite.js";
 
 function App() {
   return (
@@ -19,6 +20,9 @@ function App() {
           </Link>
           <Link to="/admin/applications">
             <button>Admin - Applications</button>
+          </Link>
+          <Link to="/admin/invite-honorary">
+            <button>Admin - Invite Honorary Member</button>
           </Link>
           <Link to="/admin/renewals-due">
             <button>Admin - Renewals Due</button>
@@ -36,6 +40,10 @@ function App() {
             element={<MembershipApplicationForm />}
           />
           <Route path="/admin/applications" element={<ApplicationsList />} />
+          <Route
+            path="/admin/invite-honorary"
+            element={<HonoraryMemberInvite />}
+          />
           <Route path="/admin/renewals-due" element={<RenewalDueList />} />
           <Route path="/view-data" element={<DataDisplay />} />
           <Route
