@@ -408,7 +408,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       {/* Display image upload error */}
       <br />
       {formData.imageURL && (
-        <div>
+        <div className="profile-picture-container">
           <h4>Uploaded Image:</h4>
           <img src={formData.imageURL} alt="Uploaded" width="200" />
         </div>

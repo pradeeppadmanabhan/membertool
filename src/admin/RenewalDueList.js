@@ -108,7 +108,7 @@ const RenewalDueList = () => {
 
   const handleElevateToLifeMember = async (user) => {
     try {
-      // 1. Construct the payment link
+      // 1. Construct the payment link [TODO: Update Payment Gateway link]
       const paymentLink = `https://your-payment-gateway.com/checkout?userId=${user.id}&membershipType=Life`; // Replace with your actual payment gateway URL
 
       // 2. Prepare email content

@@ -242,6 +242,14 @@ button:hover {
   white-space: nowrap;
 }
 
+.profile-picture-container {
+  border: 1px solid #ccc; /* Add a border for a clear boundary */
+  background-color: #282c34;
+  padding: 10px; /* Add padding top and bottom */
+  text-align: center; /* Center the image horizontally */
+  display: inline-block; /* Make the container wrap its content */
+}
+
 .file-name {
   margin-left: 10px;
   margin-right: 10px;
