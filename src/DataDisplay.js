@@ -1,21 +1,23 @@
 // src/DataDisplay.js
-import React, { useEffect, useState } from "react";
-import { ref, onValue } from "firebase/database";
+import React, { useEffect, useState, useContext } from "react";
+import { ref, onValue, off } from "firebase/database";
+import { onAuthStateChanged } from "firebase/auth";
 import { database } from "./firebase";
 import "./global.css"; // Import your CSS file
 import Header from "./components/Header";
+import AuthContext, { auth } from "./AuthContext";
 
 const DataDisplay = () => {
   const [data, setData] = useState(null);
   const [searchParams, setSearchParams] = useState({
     memberName: "", // Updated field name
-    //id: "", // Updated field name
     mobile: "", // Updated field name
   });
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null); // To store the selected user for detailed view
   const [showNoUserMessage, setShowNoUserMessage] = useState(false); // New state for the message
   const [showMore, setShowMore] = useState(false);
+  const { user } = useContext(AuthContext);
 
   useEffect(() => {
     const dataRef = ref(database, "users"); // Adjust the path as necessary
@@ -30,16 +32,49 @@ const DataDisplay = () => {
       }
     });
 
-    onValue(dataRef, (snapshot) => {
+    /* onValue(dataRef, (snapshot) => {
       const fetchedData = snapshot.val();
       //console.log("Fetched data from Firebase:", fetchedData); // Log the fetched data
       setData(fetchedData);
+    }); */
+    // Function to fetch data
+    const fetchData = () => {
+      onValue(dataRef, (snapshot) => {
+        const fetchedData = snapshot.val();
+        setData(fetchedData);
+      });
+    };
+
+    // Function to clear data
+    const clearData = () => {
+      setData(null); // Clear the data when the user logs out
+      setFilteredUsers([]); // Clear the filtered users when the user logs out
+      setSelectedUser(null); // Clear the selected user when the user logs out
+      setShowNoUserMessage(false); // Clear the showNoUserMessage when the user logs out
+    };
+
+    // Fetch data when the user logs in
+    if (user) {
+      fetchData();
+    } else {
+      // Clear data when the user logs out
+      clearData();
+    }
+
+    // Set up a listener to clear data when the user logs out
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      if (!currentUser) {
+        clearData();
+        off(dataRef); // Detach the listener when the user logs out
+      }
     });
 
     return () => {
       // Cleanup listener if necessary
+      unsubscribeAuth();
+      off(dataRef); // Detach the listener when the component unmounts
     };
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -50,6 +85,12 @@ const DataDisplay = () => {
   };
 
   const handleSearch = () => {
+    if (!user) {
+      // Check if the user is logged in
+      setShowNoUserMessage(true); // Show the "Please sign in" message
+      return; // Don't proceed with the search
+    }
+
     if (data) {
       const results = Object.values(data).filter((user) => {
         // Filter users based on search criteria
@@ -270,6 +311,8 @@ const DataDisplay = () => {
               </div>
             )}
           </div>
+        ) : showNoUserMessage && !user ? ( // Show message if no results AND user is not logged in
+          <p>Please sign in to search for members.</p>
         ) : showNoUserMessage ? ( // Show the message only if showNoUserMessage is true
           <p>No user found.</p>
         ) : null}{" "}
