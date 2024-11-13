@@ -1,18 +1,12 @@
 // src/MembershipApplicationForm.js
-import React, { useState, useEffect, useRef } from "react";
-import { database } from "./firebase"; // Import the Firebase config
-//import { collection, addDoc, getDocs } from "firebase/firestore";
+import React, { useState, useRef } from "react";
+import { database, storage } from "./firebase"; // Import the Firebase config
+import { ref, set } from "firebase/database"; // Import necessary functions - , push
 import {
-  ref,
-  set,
-  get,
-  query,
-  orderByKey,
-  orderByChild,
-  startAt,
-  endAt,
-  limitToLast,
-} from "firebase/database"; // Import necessary functions - , push
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
 import "./global.css";
 import DeclarationConsent from "./components/DeclarationConsent";
 import PersonalInfo from "./components/PersonalInfo";
@@ -21,36 +15,9 @@ import BackgroundHealth from "./components/BackgroundHealth";
 import MembershipDetails from "./components/MembershipDetails";
 import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
+import { getFunctions, httpsCallable } from "firebase/functions";
 
 const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
-
-// Reusable function to get the next available user node number
-const getNextUserNodeNumber = async () => {
-  try {
-    const usersRef = ref(database, "users");
-    const lastUserQuery = query(
-      usersRef,
-      orderByKey(), // Order by key to get the highest numerical key
-      limitToLast(1)
-    );
-
-    const lastUserSnapshot = await get(lastUserQuery);
-    //console.log("Last User Snapshot:", lastUserSnapshot.val());
-
-    if (lastUserSnapshot.exists()) {
-      const lastUserKey = Object.keys(lastUserSnapshot.val())[0]; // Get the key (e.g., 'user10')
-      //console.log("Last User Key:", lastUserKey);
-      const lastUserNumber = parseInt(lastUserKey.substring(4), 10); // Extract the number
-      //console.log("Last User Number:", lastUserNumber);
-      return lastUserNumber + 1;
-    } else {
-      return 1; // Start from 1 if there are no users
-    }
-  } catch (error) {
-    console.error("Error getting next user node number:", error);
-    return 1; // Default to 1 in case of an error
-  }
-};
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   // Prop Validation using PropTypes
@@ -59,7 +26,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       .isRequired,
   };
   const [formData, setFormData] = useState({
-    id: "",
+    id: null, // Initially set to null
     memberName: "",
     age: "",
     dob: "",
@@ -100,69 +67,14 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
   const [errors, setErrors] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
 
-  // Function to generate the member ID (LMXXXX or AMXXXX)
-  const generateMemberId = async () => {
-    try {
-      const currentYear = new Date().getFullYear();
-      const membershipTypePrefix =
-        formData.membershipType === "Life" ? "LM" : "AM";
+  const [generatedMemberId, setGeneratedMemberId] = useState(null);
+  const functions = getFunctions();
+  const generateMemberId = httpsCallable(functions, "generateMemberId");
 
-      // Get the last user ID with the same membership type prefix
-      const usersRef = ref(database, "users");
-      const lastUserQuery = query(
-        usersRef,
-        orderByChild("id"),
-        startAt(membershipTypePrefix), // Start searching from IDs with the correct prefix
-        endAt(membershipTypePrefix + "\uf8ff"), // End search at IDs with the prefix + a very high character
-        limitToLast(1)
-      );
-
-      const lastUserSnapshot = await get(lastUserQuery);
-
-      let newId = `${membershipTypePrefix}${currentYear}001`; // Default ID for the year
-
-      if (lastUserSnapshot.exists()) {
-        const lastUserData = Object.values(lastUserSnapshot.val())[0];
-        const lastUserId = lastUserData.id;
-        const lastUserYear = parseInt(lastUserId.substring(2, 6), 10);
-        const lastUserNumber = parseInt(lastUserId.substring(6), 10);
-
-        if (lastUserYear === currentYear) {
-          const newNumber = (lastUserNumber + 1).toString().padStart(3, "0");
-          newId = `${membershipTypePrefix}${currentYear}${newNumber}`;
-        }
-      }
-
-      return newId;
-    } catch (error) {
-      console.error("Error generating member ID:", error);
-      // Handle error (e.g., return a default ID or throw an error)
-    }
-  };
-
-  useEffect(() => {
-    const initializeFormData = async () => {
-      try {
-        const nextUserNumber = await getNextUserNodeNumber();
-        const userKey = `user${nextUserNumber.toString().padStart(5, "0")}`;
-
-        //console.log("Next User Number:", nextUserNumber);
-        //console.log("User Key:", userKey);
-
-        setFormData((prevData) => ({
-          ...prevData,
-          key: userKey, // Set the generated user key here
-        }));
-        //console.log("Form data initialized:", formData);
-      } catch (error) {
-        console.error("Error initializing form data:", error);
-        // Handle error appropriately
-      }
-    };
-
-    initializeFormData();
-  }, []);
+  // Reference to the ImageUploader component
+  const imageUploaderRef = useRef(null);
 
   const validate = () => {
     //console.log("Validating form data:", formData);
@@ -193,33 +105,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (formData.landline && !/^\d+$/.test(formData.landline))
       newErrors.landline = "Landline number must be numeric.";
     if (!formData.bloodGroup) newErrors.bloodGroup = "Blood Group is required.";
-    //if (!formData.consent) newErrors.consent = "Consent is required."; // Consent validation
-    // Image validation
-    if (!formData.imageURL) {
-      newErrors.imageURL = "Please upload a passport size photo.";
-    }
 
     return newErrors;
-  };
-
-  // Function to update the imageURL in the form data
-  const handleImageUploadSuccess = (downloadURL) => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      imageURL: downloadURL,
-    }));
-    // Clear the image upload error
-    setErrors((prevErrors) => ({
-      ...prevErrors,
-      imageURL: "", // Reset the imageURL error
-    }));
-  };
-
-  const handleImageDeleteSuccess = () => {
-    setFormData((prevFormData) => ({
-      ...prevFormData,
-      imageURL: "",
-    }));
   };
 
   const resetImageUploader = () => {
@@ -275,15 +162,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 1. Generate Member ID
-    try {
-      formData.id = await generateMemberId();
-    } catch (error) {
-      console.error("Error generating member ID:", error);
-      // Handle error appropriately (e.g., set a default ID or show an error message)
-    }
-
-    // 2. Validation
+    // 1. Validation
     //console.log("handleSubmit - Form data:", formData);
     const validationErrors = validate();
     setErrors(validationErrors); //update errors state immediately
@@ -310,28 +189,67 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       return;
     }
 
+    // 2. Generate Member ID
+    if (!generatedMemberId) {
+      try {
+        const { data } = await generateMemberId({
+          membershipType: formData.membershipType,
+        });
+        setGeneratedMemberId(data.memberId);
+        console.log("Generated Member ID:", generatedMemberId);
+      } catch (error) {
+        console.error("Error generating member ID:", error);
+        return;
+        // Handle error appropriately (e.g., set a default ID or show an error message)
+      }
+    }
+
     // 3. Consent Check
     if (!formData.consent) {
       setErrors({ consent: "Consent is required." }); // Show error if not accepted
       return;
     }
 
-    // 4. Submit Data to Firebase
+    //4. Upload Image (if selected)
+    let uploadedImageUrl = null;
+    if (selectedImage) {
+      try {
+        const imagePath = `images/${generatedMemberId}/${selectedImage.name}`;
+        const storageReference = storageRef(storage, imagePath);
+        const snapshot = await uploadBytes(storageReference, selectedImage);
+        uploadedImageUrl = await getDownloadURL(snapshot.ref);
+        //console.log("Uploaded Image URL:", uploadedImageUrl);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+      }
+    }
+    // Image validation
+    if (!uploadedImageUrl) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        imageURL: "Please upload a passport size photo.",
+      }));
+      return; // Don't submit if image upload failed
+    }
+
+    // 5. Submit Data to Firebase
     try {
       // Add the data to Firestore
+      console.log("Submitting Member ID:", generatedMemberId);
       const userData = {
         ...formData,
-        //key: formData.id, // Add the ID as a key,
+        id: generatedMemberId,
+        imageURL: uploadedImageUrl,
         dateOfSubmission: new Date().toISOString(), // Add current date
       };
       //console.log("Submitting data...", userData);
       //await addDoc(collection(database, "users"), userData);
       /*TODO: Update the JSON Packaging before uploading to DB.*/
-      const userRef = ref(database, `users/${formData.key}`); // Use formData.key for the database reference
+      const userRef = ref(database, `users/${generatedMemberId}`); // Use formData.key for the database reference
       await set(userRef, userData); // Set the user data
       console.log("Data submitted successfully!");
       setStatusMessage("Application submitted successfully!");
-      resetImageUploader(); // Reset the image uploader after clearing the form
+
       // Delay clearing the form to allow the user to see the success message
       setTimeout(() => {
         handleClear(); // Clear the form after a short delay
@@ -356,9 +274,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       setStatusMessage(errorMessage);
     }
   };
-
-  // Reference to the ImageUploader component
-  const imageUploaderRef = useRef(null);
 
   return (
     <form onSubmit={handleSubmit}>
@@ -399,20 +314,10 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       <br />
       {/* Image Uploader */}
       <label>Upload Passport Size Photo*</label>
-      <ImageUploader
-        userKey={formData.key}
-        onUploadSuccess={handleImageUploadSuccess}
-        onDeleteSuccess={handleImageDeleteSuccess}
-      />
+      <ImageUploader onImageSelect={setSelectedImage} />
       {errors.imageURL && <span className="error">{errors.imageURL}</span>}{" "}
       {/* Display image upload error */}
       <br />
-      {formData.imageURL && (
-        <div className="profile-picture-container">
-          <h4>Uploaded Image:</h4>
-          <img src={formData.imageURL} alt="Uploaded" width="200" />
-        </div>
-      )}
       <button type="submit" disabled={!formData.consent}>
         Submit
       </button>
@@ -434,7 +339,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           {statusMessage}
         </p>
       )}
-      {/* {statusMessage && <p className="status-message">{statusMessage}</p>} */}
     </form>
   );
 };

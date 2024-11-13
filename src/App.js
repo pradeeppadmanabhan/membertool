@@ -61,10 +61,27 @@ function App() {
         </div>
 
         <Routes>
-          <Route path="/" element={<MembershipApplicationForm />} />
+          <Route
+            path="/"
+            element={
+              <MembershipApplicationForm initialMembershipType="Annual" />
+            }
+          />
           <Route
             path="/new-application"
-            element={<MembershipApplicationForm />}
+            element={
+              <MembershipApplicationForm initialMembershipType="Annual" />
+            }
+          />
+          <Route
+            path="/new-application/life"
+            element={<MembershipApplicationForm initialMembershipType="life" />}
+          />
+          <Route
+            path="/new-application/honorary"
+            element={
+              <MembershipApplicationForm initialMembershipType="honorary" />
+            }
           />
           <Route path="/search" element={<DataDisplay />} />
           <Route path="/login" element={<LoginPage />} />
