@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { database } from "../firebase";
 import { ref, get } from "firebase/database";
-//import PrintApplication from "../utils/PrintApplication";
+import PrintApplication from "../utils/PrintApplication";
 import Header from "../components/Header";
 
 const ApplicationDetails = () => {
-  const { applicationKey } = useParams();
+  const { applicationId } = useParams();
   const navigate = useNavigate();
   const [applicationData, setApplicationData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,8 +15,11 @@ const ApplicationDetails = () => {
   useEffect(() => {
     const fetchApplicationData = async () => {
       try {
-        const applicationRef = ref(database, `users/${applicationKey}`);
+        const applicationRef = ref(database, `users/${applicationId}`);
         const snapshot = await get(applicationRef);
+
+        console.log("looking for application id: users/", applicationId);
+        console.log("Snapshot Data:", snapshot.val());
 
         if (snapshot.exists()) {
           setApplicationData(snapshot.val());
@@ -32,7 +35,7 @@ const ApplicationDetails = () => {
     };
 
     fetchApplicationData();
-  }, [applicationKey]);
+  }, [applicationId]);
 
   if (isLoading) {
     return <div>Loading application details...</div>;
@@ -41,6 +44,12 @@ const ApplicationDetails = () => {
   if (error) {
     return <div>Error: {error}</div>;
   }
+
+  const handlePrintApplication = () => {
+    if (applicationData) {
+      PrintApplication(applicationData);
+    }
+  };
 
   return (
     <div className="application-details-container">
@@ -141,9 +150,9 @@ const ApplicationDetails = () => {
           </tr>
         </tbody>
       </table>
-      {/* <div className="generate-pdf-button">
-        <button onClick={handlePrintApplication}>Print Application</button>
-      </div> */}
+      <div className="generate-pdf-button">
+        <button onClick={handlePrintApplication}>Download Application</button>
+      </div>
     </div>
   );
 };

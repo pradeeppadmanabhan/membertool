@@ -115,7 +115,7 @@ function App() {
           />
 
           <Route
-            path="/admin/application/:applicationKey"
+            path="/admin/application/:applicationId"
             element={
               <ProtectedRoute requiredRoles={authorizedAdminEmails}>
                 <ApplicationDetails />

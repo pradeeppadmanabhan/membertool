@@ -117,32 +117,19 @@ const ApplicationsList = () => {
         <label htmlFor="dateFilter">Filter by Month:</label>
         <div>
           <label htmlFor="startDate">Start Month:</label>
-          <DatePicker
+          <input
+            type="date"
             id="startDate"
-            selected={startDate}
-            onChange={(date) => setStartDate(date)}
-            selectsStart
-            startDate={startDate}
-            endDate={endDate}
-            maxDate={new Date()}
-            showMonthYearPicker
-            shouldCloseOnSelect={true}
-            // Optional: Prevent selecting start date after end date
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
           />
 
           <label htmlFor="endDate">End Month:</label>
-          <DatePicker
+          <input
+            type="date"
             id="endDate"
-            selected={endDate}
-            onChange={(date) => setEndDate(date)}
-            selectsEnd
-            startDate={startDate}
-            endDate={endDate}
-            minDate={startDate}
-            maxDate={new Date()}
-            shouldCloseOnSelect={true}
-            showMonthYearPicker
-            // Optional: Prevent selecting end date before start date
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
           />
         </div>
       </div>
@@ -171,12 +158,11 @@ const ApplicationsList = () => {
         </thead>
         <tbody>
           {sortedApplications.map((application) => (
-            <tr key={application.key}>
-              {console.log("Application Key:", application.key)}
-              {console.log("Application ID:", application.id)}
+            <tr key={application.id}>
+              {/* console.log("Application ID:", application.id) */}
               {/* Use key from the database */}
               <td>
-                <Link to={`/admin/application/${application.key}`}>
+                <Link to={`/admin/application/${application.id}`}>
                   {application.id}
                 </Link>
               </td>
