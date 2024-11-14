@@ -35,7 +35,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     addressLine1: "",
     addressLine2: "",
     addressLine3: "",
-    landline: "",
+    //landline: "",
     mobile: "",
     email: "",
     qualifications: "",
@@ -102,7 +102,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       addressLine1: "",
       addressLine2: "",
       addressLine3: "",
-      landline: "",
+      //landline: "",
       mobile: "",
       email: "",
       qualifications: "",
@@ -154,8 +154,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
       formErrors.email = "Email format is invalid.";
 
-    if (formData.landline && !/^\d+$/.test(formData.landline))
-      formErrors.landline = "Landline number must be numeric.";
+    /* if (formData.landline && !/^\d+$/.test(formData.landline))
+      formErrors.landline = "Landline number must be numeric."; */
     if (!formData.bloodGroup)
       formErrors.bloodGroup = "Blood Group is required.";
 

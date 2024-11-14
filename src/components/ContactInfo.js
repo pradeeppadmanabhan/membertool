@@ -37,14 +37,14 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
         <span className="error">{errors.addressLine3}</span>
       )}
       <br />
-      <label>Landline:</label>
+      {/* <label>Landline:</label>
       <input
         type="text"
         name="landline"
         value={formData.landline}
         onChange={handleChange}
       />
-      {errors.landline && <span className="error">{errors.landline}</span>}
+      {errors.landline && <span className="error">{errors.landline}</span>} */}
       <br />
       <label>Mobile*:</label>
       <input
@@ -55,7 +55,7 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
       />
       {errors.mobile && <span className="error">{errors.mobile}</span>}
       <br />
-      <label>E-mail ID*:</label>
+      <label>E-mail ID* (Use Gmail ID only):</label>
       <input
         type="email"
         name="email"
