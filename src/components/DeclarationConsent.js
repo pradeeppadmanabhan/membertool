@@ -1,7 +1,13 @@
 import React from "react";
 import Header from "./Header";
 
-const DeclarationConsent = ({ formData, errors, setFormData }) => {
+const DeclarationConsent = ({
+  formData,
+  errors,
+  setFormData,
+  setErrors,
+  setStatusMessage,
+}) => {
   return (
     <div>
       <Header /> {/* Render the Header component */}
@@ -61,7 +67,11 @@ const DeclarationConsent = ({ formData, errors, setFormData }) => {
             name="consent"
             value="accept"
             checked={formData.consent === true}
-            onChange={() => setFormData({ ...formData, consent: true })}
+            onChange={() => {
+              setFormData({ ...formData, consent: true });
+              setErrors({ ...errors, consent: "" });
+              setStatusMessage("");
+            }}
           />
           I Accept
         </label>
@@ -71,7 +81,11 @@ const DeclarationConsent = ({ formData, errors, setFormData }) => {
             name="consent"
             value="decline"
             checked={formData.consent === false}
-            onChange={() => setFormData({ ...formData, consent: false })}
+            onChange={() => {
+              setFormData({ ...formData, consent: false });
+              setErrors({ ...errors, consent: "" });
+              setStatusMessage("");
+            }}
           />
           I Decline
         </label>

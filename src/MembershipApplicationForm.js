@@ -68,46 +68,14 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const [errors, setErrors] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isValidated, setIsValidated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [generatedMemberId, setGeneratedMemberId] = useState(null);
   const functions = getFunctions();
   const generateMemberId = httpsCallable(functions, "generateMemberId");
 
   // Reference to the ImageUploader component
   const imageUploaderRef = useRef(null);
-
-  const validate = () => {
-    //console.log("Validating form data:", formData);
-    let newErrors = {};
-    if (!formData.memberName) newErrors.memberName = "Name is required.";
-    if (!formData.dob) newErrors.dob = "Date of Birth is required.";
-    if (!formData.age || formData.age <= 0)
-      newErrors.age = "Age must be a positive number.";
-    if (!formData.gender) newErrors.gender = "Gender is required.";
-    if (!formData.fatherGuardianName)
-      newErrors.fatherGuardianName = "Father/Guardian Name is required.";
-    if (!formData.addressLine1)
-      newErrors.addressLine1 = "Address Line 1 is required.";
-    if (!formData.addressLine2)
-      newErrors.addressLine2 = "Address Line 2 is required.";
-    if (!formData.addressLine3)
-      newErrors.addressLine3 = "Address Line 3 is required.";
-    if (!formData.mobile) {
-      newErrors.mobile = "Mobile is required.";
-    }
-    if (formData.mobile && !/^\d{10}$/.test(formData.mobile))
-      newErrors.mobile = "Mobile number must be 10 digits.";
-
-    if (!formData.email) newErrors.email = "Email is required.";
-    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = "Email format is invalid.";
-
-    if (formData.landline && !/^\d+$/.test(formData.landline))
-      newErrors.landline = "Landline number must be numeric.";
-    if (!formData.bloodGroup) newErrors.bloodGroup = "Blood Group is required.";
-
-    return newErrors;
-  };
 
   const resetImageUploader = () => {
     if (imageUploaderRef.current) {
@@ -157,121 +125,174 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     resetImageUploader();
     setErrors({});
     setStatusMessage("");
+    setIsValidated(false);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const validateForm = () => {
+    let formErrors = {};
+    if (!formData.consent) formErrors.consent = "Consent is required.";
+    if (!formData.memberName) formErrors.memberName = "Name is required.";
+    if (!formData.dob) formErrors.dob = "Date of Birth is required.";
+    if (!formData.age || formData.age <= 0)
+      formErrors.age = "Age must be a positive number.";
+    if (!formData.gender) formErrors.gender = "Gender is required.";
+    if (!formData.fatherGuardianName)
+      formErrors.fatherGuardianName = "Father/Guardian Name is required.";
+    if (!formData.addressLine1)
+      formErrors.addressLine1 = "Address Line 1 is required.";
+    if (!formData.addressLine2)
+      formErrors.addressLine2 = "Address Line 2 is required.";
+    if (!formData.addressLine3)
+      formErrors.addressLine3 = "Address Line 3 is required.";
+    if (!formData.mobile) {
+      formErrors.mobile = "Mobile is required.";
+    }
+    if (formData.mobile && !/^\d{10}$/.test(formData.mobile))
+      formErrors.mobile = "Mobile number must be 10 digits.";
 
-    // 1. Validation
-    //console.log("handleSubmit - Form data:", formData);
-    const validationErrors = validate();
-    setErrors(validationErrors); //update errors state immediately
+    if (!formData.email) formErrors.email = "Email is required.";
+    if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
+      formErrors.email = "Email format is invalid.";
 
-    if (Object.keys(validationErrors).length > 0) {
-      console.error("Validation errors:", validationErrors);
-      //Don't submit if there are errors
-      // 1. Create a String of Errors
-      const errorMessages = Object.values(validationErrors).join("<br />"); // Join with line breaks
+    if (formData.landline && !/^\d+$/.test(formData.landline))
+      formErrors.landline = "Landline number must be numeric.";
+    if (!formData.bloodGroup)
+      formErrors.bloodGroup = "Blood Group is required.";
 
-      // 2. Display the Combined Errors
+    return formErrors;
+  };
+
+  const validateImage = () => {
+    let imageErrors = {};
+
+    if (!selectedImage) {
+      imageErrors.imageURL = "Please upload a passport size photo.";
+    } else {
+      // Image type validation (example: allow only JPEG and PNG)
+      const allowedTypes = ["image/jpeg", "image/png"];
+      if (!allowedTypes.includes(selectedImage.type)) {
+        imageErrors.imageURL = "Only JPEG and PNG images are allowed.";
+      }
+
+      // Image size validation (example: maximum 2MB)
+      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+      if (selectedImage.size > maxSizeInBytes) {
+        imageErrors.imageURL = "Image size must be less than 2MB.";
+      }
+    }
+
+    return imageErrors;
+  };
+
+  const handleValidate = () => {
+    const formErrors = validateForm();
+    const imageErrors = validateImage();
+    setErrors({ ...formErrors, ...imageErrors });
+
+    if (
+      Object.keys(formErrors).length === 0 &&
+      Object.keys(imageErrors).length === 0
+    ) {
+      // All validations passed
+      setIsValidated(true);
+      setStatusMessage("Form is valid!, please Submit");
+    } else {
       setStatusMessage(
         <React.Fragment>
           <b>Please fix the errors before submitting:</b>
           <br />
-          {errorMessages.split("<br />").map((message, index) => (
-            <React.Fragment key={index}>
-              {message}
-              <br />
-            </React.Fragment>
-          ))}
+          {Object.values({ ...formErrors, ...imageErrors }).map(
+            (message, index) => (
+              <React.Fragment key={index}>
+                {message}
+                <br />
+              </React.Fragment>
+            )
+          )}
         </React.Fragment>
       );
-      return;
+      setIsValidated(false);
     }
+  };
 
-    // 2. Generate Member ID
-    if (!generatedMemberId) {
-      try {
-        const { data } = await generateMemberId({
-          membershipType: formData.membershipType,
-        });
-        setGeneratedMemberId(data.memberId);
-        console.log("Generated Member ID:", generatedMemberId);
-      } catch (error) {
-        console.error("Error generating member ID:", error);
-        return;
-        // Handle error appropriately (e.g., set a default ID or show an error message)
-      }
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-    // 3. Consent Check
-    if (!formData.consent) {
-      setErrors({ consent: "Consent is required." }); // Show error if not accepted
-      return;
-    }
-
-    //4. Upload Image (if selected)
-    let uploadedImageUrl = null;
-    if (selectedImage) {
-      try {
-        const imagePath = `images/${generatedMemberId}/${selectedImage.name}`;
-        const storageReference = storageRef(storage, imagePath);
-        const snapshot = await uploadBytes(storageReference, selectedImage);
-        uploadedImageUrl = await getDownloadURL(snapshot.ref);
-        //console.log("Uploaded Image URL:", uploadedImageUrl);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-      }
-    }
-    // Image validation
-    if (!uploadedImageUrl) {
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        imageURL: "Please upload a passport size photo.",
-      }));
-      return; // Don't submit if image upload failed
-    }
-
-    // 5. Submit Data to Firebase
     try {
-      // Add the data to Firestore
-      console.log("Submitting Member ID:", generatedMemberId);
-      const userData = {
-        ...formData,
-        id: generatedMemberId,
-        imageURL: uploadedImageUrl,
-        dateOfSubmission: new Date().toISOString(), // Add current date
-      };
-      //console.log("Submitting data...", userData);
-      //await addDoc(collection(database, "users"), userData);
-      /*TODO: Update the JSON Packaging before uploading to DB.*/
-      const userRef = ref(database, `users/${generatedMemberId}`); // Use formData.key for the database reference
-      await set(userRef, userData); // Set the user data
-      console.log("Data submitted successfully!");
-      setStatusMessage("Application submitted successfully!");
+      // 1. Generate Member ID
 
-      // Delay clearing the form to allow the user to see the success message
-      setTimeout(() => {
-        handleClear(); // Clear the form after a short delay
-      }, STATUS_TIMEOUT); // Adjust the delay (in milliseconds) as needed
-    } catch (error) {
-      console.error("Error submitting application: ", error);
-      // Improved Error Handling:
-      let errorMessage = "Error submitting application. Please try again.";
+      const { data } = await generateMemberId({
+        membershipType: formData.membershipType,
+      });
+      const newMemberId = data.memberId;
 
-      // Check for common Firebase errors and provide specific messages
-      if (error.code === "permission-denied") {
-        errorMessage =
-          "Permission denied to write to the database. Please contact the administrator.";
-      } else if (error.code === "unavailable") {
-        errorMessage =
-          "Database is temporarily unavailable. Please try again later.";
-      } else if (error.message) {
-        // If Firebase provides a message, use it, but consider sanitizing for user-friendliness
-        errorMessage = `Error: ${error.message}`;
+      //console.log("Generated Member ID:", newMemberId);
+
+      // 2. Upload Image (if selected)
+      let uploadedImageUrl = null;
+      if (selectedImage) {
+        try {
+          const imagePath = `images/${newMemberId}/${selectedImage.name}`;
+          const storageReference = storageRef(storage, imagePath);
+          const snapshot = await uploadBytes(storageReference, selectedImage);
+          uploadedImageUrl = await getDownloadURL(snapshot.ref);
+          //console.log("Uploaded Image URL:", uploadedImageUrl);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          // Handle upload error (e.g., show an error message)
+          setIsSubmitting(false); // Reset submitting state if image upload fails
+          return;
+        }
       }
 
-      setStatusMessage(errorMessage);
+      // 4. Submit Data to Firebase
+      try {
+        const userData = {
+          ...formData,
+          id: newMemberId,
+          imageURL: uploadedImageUrl,
+          dateOfSubmission: new Date().toISOString(),
+        };
+
+        //console.log("Submitting to id:", newMemberId);
+
+        const userRef = ref(database, `users/${newMemberId}`);
+        await set(userRef, userData);
+
+        console.log("Data submitted successfully!");
+        setStatusMessage("Application submitted successfully!");
+
+        // Delay clearing the form
+        setTimeout(() => {
+          handleClear();
+          resetImageUploader();
+        }, STATUS_TIMEOUT);
+      } catch (error) {
+        // ... (Error handling for database submission)
+        console.error("Error submitting application: ", error);
+        // Improved Error Handling:
+        let errorMessage = "Error submitting application. Please try again.";
+
+        // Check for common Firebase errors and provide specific messages
+        if (error.code === "permission-denied") {
+          errorMessage =
+            "Permission denied to write to the database. Please contact the administrator.";
+        } else if (error.code === "unavailable") {
+          errorMessage =
+            "Database is temporarily unavailable. Please try again later.";
+        } else if (error.message) {
+          // If Firebase provides a message, use it, but consider sanitizing for user-friendliness
+          errorMessage = `Error: ${error.message}`;
+        }
+
+        setStatusMessage(errorMessage);
+      }
+    } catch (error) {
+      // ... (Error handling for generateMemberId)
+      console.error("Error generating member ID:", error);
+    } finally {
+      setIsSubmitting(false); // Reset submitting state after all operations
     }
   };
 
@@ -282,6 +303,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         formData={formData}
         errors={errors}
         setFormData={setFormData}
+        setErrors={setErrors}
+        setStatusMessage={setStatusMessage}
       />
       <br />
       {/* Personal Information */}
@@ -318,8 +341,13 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       {errors.imageURL && <span className="error">{errors.imageURL}</span>}{" "}
       {/* Display image upload error */}
       <br />
-      <button type="submit" disabled={!formData.consent}>
-        Submit
+      <button type="button" onClick={handleValidate}>
+        Validate Form
+      </button>
+      <br />
+      <br />
+      <button type="submit" disabled={!isValidated || isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit"}
       </button>
       <button type="button" onClick={handleClear}>
         Clear
