@@ -2,15 +2,13 @@ import React, { useState, useEffect } from "react";
 import { database } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import { Link } from "react-router-dom"; // Import Link
-import DatePicker from "react-datepicker"; // Import the date picker
-import "react-datepicker/dist/react-datepicker.css";
 import "../global.css"; // Import your CSS file
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
   const [filterType, setFilterType] = useState("all"); // Filter by type
-  const [startDate, setStartDate] = useState(null); // State for start date
-  const [endDate, setEndDate] = useState(null); // State for end date
+  const [startDate, setStartDate] = useState(""); // State for start date
+  const [endDate, setEndDate] = useState(""); // State for end date
 
   const [sortConfig, setSortConfig] = useState({
     key: "dateOfSubmission",
@@ -44,9 +42,14 @@ const ApplicationsList = () => {
   const filteredApplications = applications.filter((application) => {
     if (startDate && endDate) {
       // Check if dates are selected
+      //console.log(startDate, endDate);
       const submissionDate = new Date(application.dateOfSubmission);
+      const filterStartDate = new Date(startDate);
+      const filterEndDate = new Date(endDate);
+      filterEndDate.setHours(23, 59, 59, 999);
+
       const matchesDateRange =
-        submissionDate >= startDate && submissionDate <= endDate;
+        submissionDate >= filterStartDate && submissionDate <= filterEndDate;
 
       if (!matchesDateRange) {
         return false; // Exclude if outside the date range

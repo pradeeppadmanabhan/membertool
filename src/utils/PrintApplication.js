@@ -31,7 +31,7 @@ const PrintApplication = (applicationData) => {
   } */
 
   // 3. Table Creation (same as before)
-  const tableColumnWidths = [40, 80];
+  const tableColumnWidths = [80, 80];
   const tableRows = [
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
@@ -57,8 +57,15 @@ const PrintApplication = (applicationData) => {
     ["Present General Health:", applicationData.generalHealth || "N/A"],
     ["Blood Group:", applicationData.bloodGroup || "N/A"],
     ["Membership Type:", applicationData.membershipType || "N/A"],
-    ["Recommended By -Name:", applicationData.recommendedByName || "N/A"],
-    ["Recommended By -ID:", applicationData.recommendedByID || "N/A"],
+    ["Payment Transaction No:", "<Transaction No>"],
+    ["Receipt No: / Date: ", "<Receipt No> / <Date>"],
+    [
+      "Recommended By:",
+      applicationData.recommendedByName ||
+        "N/A" + applicationData.recommendedByID ||
+        "N/A",
+    ],
+    //["Recommended By -ID:", applicationData.recommendedByID || "N/A"],
     // ... add other fields in the same format ...
   ];
 
@@ -72,8 +79,8 @@ const PrintApplication = (applicationData) => {
       1: { cellWidth: tableColumnWidths[1] },
     },
     styles: {
-      fontSize: 10,
-      cellPadding: 4,
+      fontSize: 9,
+      cellPadding: 3,
     },
   });
 
