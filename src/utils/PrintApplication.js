@@ -3,6 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import "../global.css";
 import { addHeaderToPDF } from "./PDFHeader";
+import { addDeclarationToPDF } from "./PDFDeclaration";
 
 const PrintApplication = (applicationData) => {
   const doc = new jsPDF();
@@ -11,6 +12,7 @@ const PrintApplication = (applicationData) => {
   }); // Apply the plugin
 
   let yPos = addHeaderToPDF(doc);
+  yPos = addDeclarationToPDF(doc, yPos);
 
   /* // Add the member image to the right side
   const pageWidth = doc.internal.pageSize.getWidth();

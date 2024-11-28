@@ -28,10 +28,10 @@ const DeclarationConsent = ({
         Dear Sir / Madam,
         <br />
         I hereby apply for Membership of your Association, subscribing to the
-        DECLARATION below and furnishing my particulars overleaf which are true
-        to the best of my knowledge and belief.
-        <br />I am interested in Mountaineering and undertake to abide by the
-        Rules and Regulations and as per the by laws / memorandum of the
+        DECLARATION below and furnish my particulars overleaf which are true to
+        the best of my knowledge and belief.
+        <br />I am interested in Mountaineering & related activities and
+        undertake to abide by the Rules and Regulations and as by laws of the
         Association.{" "}
         <b>I provide my consent by "accepting" this declaration.</b>
         <br />
@@ -40,11 +40,12 @@ const DeclarationConsent = ({
         <br />
         <br />
         I, as Member of the above Association hereby undertake to absolve the
-        Association, its Office bearers and any other person, or persons acting
-        on its behalf, of any disability or calamity to my person due to any
-        accident during the outings, expeditions, training and other activities
-        held under the auspices of the Association. I undertake and sign this
-        declaration will fully and with all my senses under control.
+        Association, its Office bearers, members of the Executive Committee and
+        any other person, or persons acting on its behalf, of any disability or
+        calamity to my person due to any accident during the outings,
+        expeditions, training and other activities held under the auspices of
+        the Association. I undertake and sign this declaration willfully and
+        with all my senses under control.
         <br />
         <br />I hope you will kindly accept my membership.
         {/* <br />
