@@ -1,5 +1,5 @@
 // src/MembershipApplicationForm.js
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set } from "firebase/database"; // Import necessary functions - , push
 import {
@@ -55,9 +55,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
     // New fields with initial values
     applicationStatus: "Submitted", // Default status on submission
-    approvedBy: null,
     dateOfSubmission: new Date().toISOString(), // Set on form submission
-    dateOfApproval: null,
     dateOfPayment: null,
     renewalDueOn: null,
     transactionDetail: null,
@@ -68,26 +66,63 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const [errors, setErrors] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [isValidated, setIsValidated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const functions = getFunctions();
   const generateMemberId = httpsCallable(functions, "generateMemberId");
 
-  // Reference to the ImageUploader component
-  const imageUploaderRef = useRef(null);
-
-  const resetImageUploader = () => {
-    if (imageUploaderRef.current) {
-      imageUploaderRef.current.resetUploader(); // Call the reset function on ImageUploader
-    }
-  };
+  useEffect(() => {
+    const fetchMemberID = async () => {
+      try {
+        const { data } = await generateMemberId({
+          membershipType: initialMembershipType,
+        });
+        console.log("MemberID generated successfully:", data.memberId);
+        setFormData((prev) => ({ ...prev, id: data.memberId }));
+      } catch (error) {
+        console.error("Error generating member ID:", error);
+      }
+    };
+    fetchMemberID();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: "" });
     setStatusMessage(""); // Clear the status message
+  };
+
+  const handleBlur = (e) => {
+    //const { name, value } = e.target;
+    const enteredDate = new Date(e.target.value);
+    const today = new Date();
+    const minDate = new Date("1900-01-01");
+
+    if (isNaN(enteredDate) || enteredDate > today || enteredDate < minDate) {
+      setFormData({ ...formData, dob: "" });
+      setErrors({
+        ...errors,
+        dob: "Date of Birth cannot be invalid or in the future",
+      });
+      setStatusMessage("Date of Birth cannot be invalid or in the future");
+    }
+  };
+
+  const calculateAge = (dob) => {
+    const today = new Date();
+    const birthDate = new Date(dob);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDate.getDate())
+    ) {
+      age--;
+    }
+    //console.log("Calculated Age:", age, " years");
+    return age;
   };
 
   const handleClear = () => {
@@ -102,7 +137,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       addressLine1: "",
       addressLine2: "",
       addressLine3: "",
-      //landline: "",
       mobile: "",
       email: "",
       qualifications: "",
@@ -122,10 +156,9 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       // Keep any ID or default fields as they are
     }));
     // Clear the uploaded image in ImageUploader
-    resetImageUploader();
+    setSelectedImage(null);
     setErrors({});
     setStatusMessage("");
-    setIsValidated(false);
   };
 
   const validateForm = () => {
@@ -133,8 +166,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (!formData.consent) formErrors.consent = "Consent is required.";
     if (!formData.memberName) formErrors.memberName = "Name is required.";
     if (!formData.dob) formErrors.dob = "Date of Birth is required.";
-    if (!formData.age || formData.age <= 0)
-      formErrors.age = "Age must be a positive number.";
     if (!formData.gender) formErrors.gender = "Gender is required.";
     if (!formData.fatherGuardianName)
       formErrors.fatherGuardianName = "Father/Guardian Name is required.";
@@ -169,9 +200,9 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       imageErrors.imageURL = "Please upload a passport size photo.";
     } else {
       // Image type validation (example: allow only JPEG and PNG)
-      const allowedTypes = ["image/jpeg", "image/png"];
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(selectedImage.type)) {
-        imageErrors.imageURL = "Only JPEG and PNG images are allowed.";
+        imageErrors.imageURL = "Only JPEG/JPG and PNG images are allowed.";
       }
 
       // Image size validation (example: maximum 2MB)
@@ -189,14 +220,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     const imageErrors = validateImage();
     setErrors({ ...formErrors, ...imageErrors });
 
-    if (
-      Object.keys(formErrors).length === 0 &&
-      Object.keys(imageErrors).length === 0
-    ) {
-      // All validations passed
-      setIsValidated(true);
-      setStatusMessage("Form is valid!, please Submit");
-    } else {
+    // Check for errors only once
+    if (Object.keys({ ...formErrors, ...imageErrors }).length > 0) {
       setStatusMessage(
         <React.Fragment>
           <b>Please fix the errors before submitting:</b>
@@ -211,7 +236,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           )}
         </React.Fragment>
       );
-      setIsValidated(false);
     }
   };
 
@@ -219,32 +243,44 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    handleValidate();
+
+    if (Object.keys(errors).length > 0) {
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // 1. Generate Member ID
-
-      const { data } = await generateMemberId({
-        membershipType: formData.membershipType,
-      });
-      const newMemberId = data.memberId;
-
       //console.log("Generated Member ID:", newMemberId);
+      const newMemberId = formData.id;
 
       // 2. Upload Image (if selected)
       let uploadedImageUrl = null;
       if (selectedImage) {
-        try {
-          const imagePath = `images/${newMemberId}/${selectedImage.name}`;
-          const storageReference = storageRef(storage, imagePath);
-          const snapshot = await uploadBytes(storageReference, selectedImage);
-          uploadedImageUrl = await getDownloadURL(snapshot.ref);
-          //console.log("Uploaded Image URL:", uploadedImageUrl);
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          // Handle upload error (e.g., show an error message)
-          setIsSubmitting(false); // Reset submitting state if image upload fails
-          return;
+        if (newMemberId) {
+          try {
+            const imagePath = `images/${newMemberId}/${selectedImage.name}`;
+            const storageReference = storageRef(storage, imagePath);
+            const snapshot = await uploadBytes(storageReference, selectedImage);
+            uploadedImageUrl = await getDownloadURL(snapshot.ref);
+            console.log("Uploaded Image URL:", uploadedImageUrl);
+          } catch (error) {
+            console.error("Error uploading image:", error);
+            // Handle upload error (e.g., show an error message)
+            setIsSubmitting(false); // Reset submitting state if image upload fails
+            return;
+          }
+        } else {
+          console.log("Member ID not generated yet, unable to upload image.");
+          console.error("Member ID not generated yet, unable to upload image.");
+          setStatusMessage(
+            "Member ID not generated yet, unable to upload image."
+          );
         }
       }
+
+      const age = calculateAge(formData.dob);
+      setFormData({ ...formData, age });
 
       // 4. Submit Data to Firebase
       try {
@@ -266,7 +302,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         // Delay clearing the form
         setTimeout(() => {
           handleClear();
-          resetImageUploader();
         }, STATUS_TIMEOUT);
       } catch (error) {
         // ... (Error handling for database submission)
@@ -312,6 +347,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         formData={formData}
         errors={errors}
         handleChange={handleChange}
+        handleBlur={handleBlur}
       />
       <br />
       {/* Contact Information */}
@@ -337,16 +373,15 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       <br />
       {/* Image Uploader */}
       <label>Upload Passport Size Photo*</label>
-      <ImageUploader onImageSelect={setSelectedImage} />
+      <ImageUploader
+        onImageSelect={setSelectedImage}
+        selectedImage={selectedImage}
+      />
       {errors.imageURL && <span className="error">{errors.imageURL}</span>}{" "}
       {/* Display image upload error */}
       <br />
-      <button type="button" onClick={handleValidate}>
-        Validate Form
-      </button>
       <br />
-      <br />
-      <button type="submit" disabled={!isValidated || isSubmitting}>
+      <button type="submit" disabled={!formData.consent || isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit"}
       </button>
       <button type="button" onClick={handleClear}>

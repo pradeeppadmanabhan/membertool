@@ -1,6 +1,6 @@
 import React from "react";
 
-const PersonalInfo = ({ formData, errors, handleChange }) => {
+const PersonalInfo = ({ formData, errors, handleChange, handleBlur }) => {
   return (
     <div>
       <label>Applicant's Full Name*:</label>
@@ -18,18 +18,11 @@ const PersonalInfo = ({ formData, errors, handleChange }) => {
         name="dob"
         value={formData.dob}
         onChange={handleChange}
+        onBlur={handleBlur}
       />
       {errors.dob && <span className="error">{errors.dob}</span>}
       <br />
-      <label>Age*:</label>
-      <input
-        type="number"
-        name="age"
-        value={formData.age}
-        onChange={handleChange}
-      />
-      {errors.age && <span className="error">{errors.age}</span>}
-      <br />
+
       <label>Gender*:</label>
       <div className="radio-group">
         <label>
