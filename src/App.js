@@ -16,6 +16,9 @@ import ProtectedRoute from "./ProtectedRoute.js";
 import { useContext } from "react";
 import AuthContext from "./AuthContext.js";
 import LoginPage from "./LoginPage.js";
+import PaymentDetails from "./components/PaymentDetails.js";
+//import WelcomePage from "./WelcomePage.js";
+//import ThankYouPage from "./ThankYouPage.js";
 
 function App() {
   const { user, signInWithGoogle, logout } = useContext(AuthContext);
@@ -67,6 +70,12 @@ function App() {
               <MembershipApplicationForm initialMembershipType="Annual" />
             }
           />
+          {/* <Route path="/" element={<WelcomePage />} /> */}
+          <Route
+            path="/payment-details/:memberID/:membershipType"
+            element={<PaymentDetails />}
+          />
+          {/* <Route path="/thank-you" element={<ThankYouPage />} /> */}
           <Route
             path="/new-application"
             element={

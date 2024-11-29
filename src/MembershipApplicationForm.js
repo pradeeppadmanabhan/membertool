@@ -1,5 +1,6 @@
 // src/MembershipApplicationForm.js
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set } from "firebase/database"; // Import necessary functions - , push
 import {
@@ -20,6 +21,8 @@ import { getFunctions, httpsCallable } from "firebase/functions";
 const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
+  const navigate = useNavigate();
+
   // Prop Validation using PropTypes
   MembershipApplicationForm.propTypes = {
     initialMembershipType: PropTypes.oneOf(["Annual", "Life", "Honorary"])
@@ -35,7 +38,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     addressLine1: "",
     addressLine2: "",
     addressLine3: "",
-    //landline: "",
     mobile: "",
     email: "",
     qualifications: "",
@@ -47,7 +49,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     generalHealth: "",
     bloodGroup: "",
     membershipType: initialMembershipType, // Default value - Annual
-    paymentTransactionNumber: "",
     recommendedByName: "",
     recommendedByID: "",
     imageURL: "", // New field for image URL
@@ -302,6 +303,9 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         // Delay clearing the form
         setTimeout(() => {
           handleClear();
+          navigate(
+            `/payment-details/${newMemberId}/${formData.membershipType}`
+          );
         }, STATUS_TIMEOUT);
       } catch (error) {
         // ... (Error handling for database submission)
