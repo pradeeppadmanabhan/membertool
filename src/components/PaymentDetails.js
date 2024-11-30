@@ -9,6 +9,8 @@ import {
 } from "firebase/storage";
 import { ref, update } from "firebase/database";
 import { database, storage } from "../firebase";
+import "../global.css";
+import ImageUploader from "./ImageUploader";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
@@ -44,8 +46,10 @@ const PaymentDetails = () => {
     setErrors((prev) => ({ ...prev, paymentMode: "" }));
   };
 
-  const handleFileSelect = (e) => {
-    const file = e.target.files[0];
+  const handleFileSelect = (file) => {
+    //const file = e.target.files[0];
+    setPaymentData((prev) => ({ ...prev, transactionScreenshot: file }));
+    //console.log("file :", file);
     if (file) {
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(file.type)) {
@@ -60,7 +64,6 @@ const PaymentDetails = () => {
         }));
       } else {
         setErrors((prev) => ({ ...prev, transactionScreenshot: "" }));
-        setPaymentData((prev) => ({ ...prev, transactionScreenshot: file }));
       }
     }
   };
@@ -124,6 +127,7 @@ const PaymentDetails = () => {
         amount: paymentData.amount,
         dateOfPayment: new Date().toISOString(),
         applicationStatus: "Paid",
+        membershipType: membershipType,
       });
 
       setStatusMessage("Payment details submitted successfully!");
@@ -140,12 +144,15 @@ const PaymentDetails = () => {
     <form onSubmit={handleSubmit}>
       <h2>Payment Details</h2>
 
-      <p>Member ID: {memberID}</p>
+      <p>
+        Member ID: <b>{memberID}</b>
+      </p>
       <p>Membership Type: {membershipType}</p>
       <p>Please Pay: Rs.{paymentData.amount}</p>
       <label>
         Payment Mode:
         <select
+          className="filter-select"
           value={paymentData.paymentMode}
           onChange={handlePaymentModeChange}
         >
@@ -166,6 +173,20 @@ const PaymentDetails = () => {
       )}
       {paymentData.paymentMode === "Bank Transfer" && (
         <>
+          <p>
+            Please make a bank transfer to the following Account and share
+            details:
+            <br />
+            <br />
+            <b>The Karnataka Mountaineering Association</b>
+            <br />
+            Account No 520101235072644
+            <br />
+            Union Bank of India, Nrupatunga Road Branch, Bengaluru
+            <br />
+            IFSC / NEFT – UBIN0901750
+            <br />
+          </p>
           <label>
             Transaction Reference Number:
             <input
@@ -185,10 +206,9 @@ const PaymentDetails = () => {
           <br />
           <label>
             Upload Transaction Screenshot:
-            <input
-              type="file"
-              accept="image/jpeg, image/jpg, image/png"
-              onChange={handleFileSelect}
+            <ImageUploader
+              onImageSelect={handleFileSelect}
+              selectedImage={paymentData.transactionScreenshot}
             />
           </label>
           {errors.transactionScreenshot && (
