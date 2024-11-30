@@ -17,8 +17,8 @@ import { useContext } from "react";
 import AuthContext from "./AuthContext.js";
 import LoginPage from "./LoginPage.js";
 import PaymentDetails from "./components/PaymentDetails.js";
-//import WelcomePage from "./WelcomePage.js";
-//import ThankYouPage from "./ThankYouPage.js";
+import WelcomePage from "./WelcomePage.js";
+import ThankYouPage from "./ThankYouPage.js";
 
 function App() {
   const { user, signInWithGoogle, logout } = useContext(AuthContext);
@@ -64,18 +64,12 @@ function App() {
         </div>
 
         <Routes>
-          <Route
-            path="/"
-            element={
-              <MembershipApplicationForm initialMembershipType="Annual" />
-            }
-          />
-          {/* <Route path="/" element={<WelcomePage />} /> */}
+          <Route path="/" element={<WelcomePage />} />
           <Route
             path="/payment-details/:memberID/:membershipType"
             element={<PaymentDetails />}
           />
-          {/* <Route path="/thank-you" element={<ThankYouPage />} /> */}
+          <Route path="/thank-you" element={<ThankYouPage />} />
           <Route
             path="/new-application"
             element={
@@ -84,12 +78,12 @@ function App() {
           />
           <Route
             path="/new-application/life"
-            element={<MembershipApplicationForm initialMembershipType="life" />}
+            element={<MembershipApplicationForm initialMembershipType="Life" />}
           />
           <Route
             path="/new-application/honorary"
             element={
-              <MembershipApplicationForm initialMembershipType="honorary" />
+              <MembershipApplicationForm initialMembershipType="Honorary" />
             }
           />
           <Route path="/search" element={<DataDisplay />} />

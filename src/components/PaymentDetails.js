@@ -123,10 +123,10 @@ const PaymentDetails = () => {
         transactionScreenshot: uploadedImageUrl,
         amount: paymentData.amount,
         dateOfPayment: new Date().toISOString(),
+        applicationStatus: "Paid",
       });
 
       setStatusMessage("Payment details submitted successfully!");
-      //setTimeout(() => navigate("/success"), 3000); // Navigate to a success page
       navigate("/thank-you");
     } catch (error) {
       console.error("Error updating payment details:", error);
@@ -159,6 +159,11 @@ const PaymentDetails = () => {
       )}
       <br />
 
+      {paymentData.paymentMode === "Cash" && (
+        <>
+          <p> Please pay cash to the treasurer and get a receipt. </p>
+        </>
+      )}
       {paymentData.paymentMode === "Bank Transfer" && (
         <>
           <label>

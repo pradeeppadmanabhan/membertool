@@ -281,7 +281,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       }
 
       const age = calculateAge(formData.dob);
-      setFormData({ ...formData, age });
+      //setFormData({ ...formData, age });
 
       // 4. Submit Data to Firebase
       try {
@@ -290,6 +290,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           id: newMemberId,
           imageURL: uploadedImageUrl,
           dateOfSubmission: new Date().toISOString(),
+          age: age,
         };
 
         //console.log("Submitting to id:", newMemberId);
