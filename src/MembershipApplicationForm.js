@@ -18,7 +18,7 @@ import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
 import { getFunctions, httpsCallable } from "firebase/functions";
 
-const STATUS_TIMEOUT = 10000; // 10 seconds in milliseconds
+const STATUS_TIMEOUT = 2000; // 10 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const navigate = useNavigate();
@@ -305,7 +305,12 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setTimeout(() => {
           handleClear();
           navigate(
-            `/payment-details/${newMemberId}/${formData.membershipType}`
+            `/payment-details/${newMemberId}/${formData.membershipType}`,
+            {
+              state: {
+                memberData: { ...formData, imageURL: uploadedImageUrl },
+              },
+            }
           );
         }, STATUS_TIMEOUT);
       } catch (error) {

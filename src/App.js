@@ -69,7 +69,10 @@ function App() {
             path="/payment-details/:memberID/:membershipType"
             element={<PaymentDetails />}
           />
-          <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route
+            path="/thank-you/:receiptNumber/:memberID"
+            element={<ThankYouPage />}
+          />
           <Route
             path="/new-application"
             element={

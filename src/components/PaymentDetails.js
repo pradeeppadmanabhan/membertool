@@ -1,5 +1,5 @@
 // src/components/PaymentDetails.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -7,15 +7,19 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "firebase/storage";
-import { ref, update } from "firebase/database";
+import { ref, get, update, runTransaction } from "firebase/database";
 import { database, storage } from "../firebase";
 import "../global.css";
 import ImageUploader from "./ImageUploader";
+import { useLocation } from "react-router-dom";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
   const { memberID, membershipType } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  //const { memberData } = location.state || {};
+  const [memberData, setMemberData] = useState(location.state?.memberData);
 
   const [paymentData, setPaymentData] = useState({
     paymentMode: "",
@@ -28,6 +32,31 @@ const PaymentDetails = () => {
   const [statusMessage, setStatusMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    // Fetch data when the component mounts
+    const fetchMemberData = async () => {
+      try {
+        const memberRef = ref(database, `users/${memberID}`);
+        const snapshot = await get(memberRef);
+        if (snapshot.exists()) {
+          setMemberData(snapshot.val());
+        } else {
+          // Handle case where member data is not found
+          console.error("Member data not found for ID:", memberID);
+          // Consider setting an error state or redirecting
+        }
+      } catch (error) {
+        console.error("Error fetching member data:", error);
+        // Handle error appropriately
+      }
+    };
+
+    if (memberID) {
+      // Only fetch if memberID is available
+      fetchMemberData();
+    }
+  }, [memberID]); // Run the effect whenever memberID changes
+
   //console.log("memberId:", memberID, "membershipType:", membershipType);
   if (!memberID || !membershipType) {
     return (
@@ -36,6 +65,43 @@ const PaymentDetails = () => {
       </div>
     );
   }
+  if (!memberData) {
+    //Conditional rendering before fetching data
+    return (
+      <p> Please wait while we get the information to make your payment </p>
+    );
+  }
+
+  async function generateReceiptNumber(database) {
+    const receiptCounterRef = ref(database, "counters/receipt_counter");
+
+    let receiptNumber = "";
+    try {
+      const result = await runTransaction(receiptCounterRef, (currentCount) => {
+        if (currentCount === null) {
+          currentCount = 1;
+        }
+        if (typeof currentCount !== "number") {
+          currentCount = parseInt(currentCount, 10);
+        }
+        const nextCount = currentCount + 1;
+        return nextCount;
+      });
+
+      if (result.committed) {
+        receiptNumber = "D" + String(result.snapshot.val()).padStart(5, "0");
+        console.log("Receipt Number Generated:", receiptNumber);
+      } else {
+        console.error("Transaction not committed", result.error);
+        throw result.error;
+      }
+    } catch (error) {
+      console.error("Transaction failed:", error);
+      throw error;
+    }
+    return receiptNumber;
+  }
+
   const handlePaymentModeChange = (e) => {
     setPaymentData((prev) => ({
       ...prev,
@@ -100,7 +166,7 @@ const PaymentDetails = () => {
     }
 
     // Upload screenshot if provided
-    let uploadedImageUrl = null;
+    let uploadedScreenshotURL = null;
     if (transactionScreenshot) {
       try {
         const imagePath = `images/${memberID}/${transactionScreenshot.name}`;
@@ -109,13 +175,14 @@ const PaymentDetails = () => {
           storageReference,
           transactionScreenshot
         );
-        uploadedImageUrl = await getDownloadURL(snapshot.ref);
+        uploadedScreenshotURL = await getDownloadURL(snapshot.ref);
       } catch (error) {
         console.error("Error uploading transaction screenshot:", error);
         setStatusMessage("Error uploading screenshot. Please try again.");
         return;
       }
     }
+    const receiptNumber = await generateReceiptNumber(database);
 
     // Update payment details in Firebase
     try {
@@ -123,15 +190,18 @@ const PaymentDetails = () => {
       await update(paymentRef, {
         paymentMode,
         transactionReference,
-        transactionScreenshot: uploadedImageUrl,
+        transactionScreenshot: uploadedScreenshotURL,
         amount: paymentData.amount,
+        receiptNo: receiptNumber,
         dateOfPayment: new Date().toISOString(),
         applicationStatus: "Paid",
         membershipType: membershipType,
       });
 
       setStatusMessage("Payment details submitted successfully!");
-      navigate("/thank-you");
+      navigate(`/thank-you/${receiptNumber}/${memberID}`, {
+        state: { memberData },
+      });
     } catch (error) {
       console.error("Error updating payment details:", error);
       setStatusMessage("Error submitting payment details. Please try again.");
@@ -145,9 +215,9 @@ const PaymentDetails = () => {
       <h2>Payment Details</h2>
 
       <p>
-        Member ID: <b>{memberID}</b>
+        Member ID: <b>{memberData?.memberID}</b>
       </p>
-      <p>Membership Type: {membershipType}</p>
+      <p>Membership Type: {memberData?.membershipType}</p>
       <p>Please Pay: Rs.{paymentData.amount}</p>
       <label>
         Payment Mode:
