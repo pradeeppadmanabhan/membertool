@@ -1,6 +1,7 @@
 import React from "react";
 import "./ThankYouPage.css";
 import { useParams } from "react-router-dom";
+import logo from "./KMALogo.png"; // Import your logo
 /* import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import sendEmail from "./utils/SendEmail";
@@ -71,11 +72,24 @@ const ThankYouPage = () => {
   return (
     <div className="thank-you-page">
       <div className="content">
+        <img
+          src={logo}
+          alt="KMA Logo"
+          className="logo-image"
+          style={{
+            // Inline styles for print layout
+            "@media print": {
+              height: "25px",
+              marginRight: "10px",
+            },
+          }}
+        />
         <h1>Thank You!</h1>
-        <p>Your payment has been successfully processed.</p>
+        <p>Your application & payment have been successfully recorded.</p>
         <p>Your Member ID is: {memberID}</p>
         <p>Your receipt number: {receiptNumber} </p>
         <p>
+          We will review your submission and get back to you shortly via email.
           We look forward to having you as part of the Karnataka Mountaineering
           Association.
         </p>

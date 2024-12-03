@@ -1,5 +1,6 @@
 .thank-you-page {
-  background-image: url("../public/images/mountains-background.jpg");
+  /* background-image: url("../public/images/mountains-background.jpg"); */
+  /* background-color: white; */
   background-size: cover;
   background-position: center;
   height: 100vh;

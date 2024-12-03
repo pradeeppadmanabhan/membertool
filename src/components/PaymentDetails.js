@@ -21,12 +21,19 @@ const PaymentDetails = () => {
   //const { memberData } = location.state || {};
   const [memberData, setMemberData] = useState(location.state?.memberData);
 
+  const ANNUAL_MEMBERSHIP_FEE = 250;
+  const LIFE_MEMBERSHIP_FEE = 2000;
+
   const [paymentData, setPaymentData] = useState({
     paymentMode: "",
     transactionReference: "",
     transactionScreenshot: null,
     amount:
-      membershipType === "Annual" ? 200 : membershipType === "Life" ? 2000 : 0,
+      membershipType === "Annual"
+        ? ANNUAL_MEMBERSHIP_FEE
+        : membershipType === "Life"
+          ? LIFE_MEMBERSHIP_FEE
+          : 0,
   });
   const [errors, setErrors] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
@@ -36,10 +43,12 @@ const PaymentDetails = () => {
     // Fetch data when the component mounts
     const fetchMemberData = async () => {
       try {
+        //console.log("Fetching member data for ", memberID);
         const memberRef = ref(database, `users/${memberID}`);
         const snapshot = await get(memberRef);
         if (snapshot.exists()) {
           setMemberData(snapshot.val());
+          //console.log("Member data fetched successfully:", snapshot.val());
         } else {
           // Handle case where member data is not found
           console.error("Member data not found for ID:", memberID);
@@ -90,7 +99,7 @@ const PaymentDetails = () => {
 
       if (result.committed) {
         receiptNumber = "D" + String(result.snapshot.val()).padStart(5, "0");
-        console.log("Receipt Number Generated:", receiptNumber);
+        //console.log("Receipt Number Generated:", receiptNumber);
       } else {
         console.error("Transaction not committed", result.error);
         throw result.error;
@@ -215,7 +224,7 @@ const PaymentDetails = () => {
       <h2>Payment Details</h2>
 
       <p>
-        Member ID: <b>{memberData?.memberID}</b>
+        Member ID: <b>{memberData?.id}</b>
       </p>
       <p>Membership Type: {memberData?.membershipType}</p>
       <p>Please Pay: Rs.{paymentData.amount}</p>
