@@ -89,7 +89,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
   useEffect(() => {
     if (!user) {
-      console.error("User Unauthennticated, redirecting to Login Page");
+      console.error("User Unauthenticated, redirecting to Login Page");
       navigate("/login");
       return;
     }
