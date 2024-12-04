@@ -86,7 +86,7 @@ const ThankYouPage = () => {
         />
         <h1>Thank You!</h1>
         <p>Your application & payment have been successfully recorded.</p>
-        <p>Your Member ID is: {memberID}</p>
+        <p>Your Provisional Member ID is: {memberID}</p>
         <p>Your receipt number: {receiptNumber} </p>
         <p>
           We will review your submission and get back to you shortly via email.

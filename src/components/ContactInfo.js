@@ -46,7 +46,10 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
       />
       {errors.landline && <span className="error">{errors.landline}</span>} */}
       <br />
-      <label>Mobile*:</label>
+      <label>
+        Mobile* (please provide a Whatsapp enabled number we can use for
+        communication):
+      </label>
       <input
         type="text"
         name="mobile"
@@ -55,11 +58,12 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
       />
       {errors.mobile && <span className="error">{errors.mobile}</span>}
       <br />
-      <label>E-mail ID* (Use Gmail ID only):</label>
+      <label>E-mail ID* :</label>
       <input
         type="email"
         name="email"
         value={formData.email}
+        readOnly
         onChange={handleChange}
       />
       {errors.email && <span className="error">{errors.email}</span>}

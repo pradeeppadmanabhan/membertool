@@ -1,5 +1,5 @@
 // src/MembershipApplicationForm.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set } from "firebase/database"; // Import necessary functions - , push
@@ -17,10 +17,12 @@ import MembershipDetails from "./components/MembershipDetails";
 import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
 import { getFunctions, httpsCallable } from "firebase/functions";
+import AuthContext from "./AuthContext";
 
 const STATUS_TIMEOUT = 2000; // 10 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
+  const { user } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Prop Validation using PropTypes
@@ -30,7 +32,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   };
   const [formData, setFormData] = useState({
     id: null, // Initially set to null
-    memberName: "",
+    memberName: user?.displayName || "",
+    uid: user?.uid || "",
     age: "",
     dob: "",
     gender: "",
@@ -39,7 +42,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     addressLine2: "",
     addressLine3: "",
     mobile: "",
-    email: "",
+    email: user?.email || "",
     qualifications: "",
     profession: "",
     athleticBackground: "",
@@ -72,20 +75,29 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const functions = getFunctions();
   const generateMemberId = httpsCallable(functions, "generateMemberId");
 
+  const fetchMemberID = useCallback(async () => {
+    try {
+      const { data } = await generateMemberId({
+        membershipType: initialMembershipType,
+      });
+      console.log("MemberID generated successfully:", data.memberId);
+      setFormData((prev) => ({ ...prev, id: data.memberId }));
+    } catch (error) {
+      console.error("Error generating member ID:", error);
+    }
+  }, [initialMembershipType, generateMemberId]);
+
   useEffect(() => {
-    const fetchMemberID = async () => {
-      try {
-        const { data } = await generateMemberId({
-          membershipType: initialMembershipType,
-        });
-        console.log("MemberID generated successfully:", data.memberId);
-        setFormData((prev) => ({ ...prev, id: data.memberId }));
-      } catch (error) {
-        console.error("Error generating member ID:", error);
-      }
-    };
+    if (!user) {
+      console.error("User Unauthennticated, redirecting to Login Page");
+      navigate("/login");
+      return;
+    }
+
+    console.log("Generating ID for user: ", user.displayName, user.uid);
+
     fetchMemberID();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    //eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleChange = (e) => {
@@ -306,11 +318,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           handleClear();
           navigate(
             `/payment-details/${newMemberId}/${formData.membershipType}`,
-            {
-              state: {
-                memberData: { ...formData, imageURL: uploadedImageUrl },
-              },
-            }
+            { state: { memberData: userData } }
           );
         }, STATUS_TIMEOUT);
       } catch (error) {
