@@ -18,16 +18,27 @@ const ApplicationsList = () => {
   useEffect(() => {
     const applicationsRef = ref(database, "users");
 
-    onValue(applicationsRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const applicationsArray = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...value,
-        }));
-        setApplications(applicationsArray);
+    onValue(
+      applicationsRef,
+      (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const applicationsArray = Object.entries(data).map(
+            ([key, value]) => ({
+              id: key,
+              ...value,
+            })
+          );
+          setApplications(applicationsArray);
+        } else {
+          console.error("No data found in the database.");
+          setApplications([]);
+        }
+      },
+      (error) => {
+        console.error("Error fetching data:", error);
       }
-    });
+    );
   }, []);
 
   // Sorting Logic

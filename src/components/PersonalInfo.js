@@ -8,6 +8,7 @@ const PersonalInfo = ({ formData, errors, handleChange, handleBlur }) => {
         type="text"
         name="memberName"
         value={formData.memberName}
+        readOnly
         onChange={handleChange}
       />
       {errors.memberName && <span className="error">{errors.memberName}</span>}

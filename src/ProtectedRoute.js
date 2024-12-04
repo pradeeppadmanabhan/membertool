@@ -7,8 +7,8 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
   const { user } = useContext(AuthContext);
   const location = useLocation();
 
-  console.log("User in ProtectedRoute:", user);
-  console.log("Required Roles:", requiredRoles);
+  //console.log("User in ProtectedRoute:", user);
+  //console.log("Required Roles:", requiredRoles);
 
   if (!user) {
     // Redirect to login page if not logged in
