@@ -11,10 +11,10 @@ import ApplicationDetails from "./admin/ApplicationDetails.js"; // Update the pa
 import DataDisplay from "./DataDisplay.js";
 import MembershipApplicationForm from "./MembershipApplicationForm.js";
 import RenewalDueList from "./admin/RenewalDueList";
-import HonoraryMemberInvite from "./admin/HonoraryMemberInvite.js";
+import MemberInvite from "./admin/MemberInvite.js";
 import ProtectedRoute from "./ProtectedRoute.js";
-import { useContext } from "react";
-import AuthContext from "./AuthContext.js";
+import { useContext, useEffect } from "react";
+import AuthContext, { AuthProvider } from "./AuthContext.js";
 import LoginPage from "./LoginPage.js";
 import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
@@ -35,7 +35,7 @@ function App() {
           <div>
             {user ? (
               <div>
-                <span>Welcome, {user.displayName}!</span>
+                <span>Welcome, {user.displayName}! </span>
                 <button onClick={logout}>Logout</button>
               </div>
             ) : (
@@ -43,6 +43,7 @@ function App() {
                 <button onClick={signInWithGoogle}>Sign in with Google</button>
               </div>
             )}
+            <br />
           </div>
         </header>
         <div className="button-container">
@@ -52,8 +53,8 @@ function App() {
           <Link to="/admin/applications">
             <button>Admin - Applications</button>
           </Link>
-          <Link to="/admin/invite-honorary">
-            <button>Admin - Invite Honorary Member</button>
+          <Link to="/admin/invite-member">
+            <button>Admin - Invite Member</button>
           </Link>
           <Link to="/admin/renewals-due">
             <button>Admin - Renewals Due</button>
@@ -104,10 +105,10 @@ function App() {
 
           {/* <Route path="/admin/applications" element={<ApplicationsList />} /> */}
           <Route
-            path="/admin/invite-honorary"
+            path="/admin/invite-member"
             element={
               <ProtectedRoute requiredRoles={authorizedAdminEmails}>
-                <HonoraryMemberInvite />
+                <MemberInvite />
               </ProtectedRoute>
             }
           />
