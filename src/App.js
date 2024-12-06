@@ -13,8 +13,8 @@ import MembershipApplicationForm from "./MembershipApplicationForm.js";
 import RenewalDueList from "./admin/RenewalDueList";
 import MemberInvite from "./admin/MemberInvite.js";
 import ProtectedRoute from "./ProtectedRoute.js";
-import { useContext, useEffect } from "react";
-import AuthContext, { AuthProvider } from "./AuthContext.js";
+import { useContext } from "react";
+import AuthContext from "./AuthContext.js";
 import LoginPage from "./LoginPage.js";
 import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
@@ -60,7 +60,7 @@ function App() {
             <button>Admin - Renewals Due</button>
           </Link>
           <Link to="/search">
-            <button>View Member Data</button>
+            <button>Admin - Search Members</button>
           </Link>
         </div>
 
@@ -90,7 +90,7 @@ function App() {
               <MembershipApplicationForm initialMembershipType="Honorary" />
             }
           />
-          <Route path="/search" element={<DataDisplay />} />
+
           <Route path="/login" element={<LoginPage />} />
 
           {/* Protected Admin Routes */}
@@ -126,6 +126,14 @@ function App() {
             element={
               <ProtectedRoute requiredRoles={authorizedAdminEmails}>
                 <ApplicationDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/search"
+            element={
+              <ProtectedRoute requiredRoles={authorizedAdminEmails}>
+                <DataDisplay />
               </ProtectedRoute>
             }
           />

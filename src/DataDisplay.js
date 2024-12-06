@@ -170,7 +170,11 @@ const DataDisplay = () => {
               >
                 <div className="card-content">
                   <h3>{displayValue(user.memberName)}</h3>
+                  <p>
+                    <strong>{displayValue(user.id)}</strong>
+                  </p>
                   <p>{displayValue(user.mobile)} </p>
+                  <p>{displayValue(user.email)} </p>
                 </div>
               </div>
             ))}
