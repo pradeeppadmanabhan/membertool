@@ -47,60 +47,93 @@ const MemberInvite = () => {
   // 1. Construct the invitation link
   const invitationLink = `https://membertool.vercel.app/new-application?initialMembershipType=${membershipType}`;
 
-  const honoraryMemberInvite = `Dear ${name},
+  const honoraryMemberInvite = `<!DOCTYPE html>
+  <html>
+  <head>
+    <title>KMA Honorary Membership Invitation</title>
+  </head>
+  <body>
+    <p>Dear ${name},</p>
+  
+    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Honorary Member.</p>
+  
+    <p>This prestigious membership is extended to individuals who have made significant contributions to mountaineering, adventure sports, or related fields.</p>
+  
+    <p>As an Honorary Member, you will enjoy various benefits, including:</p>
+  
+    <ul>
+      <li>Recognition as a distinguished member of the KMA community</li>
+      <li>Lifetime access to KMA events and activities</li>
+      <li>Exemption from all fees</li>
+      <li>... And a host of other benefits</li>
+    </ul>
+  
+    <p>Please <a href="${invitationLink}">click here</a> to accept the invitation and complete your membership application.</p>
+  
+    <p>If the link above doesn't work, you can copy and paste the following URL into your browser:<br />
+    ${invitationLink}</p>
+  
+    <p>We believe that your presence as an Honorary Member will greatly enrich our association.</p>
+  
+    <p>Sincerely,<br />
+    The KMA Team</p>
+  </body>
+  </html>`;
 
-  We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Honorary Member.
+  const lifeMemberInvite = `<!DOCTYPE html>
+  <html>
+  <head>
+    <title>KMA Life Membership Invitation</title>
+  </head>
+  <body>
+    <p>Dear ${name},</p>
   
-  This prestigious membership is extended to individuals who have made significant contributions to mountaineering, adventure sports, or related fields.
+    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as a Life Member.</p>
   
-  As an Honorary Member, you will enjoy various benefits, including:
+    <p>This membership offers lifetime access to our events and activities. As a Life Member, you will enjoy various benefits, including:</p>
   
-  * Recognition as a distinguished member of the KMA community
-  * Lifetime access to KMA events and activities
-  * Exemption from all fees
-  * ... And a host of other benefits
+    <ul>
+      <li>Recognition as a valued member of the KMA community</li>
+      <li>Lifetime access to KMA events and activities</li>
+      <li>Exemption from annual renewal fees</li>
+      <li>... And a host of other benefits</li>
+    </ul>
   
-  To accept this invitation and complete your membership application, please click on the following link:
+    <p>Please <a href="${invitationLink}">click here</a> to accept the invitation and complete your membership application.</p>
   
-  ${invitationLink}
+    <p>If the link above doesn't work, you can copy and paste the following URL into your browser:<br />
+    ${invitationLink}</p>
   
-  We believe that your presence as an Honorary Member will greatly enrich our association.
-  
-  Sincerely,
-  The KMA Team`;
+    <p>Sincerely,<br />
+    The KMA Team</p>
+  </body>
+  </html>`;
 
-  const lifeMemberInvite = `Dear ${name},
-  
-  We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as a Life Member.
-  
-  This membership offers lifetime access to our events and activities.  As a Life Member, you will enjoy various benefits, including:
-  
-  * Recognition as a valued member of the KMA community
-  * Lifetime access to KMA events and activities
-  * Exemption from annual renewal fees
-  * ... And a host of other benefits
-  
-  To accept this invitation and complete your membership application, please click on the following link:
-  
-  ${invitationLink}
-    
-  Sincerely,
-  The KMA Team`;
+  const annualMemberInvite = `<!DOCTYPE html>
+  <html>
+  <head>
+    <title>KMA Membership Invitation</title>
+  </head>
+  <body>
+    <p>Dear ${name},</p>
 
-  const annualMemberInvite = `Dear ${name},
-  
-  We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Annual Member.  This membership offers annual access to our events and activities. As an Annual Member, you will enjoy various benefits, including:
-  
-  * Recognition as a member of the KMA community
-  * Annual access to KMA events and activities
-  * ... And a host of other benefits
-  
-  To accept this invitation and complete your membership application, please click on the following link:
-  
-  ${invitationLink}
-  
-  Sincerely,
-  The KMA Team`;
+    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Annual Member. This membership offers annual access to our events and activities. As an Annual Member, you will enjoy various benefits, including:</p>
+
+    <ul>
+      <li>Recognition as a member of the KMA community</li>
+      <li>Annual access to KMA events and activities</li>
+      <li>... And a host of other benefits</li>
+    </ul>
+
+    <p>Please <a href="${invitationLink}">click here</a> to accept the invitation and complete your membership application.</p>
+
+    <p>If the link above doesn't work, you can copy and paste the following URL into your browser:<br />
+    ${invitationLink}</p>
+
+    <p>Sincerely,<br />
+    The KMA Team</p>
+  </body>
+  </html>`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,7 +159,7 @@ const MemberInvite = () => {
 
     try {
       // 2. Prepare email content
-      const subjectLine = `Invitation to Join KMA as an ${membershipType} Member`;
+      const subjectLine = `Invitation to Join KMA as ${membershipType === "Life" ? "a" : "an"} ${membershipType} Member`;
       let emailMessage;
       switch (membershipType) {
         case "Honorary":
@@ -148,12 +181,14 @@ const MemberInvite = () => {
         to_email: email,
         subject: subjectLine,
         message: emailMessage,
+        contentType: "text/html",
       };
 
       // 4. Send the email
       const success = await sendEmail(emailData);
 
       if (success) {
+        console.log("Invitation sent successfully!", success);
         setMessage("Invitation sent successfully!");
         setName(""); // Clear the name input field
         setEmail(""); // Clear the email input field
