@@ -103,7 +103,9 @@ const DataDisplay = () => {
             user.memberName
               ?.toLowerCase()
               ?.includes(searchParams.memberName.toLowerCase())) ||
-          (searchParams.mobile && user.mobile.includes(searchParams.mobile))
+          (searchParams.mobile &&
+            user.mobile &&
+            String(user.mobile).includes(searchParams.mobile))
         );
       });
       setFilteredUsers(results);
@@ -164,7 +166,7 @@ const DataDisplay = () => {
         <div className="search-results">
           {/* Add a container for search results */}
           {filteredUsers.length > 0 && !selectedUser ? ( // Show the list only if there are filtered users and no user is selected
-            <div className="card-container">
+            <div className="card-container" key={user.id}>
               {filteredUsers.map((user) => (
                 <div
                   key={user.id}
