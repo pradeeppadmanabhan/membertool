@@ -19,6 +19,7 @@ import LoginPage from "./LoginPage.js";
 import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
 import ThankYouPage from "./ThankYouPage.js";
+import AdminDashboard from "./admin/AdminDashboard.js";
 
 function App() {
   const { user, signInWithGoogle, logout } = useContext(AuthContext);
@@ -61,6 +62,9 @@ function App() {
           </Link>
           <Link to="/search">
             <button>Admin - Search Members</button>
+          </Link>
+          <Link to="/admin/dashboard">
+            <button>Admin - Dashboard</button>
           </Link>
         </div>
 
@@ -134,6 +138,14 @@ function App() {
             element={
               <ProtectedRoute requiredRoles={authorizedAdminEmails}>
                 <DataDisplay />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute requiredRoles={authorizedAdminEmails}>
+                <AdminDashboard />
               </ProtectedRoute>
             }
           />
