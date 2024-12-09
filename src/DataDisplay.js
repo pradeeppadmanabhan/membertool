@@ -84,7 +84,9 @@ const DataDisplay = () => {
     }));
   };
 
-  const handleSearch = () => {
+  const handleSearch = (e) => {
+    e.preventDefault();
+
     if (!user) {
       // Check if the user is logged in
       setShowNoUserMessage(true); // Show the "Please sign in" message
@@ -136,193 +138,195 @@ const DataDisplay = () => {
   };
 
   return (
-    <div className="search-container">
-      <Header />
-      <h1>Search Member Details</h1>
-      <div>
-        <input
-          type="text"
-          name="memberName" // Updated field name
-          placeholder="Member Name"
-          value={searchParams.memberName}
-          onChange={handleChange}
-        />
-        <p>or</p>
-        <input
-          type="text"
-          name="mobile" // Updated field name
-          placeholder="Mobile"
-          value={searchParams.mobile}
-          onChange={handleChange}
-        />
-        <button onClick={handleSearch}>Search</button>
-        <button onClick={handleClear}>Clear</button>
-      </div>
-      <div className="search-results">
-        {/* Add a container for search results */}
-        {filteredUsers.length > 0 && !selectedUser ? ( // Show the list only if there are filtered users and no user is selected
-          <div className="card-container">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="member-card"
-                onClick={() => handleUserClick(user)}
-              >
-                <div className="card-content">
-                  <h3>{displayValue(user.memberName)}</h3>
-                  <p>
-                    <strong>{displayValue(user.id)}</strong>
-                  </p>
-                  <p>{displayValue(user.mobile)} </p>
-                  <p>{displayValue(user.email)} </p>
+    <form onSubmit={handleSearch}>
+      <div className="search-container">
+        <Header />
+        <h1>Search Member Details</h1>
+        <div>
+          <input
+            type="text"
+            name="memberName" // Updated field name
+            placeholder="Member Name"
+            value={searchParams.memberName}
+            onChange={handleChange}
+          />
+          <p>or</p>
+          <input
+            type="text"
+            name="mobile" // Updated field name
+            placeholder="Mobile"
+            value={searchParams.mobile}
+            onChange={handleChange}
+          />
+          <button onClick={handleSearch}>Search</button>
+          <button onClick={handleClear}>Clear</button>
+        </div>
+        <div className="search-results">
+          {/* Add a container for search results */}
+          {filteredUsers.length > 0 && !selectedUser ? ( // Show the list only if there are filtered users and no user is selected
+            <div className="card-container">
+              {filteredUsers.map((user) => (
+                <div
+                  key={user.id}
+                  className="member-card"
+                  onClick={() => handleUserClick(user)}
+                >
+                  <div className="card-content">
+                    <h3>{displayValue(user.memberName)}</h3>
+                    <p>
+                      <strong>{displayValue(user.id)}</strong>
+                    </p>
+                    <p>{displayValue(user.mobile)} </p>
+                    <p>{displayValue(user.email)} </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        ) : selectedUser ? (
-          <div className="details-card">
-            {/* Add a class for the details card */}
-            {/* Display ID as the first row in bold */}
-            <table className="application-details-table">
-              <tbody>
-                <tr>
-                  <td className="field-name">ID:</td>
-                  <td>
-                    <strong>{selectedUser.id}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="field-name">Name:</td>
-                  <td>
-                    <strong>{selectedUser.memberName}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="field-name">Date Of Birth:</td>
-                  <td>{selectedUser.dob}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Gender:</td>
-                  <td>{selectedUser.gender}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">
-                    Name of Father / Guardian / Husband:
-                  </td>
-                  <td>{selectedUser.fatherGuardianName}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Address Line1:</td>
-                  <td>{selectedUser.addressLine1}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Address Line2:</td>
-                  <td>{selectedUser.addressLine2}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Address Line3:</td>
-                  <td>{selectedUser.addressLine3}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Landline:</td>
-                  <td>{selectedUser.landline}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Mobile:</td>
-                  <td>{selectedUser.mobile}</td>
-                </tr>
-                <tr>
-                  <td className="field-name">Email ID:</td>
-                  <td>{selectedUser.email}</td>
-                </tr>
-              </tbody>
-            </table>
-            {/* Show More/Less button */}
-            <button onClick={() => setShowMore(!showMore)}>
-              {showMore ? "Show Less" : "Show More"}
-            </button>
-            {/* Conditionally display additional details */}
-            {showMore && (
-              <div>
-                <table className="application-details-table">
-                  <tbody>
-                    <tr>
-                      <td className="field-name">Academic Qualification:</td>
-                      <td>{selectedUser.qualifications}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Profession:</td>
-                      <td>{selectedUser.profession}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Athletic Background:</td>
-                      <td>{selectedUser.athleticBackground}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Hobbies:</td>
-                      <td>{selectedUser.hobbies}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">
-                        History of serious illness:
-                      </td>
-                      <td>{selectedUser.illnessHistory}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Present General Health:</td>
-                      <td>{selectedUser.generalHealth}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Blood Group:</td>
-                      <td>{selectedUser.bloodGroup}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Membership Type:</td>
-                      <td>{selectedUser.membershipType}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Recommended By:</td>
-                      <td>{selectedUser.recommendedByName}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Recommended By ID:</td>
-                      <td>{selectedUser.recommendedByID}</td>
-                    </tr>
-                    {selectedUser.membershipType === "Annual" && ( // Conditional rendering
+              ))}
+            </div>
+          ) : selectedUser ? (
+            <div className="details-card">
+              {/* Add a class for the details card */}
+              {/* Display ID as the first row in bold */}
+              <table className="application-details-table">
+                <tbody>
+                  <tr>
+                    <td className="field-name">ID:</td>
+                    <td>
+                      <strong>{selectedUser.id}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Name:</td>
+                    <td>
+                      <strong>{selectedUser.memberName}</strong>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Date Of Birth:</td>
+                    <td>{selectedUser.dob}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Gender:</td>
+                    <td>{selectedUser.gender}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">
+                      Name of Father / Guardian / Husband:
+                    </td>
+                    <td>{selectedUser.fatherGuardianName}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Address Line1:</td>
+                    <td>{selectedUser.addressLine1}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Address Line2:</td>
+                    <td>{selectedUser.addressLine2}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Address Line3:</td>
+                    <td>{selectedUser.addressLine3}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Landline:</td>
+                    <td>{selectedUser.landline}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Mobile:</td>
+                    <td>{selectedUser.mobile}</td>
+                  </tr>
+                  <tr>
+                    <td className="field-name">Email ID:</td>
+                    <td>{selectedUser.email}</td>
+                  </tr>
+                </tbody>
+              </table>
+              {/* Show More/Less button */}
+              <button onClick={() => setShowMore(!showMore)}>
+                {showMore ? "Show Less" : "Show More"}
+              </button>
+              {/* Conditionally display additional details */}
+              {showMore && (
+                <div>
+                  <table className="application-details-table">
+                    <tbody>
                       <tr>
-                        <td className="field-name">Renewal Due On:</td>
-                        <td>{selectedUser.renewalDueOn}</td>
+                        <td className="field-name">Academic Qualification:</td>
+                        <td>{selectedUser.qualifications}</td>
                       </tr>
-                    )}
-                    <tr>
-                      <td className="field-name">Transaction Detail:</td>
-                      <td>{selectedUser.transactionDetail}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Receipt No:</td>
-                      <td>{selectedUser.receiptNo}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Amount:</td>
-                      <td>{selectedUser.amount}</td>
-                    </tr>
-                    <tr>
-                      <td className="field-name">Approved By:</td>
-                      <td>{selectedUser.approvedBy}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        ) : showNoUserMessage && !user ? ( // Show message if no results AND user is not logged in
-          <p>Please sign in to search for members.</p>
-        ) : showNoUserMessage ? ( // Show the message only if showNoUserMessage is true
-          <p>No user found.</p>
-        ) : null}{" "}
-        {/* Otherwise, show nothing */}
+                      <tr>
+                        <td className="field-name">Profession:</td>
+                        <td>{selectedUser.profession}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Athletic Background:</td>
+                        <td>{selectedUser.athleticBackground}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Hobbies:</td>
+                        <td>{selectedUser.hobbies}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">
+                          History of serious illness:
+                        </td>
+                        <td>{selectedUser.illnessHistory}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Present General Health:</td>
+                        <td>{selectedUser.generalHealth}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Blood Group:</td>
+                        <td>{selectedUser.bloodGroup}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Membership Type:</td>
+                        <td>{selectedUser.membershipType}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Recommended By:</td>
+                        <td>{selectedUser.recommendedByName}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Recommended By ID:</td>
+                        <td>{selectedUser.recommendedByID}</td>
+                      </tr>
+                      {selectedUser.membershipType === "Annual" && ( // Conditional rendering
+                        <tr>
+                          <td className="field-name">Renewal Due On:</td>
+                          <td>{selectedUser.renewalDueOn}</td>
+                        </tr>
+                      )}
+                      <tr>
+                        <td className="field-name">Transaction Detail:</td>
+                        <td>{selectedUser.transactionDetail}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Receipt No:</td>
+                        <td>{selectedUser.receiptNo}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Amount:</td>
+                        <td>{selectedUser.amount}</td>
+                      </tr>
+                      <tr>
+                        <td className="field-name">Approved By:</td>
+                        <td>{selectedUser.approvedBy}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          ) : showNoUserMessage && !user ? ( // Show message if no results AND user is not logged in
+            <p>Please sign in to search for members.</p>
+          ) : showNoUserMessage ? ( // Show the message only if showNoUserMessage is true
+            <p>No user found.</p>
+          ) : null}{" "}
+          {/* Otherwise, show nothing */}
+        </div>
       </div>
-    </div>
+    </form>
   );
 };
 
