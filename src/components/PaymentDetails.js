@@ -261,9 +261,9 @@ const PaymentDetails = () => {
       <h2>Payment Details</h2>
 
       <p>
-        Member ID: <b>{memberData?.id}</b>
+        Member ID: <b>{memberID}</b>
       </p>
-      <p>Membership Type: {memberData?.membershipType}</p>
+      <p>Membership Type: {membershipType}</p>
       <p>Please Pay: Rs.{paymentData.amount}</p>
       <label>
         Payment Mode:
