@@ -18,9 +18,8 @@ const PaymentDetails = () => {
   const { memberID, membershipType } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  //const { memberData } = location.state || {};
   const [memberData, setMemberData] = useState(location.state?.memberData);
-
+  const [payments, setPayments] = useState([]);
   const ANNUAL_MEMBERSHIP_FEE = 250;
   const LIFE_MEMBERSHIP_FEE = 2000;
 
@@ -47,8 +46,11 @@ const PaymentDetails = () => {
         const memberRef = ref(database, `users/${memberID}`);
         const snapshot = await get(memberRef);
         if (snapshot.exists()) {
-          setMemberData(snapshot.val());
+          const memberData = snapshot.val();
+          //console.log("Fetched member data:", memberData);
+          setMemberData(memberData);
           //console.log("Member data fetched successfully:", snapshot.val());
+          setPayments(memberData.payments || []);
         } else {
           // Handle case where member data is not found
           console.error("Member data not found for ID:", memberID);
@@ -174,6 +176,21 @@ const PaymentDetails = () => {
       }
     }
 
+    const isDuplicatePayment = payments.some(
+      (payment) =>
+        payment.paymentMode === paymentMode &&
+        payment.transactionReference === transactionReference
+    );
+
+    if (isDuplicatePayment) {
+      setErrors((prev) => ({
+        ...prev,
+        transactionReference: "This transaction has already been recorded",
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+
     // Upload screenshot if provided
     let uploadedScreenshotURL = null;
     if (transactionScreenshot) {
@@ -191,12 +208,12 @@ const PaymentDetails = () => {
         return;
       }
     }
+
     const receiptNumber = await generateReceiptNumber(database);
 
     // Update payment details in Firebase
     try {
-      const paymentRef = ref(database, `users/${memberID}`);
-      await update(paymentRef, {
+      const paymentRecord = {
         paymentMode,
         transactionReference,
         transactionScreenshot: uploadedScreenshotURL,
@@ -205,6 +222,12 @@ const PaymentDetails = () => {
         dateOfPayment: new Date().toISOString(),
         applicationStatus: "Paid",
         membershipType: membershipType,
+      };
+
+      const paymentRef = ref(database, `users/${memberID}/payments/`);
+      const newPaymentIndex = payments.length;
+      await update(paymentRef, {
+        [newPaymentIndex]: paymentRecord,
       });
 
       setStatusMessage("Payment details submitted successfully!");
@@ -304,6 +327,37 @@ const PaymentDetails = () => {
         {isSubmitting ? "Submitting..." : "Submit Payment Details"}
       </button>
       {statusMessage && <p>{statusMessage}</p>}
+      {errors.transactionReference && (
+        <span className="error">{errors.transactionReference}</span>
+      )}
+      <br />
+      {/* {payments.length > 0 && (
+        <div>
+          <h3>Past Payments</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Receipt No</th>
+                <th>Amount</th>
+                <th>Payment Mode</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map((payment, index) => (
+                <tr key={index}>
+                  <td>{payment.receiptNo}</td>
+                  <td>₹{payment.amount}</td>
+                  <td>{payment.paymentMode}</td>
+                  <td>
+                    {new Date(payment.dateOfPayment).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )} */}
     </form>
   );
 };
