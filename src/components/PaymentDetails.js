@@ -169,25 +169,29 @@ const PaymentDetails = () => {
     // Validate inputs
     if (!paymentMode) {
       setErrors({ paymentMode: "Payment mode is required." });
+      setIsSubmitting(false);
       return;
     }
-    if (paymentMode === "Bank Transfer") {
-      if (!transactionReference) {
-        setErrors((prev) => ({
-          ...prev,
-          transactionReference: "Transaction Reference is required.",
-        }));
-        setIsSubmitting(false);
-        return;
-      }
-      if (!transactionScreenshot) {
-        setErrors((prev) => ({
-          ...prev,
-          transactionScreenshot: "Transaction Screenshot is required.",
-        }));
-        setIsSubmitting(false);
-        return;
-      }
+
+    if (!transactionReference) {
+      setErrors((prev) => ({
+        ...prev,
+        transactionReference:
+          paymentMode === "Cash"
+            ? "Enter receipt number from treasurer"
+            : "Transaction Reference from bank transfer is required.",
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (paymentMode === "Bank Transfer" && !transactionScreenshot) {
+      setErrors((prev) => ({
+        ...prev,
+        transactionScreenshot: "Transaction Screenshot is required.",
+      }));
+      setIsSubmitting(false);
+      return;
     }
 
     const isDuplicatePayment = payments.some(
@@ -205,6 +209,14 @@ const PaymentDetails = () => {
       return;
     }
 
+    let receiptNumber = "";
+
+    if (paymentMode === "Cash") {
+      receiptNumber = transactionReference;
+    } else {
+      receiptNumber = await generateReceiptNumber(database);
+    }
+
     // Upload screenshot if provided
     let uploadedScreenshotURL = null;
     if (transactionScreenshot) {
@@ -219,11 +231,10 @@ const PaymentDetails = () => {
       } catch (error) {
         console.error("Error uploading transaction screenshot:", error);
         setStatusMessage("Error uploading screenshot. Please try again.");
+        setIsSubmitting(false);
         return;
       }
     }
-
-    const receiptNumber = await generateReceiptNumber(database);
 
     // Update payment details in Firebase
     try {
@@ -287,6 +298,7 @@ const PaymentDetails = () => {
           <p> Please pay cash to the treasurer and get a receipt. </p>
         </>
       )}
+
       {paymentData.paymentMode === "Bank Transfer" && (
         <>
           <p>
@@ -303,22 +315,7 @@ const PaymentDetails = () => {
             IFSC / NEFT – UBIN0901750
             <br />
           </p>
-          <label>
-            Transaction Reference Number:
-            <input
-              type="text"
-              value={paymentData.transactionReference}
-              onChange={(e) =>
-                setPaymentData((prev) => ({
-                  ...prev,
-                  transactionReference: e.target.value,
-                }))
-              }
-            />
-          </label>
-          {errors.transactionReference && (
-            <span className="error">{errors.transactionReference}</span>
-          )}
+
           <br />
           <label>
             Upload Transaction Screenshot:
@@ -334,44 +331,35 @@ const PaymentDetails = () => {
         </>
       )}
 
-      {/* <p>
-        <strong>Amount:</strong> ₹{paymentData.amount}
-      </p> */}
-      <button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit Payment Details"}
-      </button>
-      {statusMessage && <p>{statusMessage}</p>}
+      <label>
+        Transaction Reference Number:
+        <input
+          type="text"
+          value={paymentData.transactionReference}
+          placeholder={
+            paymentData.paymentMode === "Cash"
+              ? "Enter receipt number from treasurer"
+              : "Enter bank transaction reference"
+          }
+          onChange={(e) =>
+            setPaymentData((prev) => ({
+              ...prev,
+              transactionReference: e.target.value,
+            }))
+          }
+        />
+      </label>
+      <br />
       {errors.transactionReference && (
         <span className="error">{errors.transactionReference}</span>
       )}
       <br />
-      {/* {payments.length > 0 && (
-        <div>
-          <h3>Past Payments</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Receipt No</th>
-                <th>Amount</th>
-                <th>Payment Mode</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map((payment, index) => (
-                <tr key={index}>
-                  <td>{payment.receiptNo}</td>
-                  <td>₹{payment.amount}</td>
-                  <td>{payment.paymentMode}</td>
-                  <td>
-                    {new Date(payment.dateOfPayment).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )} */}
+
+      <button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Submitting..." : "Submit Payment Details"}
+      </button>
+      {statusMessage && <p>{statusMessage}</p>}
+      <br />
     </form>
   );
 };
