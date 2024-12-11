@@ -38,7 +38,23 @@ const AdminDashboard = () => {
         const usersSnapshot = await get(usersRef);
         const fetchedUsers = usersSnapshot.val();
 
-        setUsers(Object.values(fetchedUsers || {}));
+        if (fetchedUsers) {
+          const processedUsers = Object.values(fetchedUsers).map((user) => {
+            const payments = user.payments || [];
+            return payments.map((payment) => ({
+              ...payment,
+              //membershipType: payment.membershipType, // Inherit membership type from user
+              memberId: user.id, // Inherit member ID from user
+              memberName: user.memberName, // Inherit member name from user
+            }));
+          });
+
+          //console.log("Processed Users:", processedUsers);
+
+          // Flatten nested payments into a single array
+          const allPayments = processedUsers.flat();
+          setUsers(allPayments);
+        }
         setLoading(false);
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -51,15 +67,15 @@ const AdminDashboard = () => {
 
   const filterDataByYear = useCallback(
     (year) => {
-      const filteredUsers = users.filter((user) => {
-        if (user.dateOfPayment) {
-          const date = new Date(user.dateOfPayment);
+      const filteredPayments = users.filter((payment) => {
+        if (payment.dateOfPayment) {
+          const date = new Date(payment.dateOfPayment);
           return year === "All" || date.getFullYear() === parseInt(year, 10);
         }
         return false;
       });
 
-      processStatsAndCharts(filteredUsers);
+      processStatsAndCharts(filteredPayments);
     },
     [users]
   );
@@ -70,11 +86,21 @@ const AdminDashboard = () => {
     }
   }, [selectedYear, users, filterDataByYear]);
 
-  const processStatsAndCharts = (filteredUsers) => {
+  const processStatsAndCharts = (filteredPayments) => {
     // Process stats
-    const totalMembers = filteredUsers.length;
+    const totalPayments = filteredPayments.length;
+    const membershipCounts = { Life: 0, Annual: 0, Honorary: 0 };
+    const membershipAmounts = { Life: 0, Annual: 0, Honorary: 0 };
 
-    const lifeMembers = filteredUsers.filter(
+    filteredPayments.forEach((payment) => {
+      const type = payment.membershipType;
+      if (type) {
+        membershipCounts[type]++;
+        membershipAmounts[type] += payment.amount || 0;
+      }
+    });
+
+    /*     const lifeMembers = filteredUsers.filter(
       (user) => user.membershipType === "Life"
     ).length;
     const annualMembers = filteredUsers.filter(
@@ -97,57 +123,61 @@ const AdminDashboard = () => {
         ? sum + (user.amount || 0)
         : sum;
     }, 0);
-
+ */
     setStats({
-      totalMembers,
-      lifeMembers,
-      annualMembers,
-      honoraryMembers,
-      totalAmount: lifeAmount + annualAmount + honoraryAmount,
-      lifeAmount,
-      annualAmount,
-      honoraryAmount,
+      totalMembers: totalPayments,
+      lifeMembers: membershipCounts.Life,
+      annualMembers: membershipCounts.Annual,
+      honoraryMembers: membershipCounts.Honorary,
+      totalAmount:
+        membershipAmounts.Life +
+        membershipAmounts.Annual +
+        membershipAmounts.Honorary,
+      lifeAmount: membershipAmounts.Life,
+      annualAmount: membershipAmounts.Annual,
+      honoraryAmount: membershipAmounts.Honorary,
     });
 
     // Process Monthly Data for Charts
-    const monthlyData = Array(12)
-      .fill()
-      .map(() => ({
-        Life: 0,
-        Annual: 0,
-        Honorary: 0,
-      }));
-    const monthlyAmounts = Array(12)
-      .fill()
-      .map(() => ({
-        Life: 0,
-        Annual: 0,
-        Honorary: 0,
-      }));
+    const monthlyData = Array.from({ length: 12 }, () => ({
+      Life: 0,
+      Annual: 0,
+      Honorary: 0,
+    }));
+    const monthlyAmounts = Array.from({ length: 12 }, () => ({
+      Life: 0,
+      Annual: 0,
+      Honorary: 0,
+    }));
 
-    filteredUsers.forEach((user) => {
-      if (user.dateOfPayment) {
-        const date = new Date(user.dateOfPayment);
+    filteredPayments.forEach((payment) => {
+      if (payment.dateOfPayment) {
+        const date = new Date(payment.dateOfPayment);
         const month = date.getMonth(); // 0 = Jan, 1 = Feb, ...
 
         if (!isNaN(month) && month >= 0 && month < 12) {
-          const type = user.membershipType;
-          if (type === "Life") {
-            monthlyData[month].Life++;
-            monthlyAmounts[month].Life += user.amount || 0;
-          }
-          if (type === "Annual") {
-            monthlyData[month].Annual++;
-            monthlyAmounts[month].Annual += user.amount || 0;
-          }
-          if (type === "Honorary") {
-            monthlyData[month].Honorary++;
-            monthlyAmounts[month].Honorary += user.amount || 0;
+          const type = payment.membershipType;
+          if (type && monthlyData[month][type] !== undefined) {
+            monthlyData[month][type]++;
+            monthlyAmounts[month][type] += payment.amount || 0;
+            /* console.log(
+              `User: ${payment.memberName} (ID: ${payment.memberId})`,
+              `Payment Type: ${payment.membershipType}`,
+              `Amount: ₹${payment.amount}`,
+              `Month: ${new Date(payment.dateOfPayment).toLocaleString(
+                "default",
+                {
+                  month: "long",
+                }
+              )}`
+            );*/
+          } else {
+            console.warn("Invalid membership type for payment:", type, payment);
           }
         }
 
         if (isNaN(month) || month < 0 || month > 11) {
-          console.warn("Invalid date or month for user:", month, user);
+          console.warn("Invalid date or month for payment:", month, payment);
         }
       }
     });
@@ -211,11 +241,6 @@ const AdminDashboard = () => {
           label: "Annual Membership Amount",
           data: monthlyAmounts.map((month) => month.Annual),
           backgroundColor: "green",
-        },
-        {
-          label: "Honorary Membership Amount",
-          data: monthlyAmounts.map((month) => month.Honorary),
-          backgroundColor: "orange",
         },
       ],
     };
