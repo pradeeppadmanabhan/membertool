@@ -23,7 +23,7 @@ const RenewalDueList = () => {
         lastMonth.setMonth(today.getMonth() - 1); // Get last month's date
 
         const dueMembers = Object.values(data).filter((user) => {
-          if (user.membershipType !== "Annual") {
+          if (user.currentMembershipType !== "Annual") {
             return false;
           }
 
@@ -219,7 +219,7 @@ The KMA Team`;
                 </td>
                 <td>
                   {/* Conditionally render the "Elevate to Life Member" button */}
-                  {user.membershipType === "Annual" &&
+                  {user.currentMembershipType === "Annual" &&
                     isApproachingSecondAnniversary(
                       new Date(user.dateOfSubmission)
                     ) && (

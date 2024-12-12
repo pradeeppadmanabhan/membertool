@@ -58,7 +58,7 @@ const PrintApplication = (applicationData) => {
     ["History of serious illness:", applicationData.illnessHistory || "N/A"],
     ["Present General Health:", applicationData.generalHealth || "N/A"],
     ["Blood Group:", applicationData.bloodGroup || "N/A"],
-    ["Membership Type:", applicationData.membershipType || "N/A"],
+    ["Membership Type:", applicationData.currentMembershipType || "N/A"],
     ["Payment Transaction No:", "<Transaction No>"],
     ["Receipt No: / Date: ", "<Receipt No> / <Date>"],
     [

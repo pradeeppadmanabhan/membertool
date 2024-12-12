@@ -51,7 +51,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     illnessHistory: "",
     generalHealth: "",
     bloodGroup: "",
-    membershipType: initialMembershipType, // Default value - Annual
+    currentMembershipType: initialMembershipType, // Default value - Annual
     recommendedByName: "",
     recommendedByID: "",
     imageURL: "", // New field for image URL
@@ -60,11 +60,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     // New fields with initial values
     applicationStatus: "Submitted", // Default status on submission
     dateOfSubmission: new Date().toISOString(), // Set on form submission
-    dateOfPayment: null,
     renewalDueOn: null,
-    transactionDetail: null,
-    receiptNo: null,
-    amount: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -78,7 +74,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const fetchMemberID = useCallback(async () => {
     try {
       const { data } = await generateMemberId({
-        membershipType: initialMembershipType,
+        currentMembershipType: initialMembershipType,
       });
       console.log("MemberID generated successfully:", data.memberId);
       setFormData((prev) => ({ ...prev, id: data.memberId }));
@@ -160,7 +156,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       illnessHistory: "",
       generalHealth: "",
       bloodGroup: "",
-      membershipType: initialMembershipType,
+      currentMembershipType: initialMembershipType,
       //paymentTransactionNumber: "",
       imageURL: "", // Reset image URL
       recommendedByName: "",
@@ -317,7 +313,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setTimeout(() => {
           handleClear();
           navigate(
-            `/payment-details/${newMemberId}/${formData.membershipType}`,
+            `/payment-details/${newMemberId}/${formData.currentMembershipType}`,
             { state: { memberData: userData } }
           );
         }, STATUS_TIMEOUT);

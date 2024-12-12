@@ -249,15 +249,44 @@ const PaymentDetails = () => {
         membershipType: membershipType,
       };
 
+      const updatedMemberData = { ...memberData };
+      if (membershipType === "Life") {
+        updatedMemberData.renewalDueOn = "N/A";
+        updatedMemberData.currentMembershipType = "Life";
+      } else if (membershipType === "Annual") {
+        const now = new Date();
+        const nextYear = new Date(memberData.renewalDueOn || now.toISOString());
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        updatedMemberData.renewalDueOn = nextYear.toISOString();
+        updatedMemberData.currentMembershipType = "Annual";
+      }
+
+      const memberRef = ref(database, `users/${memberID}`);
+      await update(memberRef, updatedMemberData);
+
+      console.log("Updated Member Data", updatedMemberData);
+
       const paymentRef = ref(database, `users/${memberID}/payments/`);
-      const newPaymentIndex = payments.length;
-      await update(paymentRef, {
-        [newPaymentIndex]: paymentRecord,
-      });
+
+      // Append new payment to the payments array in Firebase
+      const updatedPayments = [...payments, paymentRecord]; // Prepare updated array
+      await update(
+        paymentRef,
+        updatedPayments.reduce((acc, item, index) => {
+          acc[index] = item; // Flatten array into object for Firebase
+          return acc;
+        }, {})
+      );
+
+      // Update local payments state
+      setPayments(updatedPayments);
+
+      //console.log("New Payment Details:", paymentRecord);
+      //console.log("Updated Payments:", updatedPayments);
 
       setStatusMessage("Payment details submitted successfully!");
       navigate(`/thank-you/${receiptNumber}/${memberID}`, {
-        state: { memberData },
+        state: { memberData: updatedMemberData },
       });
     } catch (error) {
       console.error("Error updating payment details:", error);

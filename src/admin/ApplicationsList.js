@@ -69,7 +69,7 @@ const ApplicationsList = () => {
 
     // Now apply the type filter
     const matchesType =
-      filterType === "all" || application.membershipType === filterType;
+      filterType === "all" || application.currentMembershipType === filterType;
     return matchesType;
   });
 
@@ -181,7 +181,7 @@ const ApplicationsList = () => {
                 </Link>
               </td>
               <td>{application.memberName}</td>
-              <td>{application.membershipType}</td>
+              <td>{application.currentMembershipType}</td>
               <td>
                 {application.dateOfSubmission &&
                 application.dateOfSubmission !== "No Data" // Check for "No Data"

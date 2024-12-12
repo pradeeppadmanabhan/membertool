@@ -283,7 +283,7 @@ const DataDisplay = () => {
                       </tr>
                       <tr>
                         <td className="field-name">Membership Type:</td>
-                        <td>{selectedUser.membershipType}</td>
+                        <td>{selectedUser.currentMembershipType}</td>
                       </tr>
                       <tr>
                         <td className="field-name">Recommended By:</td>
@@ -293,7 +293,7 @@ const DataDisplay = () => {
                         <td className="field-name">Recommended By ID:</td>
                         <td>{selectedUser.recommendedByID}</td>
                       </tr>
-                      {selectedUser.membershipType === "Annual" && ( // Conditional rendering
+                      {selectedUser.currentMembershipType === "Annual" && ( // Conditional rendering
                         <tr>
                           <td className="field-name">Renewal Due On:</td>
                           <td>{selectedUser.renewalDueOn}</td>

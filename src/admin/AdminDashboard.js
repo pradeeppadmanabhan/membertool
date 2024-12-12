@@ -100,30 +100,6 @@ const AdminDashboard = () => {
       }
     });
 
-    /*     const lifeMembers = filteredUsers.filter(
-      (user) => user.membershipType === "Life"
-    ).length;
-    const annualMembers = filteredUsers.filter(
-      (user) => user.membershipType === "Annual"
-    ).length;
-    const honoraryMembers = filteredUsers.filter(
-      (user) => user.membershipType === "Honorary"
-    ).length;
-
-    const lifeAmount = filteredUsers.reduce((sum, user) => {
-      return user.membershipType === "Life" ? sum + (user.amount || 0) : sum;
-    }, 0);
-
-    const annualAmount = filteredUsers.reduce((sum, user) => {
-      return user.membershipType === "Annual" ? sum + (user.amount || 0) : sum;
-    }, 0);
-
-    const honoraryAmount = filteredUsers.reduce((sum, user) => {
-      return user.membershipType === "Honorary"
-        ? sum + (user.amount || 0)
-        : sum;
-    }, 0);
- */
     setStats({
       totalMembers: totalPayments,
       lifeMembers: membershipCounts.Life,
