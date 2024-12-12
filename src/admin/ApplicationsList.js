@@ -128,9 +128,9 @@ const ApplicationsList = () => {
       {/* Date Range Picker */}
       <div className="date-range-picker">
         <br />
-        <label htmlFor="dateFilter">Filter by Month:</label>
+        <label htmlFor="dateFilter">Filter by Date:</label>
         <div>
-          <label htmlFor="startDate">Start Month:</label>
+          <label htmlFor="startDate">Start Date:</label>
           <input
             type="date"
             id="startDate"
@@ -138,7 +138,7 @@ const ApplicationsList = () => {
             onChange={(e) => setStartDate(e.target.value)}
           />
 
-          <label htmlFor="endDate">End Month:</label>
+          <label htmlFor="endDate">End Date:</label>
           <input
             type="date"
             id="endDate"
@@ -168,6 +168,9 @@ const ApplicationsList = () => {
               )}
             </th>
             {/* Add more columns as needed */}
+            <th>Payment Mode</th>
+            <th>Receipt No</th>
+            <th>Transaction Reference</th>
           </tr>
         </thead>
         <tbody>
@@ -189,14 +192,34 @@ const ApplicationsList = () => {
                   : "--/--/----"}
               </td>
               <td>
-                {/* Updated cell */}
-                {application.dateOfPayment &&
-                application.dateOfPayment !== "No Data"
-                  ? new Date(application.dateOfPayment).toLocaleDateString()
+                {application.payments && application.payments.length > 0
+                  ? new Date(
+                      application.payments[
+                        application.payments.length - 1
+                      ].dateOfPayment
+                    ).toLocaleDateString()
                   : "--/--/----"}
               </td>
               {/* Format date */}
               {/* Add more cells for other data */}
+              <td>
+                {application.payments && application.payments.length > 0
+                  ? application.payments[application.payments.length - 1]
+                      .paymentMode
+                  : "--"}
+              </td>
+              <td>
+                {application.payments && application.payments.length > 0
+                  ? application.payments[application.payments.length - 1]
+                      .receiptNo
+                  : "--"}
+              </td>
+              <td>
+                {application.payments && application.payments.length > 0
+                  ? application.payments[application.payments.length - 1]
+                      .transactionReference
+                  : "--"}
+              </td>
             </tr>
           ))}
         </tbody>
