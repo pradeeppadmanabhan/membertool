@@ -39,21 +39,9 @@ const AdminDashboard = () => {
         const fetchedUsers = usersSnapshot.val();
 
         if (fetchedUsers) {
-          const processedUsers = Object.values(fetchedUsers).map((user) => {
-            const payments = user.payments || [];
-            return payments.map((payment) => ({
-              ...payment,
-              //membershipType: payment.membershipType, // Inherit membership type from user
-              memberId: user.id, // Inherit member ID from user
-              memberName: user.memberName, // Inherit member name from user
-            }));
-          });
-
-          //console.log("Processed Users:", processedUsers);
-
-          // Flatten nested payments into a single array
-          const allPayments = processedUsers.flat();
-          setUsers(allPayments);
+          const usersArray = Object.values(fetchedUsers);
+          setUsers(usersArray);
+          console.log("Users:", usersArray);
         }
         setLoading(false);
       } catch (error) {
@@ -67,15 +55,16 @@ const AdminDashboard = () => {
 
   const filterDataByYear = useCallback(
     (year) => {
-      const filteredPayments = users.filter((payment) => {
-        if (payment.dateOfPayment) {
-          const date = new Date(payment.dateOfPayment);
+      const filteredUsers = users.filter((user) => {
+        const payments = user.payments || [];
+        if (payments.length > 0) {
+          const date = new Date(payments[payments.length - 1].dateOfPayment);
           return year === "All" || date.getFullYear() === parseInt(year, 10);
+        } else {
+          return false;
         }
-        return false;
       });
-
-      processStatsAndCharts(filteredPayments);
+      processStatsAndCharts(filteredUsers);
     },
     [users]
   );
@@ -86,17 +75,39 @@ const AdminDashboard = () => {
     }
   }, [selectedYear, users, filterDataByYear]);
 
-  const processStatsAndCharts = (filteredPayments) => {
+  const processStatsAndCharts = (filteredUsers) => {
     // Process stats
-    const totalPayments = filteredPayments.length;
+    const totalPayments = filteredUsers.length;
     const membershipCounts = { Life: 0, Annual: 0, Honorary: 0 };
     const membershipAmounts = { Life: 0, Annual: 0, Honorary: 0 };
 
-    filteredPayments.forEach((payment) => {
-      const type = payment.membershipType;
-      if (type) {
-        membershipCounts[type]++;
-        membershipAmounts[type] += payment.amount || 0;
+    // Initialize monthlyData and monthlyAmounts *inside* the function
+    const monthlyData = Array.from({ length: 12 }, () => ({
+      Life: 0,
+      Annual: 0,
+      Honorary: 0,
+    }));
+    const monthlyAmounts = Array.from({ length: 12 }, () => ({
+      Life: 0,
+      Annual: 0,
+      Honorary: 0,
+    }));
+
+    filteredUsers.forEach((user) => {
+      membershipCounts[user.currentMembershipType]++;
+
+      const payments = user.payments || [];
+      if (payments.length > 0) {
+        const lastPayment = payments[payments.length - 1];
+        const type = lastPayment.membershipType;
+        membershipAmounts[type] += lastPayment.amount || 0;
+
+        const date = new Date(lastPayment.dateOfPayment);
+        const month = date.getMonth();
+        if (!isNaN(month) && month >= 0 && month < 12) {
+          monthlyData[month][type]++;
+          monthlyAmounts[month][type] += lastPayment.amount || 0;
+        }
       }
     });
 
@@ -112,50 +123,6 @@ const AdminDashboard = () => {
       lifeAmount: membershipAmounts.Life,
       annualAmount: membershipAmounts.Annual,
       honoraryAmount: membershipAmounts.Honorary,
-    });
-
-    // Process Monthly Data for Charts
-    const monthlyData = Array.from({ length: 12 }, () => ({
-      Life: 0,
-      Annual: 0,
-      Honorary: 0,
-    }));
-    const monthlyAmounts = Array.from({ length: 12 }, () => ({
-      Life: 0,
-      Annual: 0,
-      Honorary: 0,
-    }));
-
-    filteredPayments.forEach((payment) => {
-      if (payment.dateOfPayment) {
-        const date = new Date(payment.dateOfPayment);
-        const month = date.getMonth(); // 0 = Jan, 1 = Feb, ...
-
-        if (!isNaN(month) && month >= 0 && month < 12) {
-          const type = payment.membershipType;
-          if (type && monthlyData[month][type] !== undefined) {
-            monthlyData[month][type]++;
-            monthlyAmounts[month][type] += payment.amount || 0;
-            /* console.log(
-              `User: ${payment.memberName} (ID: ${payment.memberId})`,
-              `Payment Type: ${payment.membershipType}`,
-              `Amount: ₹${payment.amount}`,
-              `Month: ${new Date(payment.dateOfPayment).toLocaleString(
-                "default",
-                {
-                  month: "long",
-                }
-              )}`
-            );*/
-          } else {
-            console.warn("Invalid membership type for payment:", type, payment);
-          }
-        }
-
-        if (isNaN(month) || month < 0 || month > 11) {
-          console.warn("Invalid date or month for payment:", month, payment);
-        }
-      }
     });
 
     const memberChartData = {

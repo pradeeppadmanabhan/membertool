@@ -19,7 +19,7 @@ import PropTypes from "prop-types"; // Import PropTypes
 import { getFunctions, httpsCallable } from "firebase/functions";
 import AuthContext from "./AuthContext";
 
-const STATUS_TIMEOUT = 2000; // 10 seconds in milliseconds
+const STATUS_TIMEOUT = 5000; // 5 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const { user } = useContext(AuthContext);
@@ -299,7 +299,27 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           imageURL: uploadedImageUrl,
           dateOfSubmission: new Date().toISOString(),
           age: age,
+          payments: [],
         };
+
+        let targetPage = ``;
+
+        if (userData.currentMembershipType === "Honorary") {
+          userData.renewalDueOn = "N/A";
+          const paymentRecord = {
+            paymentMode: "Cash",
+            transactionReference: "honorary",
+            amount: 0,
+            receiptNo: "honorary",
+            dateOfPayment: new Date().toISOString(),
+            applicationStatus: "Paid",
+            membershipType: "Honorary",
+          };
+          userData.payments.push(paymentRecord);
+          targetPage = `/thank-you/honorary/${newMemberId}`;
+        } else {
+          targetPage = `/payment-details/${newMemberId}/${formData.currentMembershipType}`;
+        }
 
         //console.log("Submitting to id:", newMemberId);
 
@@ -312,10 +332,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         // Delay clearing the form
         setTimeout(() => {
           handleClear();
-          navigate(
-            `/payment-details/${newMemberId}/${formData.currentMembershipType}`,
-            { state: { memberData: userData } }
-          );
+          navigate(targetPage, { state: { memberData: userData } });
         }, STATUS_TIMEOUT);
       } catch (error) {
         // ... (Error handling for database submission)
