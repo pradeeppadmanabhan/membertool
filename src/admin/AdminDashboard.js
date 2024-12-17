@@ -26,7 +26,9 @@ const AdminDashboard = () => {
   const [memberChart, setMemberChart] = useState({ labels: [], datasets: [] });
   const [amountChart, setAmountChart] = useState({ labels: [], datasets: [] });
   const [loading, setLoading] = useState(true);
-  const [selectedYear, setSelectedYear] = useState("All");
+  const [selectedYear, setSelectedYear] = useState(
+    new Date().getFullYear().toString()
+  );
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
