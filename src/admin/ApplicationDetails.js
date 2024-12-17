@@ -96,10 +96,10 @@ const ApplicationDetails = () => {
             <td className="field-name">Address Line3:</td>
             <td>{applicationData.addressLine3}</td>
           </tr>
-          <tr>
+          {/* <tr>
             <td className="field-name">Landline:</td>
             <td>{applicationData.landline}</td>
-          </tr>
+          </tr> */}
           <tr>
             <td className="field-name">Mobile:</td>
             <td>{applicationData.mobile}</td>
@@ -138,7 +138,7 @@ const ApplicationDetails = () => {
           </tr>
           <tr>
             <td className="field-name">Membership Type:</td>
-            <td>{applicationData.membershipType}</td>
+            <td>{applicationData.currentMembershipType}</td>
           </tr>
           <tr>
             <td className="field-name">Recommended By:</td>

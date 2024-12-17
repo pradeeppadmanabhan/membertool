@@ -61,6 +61,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     applicationStatus: "Submitted", // Default status on submission
     dateOfSubmission: new Date().toISOString(), // Set on form submission
     renewalDueOn: null,
+    whatsappGroupStatus: "Add", //Available states -> "Add", "Added", "Remove", "Removed"
   });
 
   const [errors, setErrors] = useState({});

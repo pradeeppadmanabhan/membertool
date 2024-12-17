@@ -20,6 +20,7 @@ import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
 import ThankYouPage from "./ThankYouPage.js";
 import AdminDashboard from "./admin/AdminDashboard.js";
+import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 
 function App() {
   const { user, signInWithGoogle, logout } = useContext(AuthContext);
@@ -59,6 +60,9 @@ function App() {
           </Link>
           <Link to="/admin/renewals-due">
             <button>Admin - Renewals Due</button>
+          </Link>
+          <Link to="/admin/whatsapp-group-management">
+            <button>Admin - Manage WhatsApp Groups</button>
           </Link>
           <Link to="/search">
             <button>Admin - Search Members</button>
@@ -121,6 +125,14 @@ function App() {
             element={
               <ProtectedRoute requiredRoles={authorizedAdminEmails}>
                 <RenewalDueList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/whatsapp-group-management"
+            element={
+              <ProtectedRoute requiredRoles={authorizedAdminEmails}>
+                <WhatsappGroupManagement />
               </ProtectedRoute>
             }
           />
