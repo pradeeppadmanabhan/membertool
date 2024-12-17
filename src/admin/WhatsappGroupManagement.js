@@ -82,16 +82,10 @@ const WhatsappGroupManagement = () => {
   // Filter members *before* assigning to lifeMembers and annualMembers
   const filteredMembers = allMembers.filter(
     (member) =>
-      member.whatsappGroupStatus === "Add" ||
-      member.whatsappGroupStatus === "Remove"
+      (member.whatsappGroupStatus === "Add" ||
+        member.whatsappGroupStatus === "Remove") &&
+      member.mobile
   );
-  /* 
-  const lifeMembers = filteredMembers.filter(
-    (member) => member.currentMembershipType === "Life"
-  );
-  const annualMembers = filteredMembers.filter(
-    (member) => member.currentMembershipType === "Annual"
-  ); */
 
   const formatDate = (dateString) => {
     if (!dateString || dateString === "N/A") return "N/A"; // Handle empty dates or N/A case
