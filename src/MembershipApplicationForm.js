@@ -22,7 +22,7 @@ import AuthContext from "./AuthContext";
 const STATUS_TIMEOUT = 5000; // 5 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
-  const { user } = useContext(AuthContext);
+  const { user, isLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Prop Validation using PropTypes
@@ -85,17 +85,21 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   }, [initialMembershipType, generateMemberId]);
 
   useEffect(() => {
-    if (!user) {
-      console.error("User Unauthenticated, redirecting to Login Page");
+    //console.log("MemberApplicationForm: isLoading", isLoading);
+    //console.log("MemberApplicationForm: user", user);
+
+    if (!isLoading && !user) {
+      console.error("User is Unauthenticated, redirecting to Login Page");
       navigate("/login");
-      return;
+    } else if (user && !formData.id) {
+      // Only generate Member ID when user is logged in
+      fetchMemberID();
     }
+  }, [user, isLoading, navigate, formData.id, fetchMemberID]);
 
-    //console.log("Generating ID for user: ", user.displayName, user.uid);
-
-    fetchMemberID();
-    //eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
