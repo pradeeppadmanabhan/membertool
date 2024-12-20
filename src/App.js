@@ -30,26 +30,32 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
-    /*    console.log("Current Route:", location.pathname);
+    /* console.log("Current Route:", location.pathname);
     console.log("Current User:", user);
     console.log("search:", location.search);
-    console.log("isLoading", isLoading);
- */
-    if (!isLoading) {
-      const protectedRoutes = ["/new-application", "/payment-details"]; // Add protected routes here
+    console.log("isLoading", isLoading); */
 
-      if (!isLoading && !user && protectedRoutes.includes(location.pathname)) {
+    const protectedRoutes = [
+      "/new-application",
+      "/new-application/life",
+      "/new-application/honorary",
+      "/payment-details",
+    ]; // Add protected routes here
+
+    if (!isLoading) {
+      if (!user && protectedRoutes.includes(location.pathname)) {
         const currentPath = location.pathname + location.search;
-        console.log("Storing redirect URL:", currentPath);
+        //console.log("Storing redirect URL:", currentPath);
         localStorage.setItem("redirectUrl", currentPath);
 
         // Redirect to /login
         if (location.pathname !== "/login") {
-          console.log("Redirecting to /login");
+          //console.log("Redirecting to /login");
           navigate("/login");
         }
       }
     }
+    //console.log("Redirect URL Stored: ", localStorage.getItem("redirectUrl"));
   }, [user, isLoading, navigate, location.pathname, location.search]);
 
   //Define authorized admin emails

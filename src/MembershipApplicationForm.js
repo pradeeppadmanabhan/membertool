@@ -1,6 +1,6 @@
 // src/MembershipApplicationForm.js
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { /* useLocation, */ useNavigate } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set } from "firebase/database"; // Import necessary functions - , push
 import {
@@ -85,8 +85,11 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   }, [initialMembershipType, generateMemberId]);
 
   useEffect(() => {
-    //console.log("MemberApplicationForm: isLoading", isLoading);
-    //console.log("MemberApplicationForm: user", user);
+    /* const location = useLocation(); 
+    console.log("MemberApplicationForm: isLoading", isLoading);
+    console.log("MemberApplicationForm: user", user);
+    console.log("MemberApplicationForm Path:", location.pathname);
+    console.log("MemberApplicationForm Search:", location.search); */
 
     if (!isLoading && !user) {
       console.error("User is Unauthenticated, redirecting to Login Page");
