@@ -1,23 +1,20 @@
 // src/components/PaymentDetails.js
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL,
-} from "firebase/storage";
+import { useNavigate, useLocation } from "react-router-dom";
 import { ref, get, update, runTransaction } from "firebase/database";
-import { database, storage } from "../firebase";
+import { database } from "../firebase";
 import "../global.css";
-import ImageUploader from "./ImageUploader";
-import { useLocation } from "react-router-dom";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
-  const { memberID, membershipType } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const memberID = searchParams.get("memberID");
+  const membershipType = searchParams.get("membershipType");
+  const paymentMode = searchParams.get("paymentMode") || "Payment Gateway";
+
   const [memberData, setMemberData] = useState(location.state?.memberData);
   const [isLoading, setIsLoading] = useState(true);
   const [payments, setPayments] = useState([]);
@@ -25,9 +22,8 @@ const PaymentDetails = () => {
   const LIFE_MEMBERSHIP_FEE = 2000;
 
   const [paymentData, setPaymentData] = useState({
-    paymentMode: "",
-    transactionReference: "",
-    transactionScreenshot: null,
+    paymentMode: paymentMode,
+    transactionReference: "fromPG", //TODO: This is placeholder and must be replaced once actual Payment Gateway is integrated.
     amount:
       membershipType === "Annual"
         ? ANNUAL_MEMBERSHIP_FEE
@@ -83,6 +79,8 @@ const PaymentDetails = () => {
   }
 
   //console.log("memberId:", memberID, "membershipType:", membershipType);
+  //console.log("paymentMode:", paymentMode);
+
   if (!memberID || !membershipType) {
     return (
       <div>
@@ -127,44 +125,18 @@ const PaymentDetails = () => {
     return receiptNumber;
   }
 
-  const handlePaymentModeChange = (e) => {
-    setPaymentData((prev) => ({
-      ...prev,
-      paymentMode: e.target.value,
-      transactionReference: "",
-      transactionScreenshot: null,
-    }));
-    setErrors((prev) => ({ ...prev, paymentMode: "" }));
-  };
-
-  const handleFileSelect = (file) => {
-    //const file = e.target.files[0];
-    setPaymentData((prev) => ({ ...prev, transactionScreenshot: file }));
-    //console.log("file :", file);
-    if (file) {
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedTypes.includes(file.type)) {
-        setErrors((prev) => ({
-          ...prev,
-          transactionScreenshot: "Only JPEG/JPG and PNG images are allowed.",
-        }));
-      } else if (file.size > 2 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          transactionScreenshot: "Image size must be less than 2MB.",
-        }));
-      } else {
-        setErrors((prev) => ({ ...prev, transactionScreenshot: "" }));
-      }
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const { paymentMode, transactionReference, transactionScreenshot } =
-      paymentData;
+    const { paymentMode, transactionReference } = paymentData;
+
+    console.log(
+      "Submitting payment details for ",
+      memberID,
+      paymentMode,
+      transactionReference
+    );
 
     // Validate inputs
     if (!paymentMode) {
@@ -180,15 +152,6 @@ const PaymentDetails = () => {
           paymentMode === "Cash"
             ? "Enter receipt number from treasurer"
             : "Transaction Reference from bank transfer is required.",
-      }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (paymentMode === "Bank Transfer" && !transactionScreenshot) {
-      setErrors((prev) => ({
-        ...prev,
-        transactionScreenshot: "Transaction Screenshot is required.",
       }));
       setIsSubmitting(false);
       return;
@@ -215,25 +178,8 @@ const PaymentDetails = () => {
       receiptNumber = transactionReference;
     } else {
       receiptNumber = await generateReceiptNumber(database);
-    }
-
-    // Upload screenshot if provided
-    let uploadedScreenshotURL = null;
-    if (transactionScreenshot) {
-      try {
-        const imagePath = `images/${memberID}/${transactionScreenshot.name}`;
-        const storageReference = storageRef(storage, imagePath);
-        const snapshot = await uploadBytes(
-          storageReference,
-          transactionScreenshot
-        );
-        uploadedScreenshotURL = await getDownloadURL(snapshot.ref);
-      } catch (error) {
-        console.error("Error uploading transaction screenshot:", error);
-        setStatusMessage("Error uploading screenshot. Please try again.");
-        setIsSubmitting(false);
-        return;
-      }
+      paymentData.transactionReference = receiptNumber;
+      console.log("Receipt Number Generated:", receiptNumber);
     }
 
     // Update payment details in Firebase
@@ -241,7 +187,6 @@ const PaymentDetails = () => {
       const paymentRecord = {
         paymentMode,
         transactionReference,
-        transactionScreenshot: uploadedScreenshotURL,
         amount: paymentData.amount,
         receiptNo: receiptNumber,
         dateOfPayment: new Date().toISOString(),
@@ -306,20 +251,9 @@ const PaymentDetails = () => {
       <p>Membership Type: {membershipType}</p>
       <p>Please Pay: Rs.{paymentData.amount}</p>
       <label>
-        Payment Mode:
-        <select
-          className="filter-select"
-          value={paymentData.paymentMode}
-          onChange={handlePaymentModeChange}
-        >
-          <option value="">Select</option>
-          <option value="Cash">Cash</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-        </select>
+        Payment Mode: <p> {paymentData.paymentMode}</p>
       </label>
-      {errors.paymentMode && (
-        <span className="error">{errors.paymentMode}</span>
-      )}
+
       <br />
 
       {paymentData.paymentMode === "Cash" && (
@@ -328,59 +262,27 @@ const PaymentDetails = () => {
         </>
       )}
 
-      {paymentData.paymentMode === "Bank Transfer" && (
-        <>
-          <p>
-            Please make a bank transfer to the following Account and share
-            details:
-            <br />
-            <br />
-            <b>The Karnataka Mountaineering Association</b>
-            <br />
-            Account No 520101235072644
-            <br />
-            Union Bank of India, Nrupatunga Road Branch, Bengaluru
-            <br />
-            IFSC / NEFT – UBIN0901750
-            <br />
-          </p>
-
-          <br />
-          <label>
-            Upload Transaction Screenshot:
-            <ImageUploader
-              onImageSelect={handleFileSelect}
-              selectedImage={paymentData.transactionScreenshot}
-            />
-          </label>
-          {errors.transactionScreenshot && (
-            <span className="error">{errors.transactionScreenshot}</span>
+      {/* Conditionally render transaction reference input */}
+      {paymentData.paymentMode === "Cash" && (
+        <div>
+          <label htmlFor="transactionReference">Receipt Number:</label>
+          <input
+            type="text"
+            id="transactionReference"
+            name="transactionReference"
+            value={paymentData.transactionReference}
+            placeholder="Enter receipt number from treasurer"
+            onChange={(e) =>
+              setPaymentData({
+                ...paymentData,
+                transactionReference: e.target.value,
+              })
+            }
+          />
+          {errors.transactionReference && (
+            <span className="error">{errors.transactionReference}</span>
           )}
-          <br />
-        </>
-      )}
-
-      <label>
-        Transaction Reference Number:
-        <input
-          type="text"
-          value={paymentData.transactionReference}
-          placeholder={
-            paymentData.paymentMode === "Cash"
-              ? "Enter receipt number from treasurer"
-              : "Enter bank transaction reference"
-          }
-          onChange={(e) =>
-            setPaymentData((prev) => ({
-              ...prev,
-              transactionReference: e.target.value,
-            }))
-          }
-        />
-      </label>
-      <br />
-      {errors.transactionReference && (
-        <span className="error">{errors.transactionReference}</span>
+        </div>
       )}
       <br />
 
