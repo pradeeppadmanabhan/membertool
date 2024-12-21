@@ -326,7 +326,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           userData.payments.push(paymentRecord);
           targetPage = `/thank-you/honorary/${newMemberId}`;
         } else {
-          targetPage = `/payment-details/${newMemberId}/${formData.currentMembershipType}`;
+          targetPage = `/payment-details?memberID=${newMemberId}&membershipType=${formData.currentMembershipType}`;
         }
 
         //console.log("Submitting to id:", newMemberId);

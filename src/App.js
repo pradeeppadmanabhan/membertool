@@ -110,10 +110,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<WelcomePage />} />
-        <Route
-          path="/payment-details/:memberID/:membershipType"
-          element={<PaymentDetails />}
-        />
+        <Route path="/payment-details" element={<PaymentDetails />} />
         <Route
           path="/thank-you/:receiptNumber/:memberID"
           element={<ThankYouPage />}
