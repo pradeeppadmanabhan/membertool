@@ -81,27 +81,31 @@ function App() {
         </div>
       </header>
       <div className="button-container">
-        <Link to="/new-application">
-          <button>New Member Form</button>
-        </Link>
-        <Link to="/admin/applications">
-          <button>Admin - Applications</button>
-        </Link>
-        <Link to="/admin/invite-member">
-          <button>Admin - Invite Member</button>
-        </Link>
-        <Link to="/admin/renewals-due">
-          <button>Admin - Renewals Due</button>
-        </Link>
-        <Link to="/admin/whatsapp-group-management">
-          <button>Admin - Manage WhatsApp Groups</button>
-        </Link>
-        <Link to="/search">
-          <button>Admin - Search Members</button>
-        </Link>
-        <Link to="/admin/dashboard">
-          <button>Admin - Dashboard</button>
-        </Link>
+        {authorizedAdminEmails.includes(user?.email) && (
+          <>
+            <Link to="/new-application">
+              <button>New Member Form</button>
+            </Link>
+            <Link to="/admin/applications">
+              <button>Admin - Applications</button>
+            </Link>
+            <Link to="/admin/invite-member">
+              <button>Admin - Invite Member</button>
+            </Link>
+            <Link to="/admin/renewals-due">
+              <button>Admin - Renewals Due</button>
+            </Link>
+            <Link to="/admin/whatsapp-group-management">
+              <button>Admin - Manage WhatsApp Groups</button>
+            </Link>
+            <Link to="/search">
+              <button>Admin - Search Members</button>
+            </Link>
+            <Link to="/admin/dashboard">
+              <button>Admin - Dashboard</button>
+            </Link>
+          </>
+        )}
       </div>
 
       <Routes>
