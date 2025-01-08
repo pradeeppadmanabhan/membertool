@@ -6,7 +6,7 @@
 .pnp.js
 
 #Ignore functions
-/functions/
+#/functions/
 
 # testing
 /coverage
