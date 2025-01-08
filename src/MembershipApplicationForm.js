@@ -381,6 +381,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setStatusMessage={setStatusMessage}
       />
       <br />
+      <h3>Provisional Application ID: {formData.id} </h3>
+      <br />
       {/* Personal Information */}
       <PersonalInfo
         formData={formData}
