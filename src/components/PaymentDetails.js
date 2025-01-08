@@ -70,6 +70,16 @@ const PaymentDetails = () => {
     }
   }, [memberID]); // Run the effect whenever memberID changes
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   if (isLoading) {
     return <p>Loading member data...</p>;
   }
@@ -124,6 +134,92 @@ const PaymentDetails = () => {
     }
     return receiptNumber;
   }
+
+  const handleRazorpayPayment = async () => {
+    //console.log("payment amount:", paymentData.amount);
+
+    //console.log("Creating Razorpay Order at ", new Date().toLocaleString());
+
+    try {
+      // Step 1: Fetch Razorpay Order ID from backend
+      const response = await fetch(
+        "https://us-central1-membertool-test.cloudfunctions.net/createRazorpayOrder",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            amount: paymentData.amount * 100, // Convert to paise
+            currency: "INR",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to create Razorpay order");
+      }
+
+      const order = await response.json();
+      console.log("Razorpay Order created:", order);
+
+      const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+
+      // Step 2: Open Razorpay checkout
+      const options = {
+        key: RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID
+        amount: order.amount,
+        currency: order.currency,
+        name: "Membership Payment",
+        description: `Payment for ${membershipType} Membership`,
+        order_id: order.id,
+        handler: async (response) => {
+          console.log("Razorpay payment successful:", response);
+
+          // Step 3: Save payment details to Firebase
+          const paymentRecord = {
+            paymentMode: "Razorpay",
+            transactionReference: response.razorpay_payment_id,
+            amount: paymentData.amount,
+            receiptNo: response.razorpay_order_id,
+            dateOfPayment: new Date().toISOString(),
+            applicationStatus: "Paid",
+            membershipType,
+          };
+
+          try {
+            // const memberRef = ref(database, `users/${memberID}`);
+            const paymentRef = ref(database, `users/${memberID}/payments/`);
+            const updatedPayments = [...payments, paymentRecord];
+            await update(
+              paymentRef,
+              updatedPayments.reduce((acc, item, index) => {
+                acc[index] = item;
+                return acc;
+              }, {})
+            );
+            console.log("Payment saved successfully");
+            setStatusMessage("Payment successful!");
+          } catch (error) {
+            console.error("Error saving payment:", error);
+          }
+        },
+        prefill: {
+          email: "user@example.com", // Replace with user email if available
+          contact: "1234567890", // Replace with user phone number if available
+        },
+        theme: {
+          color: "#3399cc",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Error during payment:", error);
+      setStatusMessage("Payment failed. Please try again.");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,7 +345,10 @@ const PaymentDetails = () => {
         Member ID: <b>{memberID}</b>
       </p>
       <p>Membership Type: {membershipType}</p>
-      <p>Please Pay: Rs.{paymentData.amount}</p>
+      <p>
+        Please Pay: <strong>Rs.{paymentData.amount}</strong> Membership Fee
+        <br />+ Convenience Fees & Taxes
+      </p>
       <label>
         Payment Mode: <p> {paymentData.paymentMode}</p>
       </label>
@@ -284,12 +383,27 @@ const PaymentDetails = () => {
           )}
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={handleRazorpayPayment}
+        disabled={isSubmitting}
+      >
+        {isSubmitting ? "Processing..." : "Pay with Razorpay"}
+      </button>
+      <br />
       <br />
 
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit Payment Details"}
       </button>
-      {statusMessage && <p>{statusMessage}</p>}
+      <br />
+      <br />
+      {statusMessage && (
+        <p>
+          <strong>{statusMessage}</strong>
+        </p>
+      )}
       <br />
     </form>
   );

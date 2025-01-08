@@ -18,12 +18,17 @@
 //   response.send("Hello from Firebase!");
 // });
 
+const Razorpay = require("razorpay");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
 
-admin.initializeApp();
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+  databaseURL:
+    "https://membertool-test-default-rtdb.asia-southeast1.firebasedatabase.app",
+});
 const db = admin.database();
 
 const app = express();
@@ -37,6 +42,76 @@ app.use(
     ],
   })
 );
+
+console.log("ENV:", process.env.NODE_ENV);
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
+
+const razorpay = new Razorpay({
+  key_id: RAZORPAY_KEY_ID,
+  key_secret: RAZORPAY_KEY_SECRET,
+  headers: {
+    "X-Razorpay-Account": "your-account-id",
+  },
+});
+
+razorpay.log = console.log;
+
+exports.createRazorpayOrder = functions.https.onRequest(async (req, res) => {
+  //Handle preflight request
+
+  if (req.method === "OPTIONS") {
+    res.set("Access-Control-Allow-Origin", "http://localhost:3000");
+    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.set("Access-Control-Max-Age", "3600");
+    return res.status(204).send("");
+  }
+
+  res.set("Access-Control-Allow-Origin", "http://localhost:3000");
+  /*   
+  console.log(
+    "Process details",
+    process.env.RAZORPAY_KEY_ID,
+    process.env.RAZORPAY_KEY_SECRET
+  );
+  console.log(
+    "Process Lengths:",
+    process.env.RAZORPAY_KEY_ID.length,
+    process.env.RAZORPAY_KEY_SECRET.length
+  );
+  console.log("Razorpay object details", razorpay.key_id, razorpay.key_secret);
+  console.log("req.body: ", req.body);
+  */
+
+  try {
+    const { amount, currency } = req.body;
+    console.log("Creating order:", amount, currency);
+
+    if (!amount || !currency) {
+      return res
+        .status(400)
+        .json({ error: "Amount and Currency are required" });
+    }
+
+    const options = {
+      amount: amount,
+      currency: currency || "INR",
+      payment_capture: 1,
+    };
+
+    const order = await razorpay.orders.create(options);
+    console.log("Order created:", order);
+    res.status(200).json(order);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).send("error creating order: " + error.message);
+  }
+});
 
 exports.generateMemberId = functions.https.onCall(async (data, context) => {
   if (!data.auth) {
