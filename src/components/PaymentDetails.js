@@ -15,7 +15,7 @@ const PaymentDetails = () => {
   const membershipType = searchParams.get("membershipType");
   const paymentMode = searchParams.get("paymentMode") || "Payment Gateway";
 
-  const [memberData, setMemberData] = useState(location.state?.memberData);
+  const [memberData, setMemberData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [payments, setPayments] = useState([]);
   const ANNUAL_MEMBERSHIP_FEE = 250;
@@ -23,7 +23,7 @@ const PaymentDetails = () => {
 
   const [paymentData, setPaymentData] = useState({
     paymentMode: paymentMode,
-    transactionReference: "fromPG", //TODO: This is placeholder and must be replaced once actual Payment Gateway is integrated.
+    receiptNumber: "",
     amount:
       membershipType === "Annual"
         ? ANNUAL_MEMBERSHIP_FEE
@@ -40,7 +40,12 @@ const PaymentDetails = () => {
     // Fetch data when the component mounts
     const fetchMemberData = async () => {
       try {
-        //console.log("Fetching member data for ", memberID);
+        /* console.log(
+          "Fetching member data for ",
+          memberID,
+          membershipType,
+          paymentMode
+        ); */
         const memberRef = ref(database, `users/${memberID}`);
         const snapshot = await get(memberRef);
         if (snapshot.exists()) {
@@ -67,8 +72,11 @@ const PaymentDetails = () => {
     if (memberID) {
       // Only fetch if memberID is available
       fetchMemberData();
+    } else {
+      setLoadingError("Invalid URL: Missing Member ID or Membership Type");
+      setIsLoading(false);
     }
-  }, [memberID]); // Run the effect whenever memberID changes
+  }, [memberID /*  membershipType, paymentMode */]); // Run the effect whenever memberID changes
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -176,16 +184,28 @@ const PaymentDetails = () => {
         handler: async (response) => {
           console.log("Razorpay payment successful:", response);
 
+          let receiptNumber = await generateReceiptNumber(database);
+
           // Step 3: Save payment details to Firebase
           const paymentRecord = {
             paymentMode: "Razorpay",
-            transactionReference: response.razorpay_payment_id,
+            paymentID: response.razorpay_payment_id,
+            orderID: response.razorpay_order_id,
             amount: paymentData.amount,
-            receiptNo: response.razorpay_order_id,
+            receiptNumber: receiptNumber,
             dateOfPayment: new Date().toISOString(),
             applicationStatus: "Paid",
             membershipType,
           };
+
+          setPaymentData((prevData) => ({
+            ...prevData,
+            receiptNumber: receiptNumber,
+          }));
+
+          //console.log("Storing Razorpay payment :", paymentData);
+
+          // Save payment details to Firebase
 
           try {
             // const memberRef = ref(database, `users/${memberID}`);
@@ -198,6 +218,7 @@ const PaymentDetails = () => {
                 return acc;
               }, {})
             );
+            setPayments(updatedPayments);
             console.log("Payment saved successfully");
             setStatusMessage("Payment successful!");
           } catch (error) {
@@ -221,75 +242,66 @@ const PaymentDetails = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    const { paymentMode, transactionReference } = paymentData;
-
-    console.log(
-      "Submitting payment details for ",
-      memberID,
-      paymentMode,
-      transactionReference
-    );
-
-    // Validate inputs
-    if (!paymentMode) {
-      setErrors({ paymentMode: "Payment mode is required." });
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (!transactionReference) {
-      setErrors((prev) => ({
-        ...prev,
-        transactionReference:
-          paymentMode === "Cash"
-            ? "Enter receipt number from treasurer"
-            : "Transaction Reference from bank transfer is required.",
-      }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    const isDuplicatePayment = payments.some(
-      (payment) =>
-        payment.paymentMode === paymentMode &&
-        payment.transactionReference === transactionReference
-    );
-
-    if (isDuplicatePayment) {
-      setErrors((prev) => ({
-        ...prev,
-        transactionReference: "This transaction has already been recorded",
-      }));
-      setIsSubmitting(false);
-      return;
-    }
-
-    let receiptNumber = "";
-
-    if (paymentMode === "Cash") {
-      receiptNumber = transactionReference;
-    } else {
-      receiptNumber = await generateReceiptNumber(database);
-      paymentData.transactionReference = receiptNumber;
-      console.log("Receipt Number Generated:", receiptNumber);
-    }
-
-    // Update payment details in Firebase
+  const handleCashPayment = async (receiptNumber) => {
     try {
       const paymentRecord = {
-        paymentMode,
-        transactionReference,
+        paymentMode: "Cash",
         amount: paymentData.amount,
-        receiptNo: receiptNumber,
+        receiptNumber: receiptNumber,
         dateOfPayment: new Date().toISOString(),
         applicationStatus: "Paid",
         membershipType: membershipType,
       };
 
+      setPaymentData((prevData) => ({
+        ...prevData,
+        receiptNumber: receiptNumber,
+      }));
+
+      //console.log("Storing Cash payment :", paymentRecord);
+
+      // Save payment details to Firebase
+
+      const paymentRef = ref(database, `users/${memberID}/payments/`);
+      const updatedPayments = [...payments, paymentRecord];
+      await update(
+        paymentRef,
+        updatedPayments.reduce((acc, item, index) => {
+          acc[index] = item;
+          return acc;
+        }, {})
+      );
+      setPayments(updatedPayments);
+    } catch (error) {
+      console.error("Error saving payment:", error);
+      setStatusMessage("Error saving payment details. Please try again.");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const { paymentMode, receiptNumber } = paymentData;
+
+    /* console.log(
+      "handleSubmit called with payment data: ",
+      paymentMode,
+      receiptNumber
+    ); */
+
+    if (paymentMode === "Cash" && !receiptNumber) {
+      setErrors((prev) => ({
+        ...prev,
+        receiptNumber: "Enter receipt number from treasurer",
+      }));
+      console.error("Can't record cash payment without receipt No!");
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Update payment details in Firebase
+    try {
       const updatedMemberData = { ...memberData };
       if (membershipType === "Life") {
         updatedMemberData.renewalDueOn = "N/A";
@@ -302,26 +314,12 @@ const PaymentDetails = () => {
         updatedMemberData.currentMembershipType = "Annual";
       }
 
+      updatedMemberData.applicationStatus = "Paid";
       const memberRef = ref(database, `users/${memberID}`);
       await update(memberRef, updatedMemberData);
 
       console.log("Updated Member Data", updatedMemberData);
-
-      const paymentRef = ref(database, `users/${memberID}/payments/`);
-
-      // Append new payment to the payments array in Firebase
-      const updatedPayments = [...payments, paymentRecord]; // Prepare updated array
-      await update(
-        paymentRef,
-        updatedPayments.reduce((acc, item, index) => {
-          acc[index] = item; // Flatten array into object for Firebase
-          return acc;
-        }, {})
-      );
-
-      // Update local payments state
-      setPayments(updatedPayments);
-
+      setMemberData(updatedMemberData);
       //console.log("New Payment Details:", paymentRecord);
       //console.log("Updated Payments:", updatedPayments);
 
@@ -364,17 +362,17 @@ const PaymentDetails = () => {
       {/* Conditionally render transaction reference input */}
       {paymentData.paymentMode === "Cash" && (
         <div>
-          <label htmlFor="transactionReference">Receipt Number:</label>
+          <label htmlFor="receiptNumber">Receipt Number:</label>
           <input
             type="text"
-            id="transactionReference"
-            name="transactionReference"
-            value={paymentData.transactionReference}
+            id="receiptNumber"
+            name="receiptNumber"
+            value={paymentData.receiptNumber || ""}
             placeholder="Enter receipt number from treasurer"
             onChange={(e) =>
               setPaymentData({
                 ...paymentData,
-                transactionReference: e.target.value,
+                receiptNumber: e.target.value,
               })
             }
           />
@@ -393,6 +391,15 @@ const PaymentDetails = () => {
       </button>
       <br />
       <br />
+      {paymentData.paymentMode === "Cash" && (
+        <button
+          type="button"
+          onClick={() => handleCashPayment(paymentData.receiptNumber)}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Processing..." : "Submit Cash Payment"}
+        </button>
+      )}
 
       <button type="submit" disabled={isSubmitting}>
         {isSubmitting ? "Submitting..." : "Submit Payment Details"}
