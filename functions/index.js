@@ -13,40 +13,51 @@
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 const Razorpay = require("razorpay");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
 
+// console.log("ENV:", process.env.NODE_ENV);
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
+
+const REACT_APP_DATABASE_URL = process.env.REACT_APP_DATABASE_URL;
+
 admin.initializeApp({
   credential: admin.credential.applicationDefault(),
-  databaseURL:
-    "https://membertool-test-default-rtdb.asia-southeast1.firebasedatabase.app",
+  databaseURL: REACT_APP_DATABASE_URL,
 });
 const db = admin.database();
 
 const app = express();
 app.use(express.json());
-app.use(
-  cors({
-    origin: [
-      "http://localhost:3000",
-      "https://kmaindia.org",
-      "https://*.vercel.app",
-    ],
-  })
-);
 
-console.log("ENV:", process.env.NODE_ENV);
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
+//Dynamic CORS configuration
+const corsOptions = {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      "http://localhost:3000", // local development
+      "https://kmaindia.org", // production domain
+    ];
+
+    //Allow wildcard subdomains for vercel.app
+    const isVercelOrigin = origin && origin.endsWith(".vercel.app");
+
+    if (allowedOrigins.includes(origin) || isVercelOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
@@ -62,55 +73,48 @@ const razorpay = new Razorpay({
 razorpay.log = console.log;
 
 exports.createRazorpayOrder = functions.https.onRequest(async (req, res) => {
-  //Handle preflight request
+  cors(corsOptions)(req, res, async () => {
+    /* console.log(
+      "Process details",
+      process.env.RAZORPAY_KEY_ID,
+      process.env.RAZORPAY_KEY_SECRET
+    );
+    console.log(
+      "Process Lengths:",
+      process.env.RAZORPAY_KEY_ID.length,
+      process.env.RAZORPAY_KEY_SECRET.length
+    );
+    console.log(
+      "Razorpay object details",
+      razorpay.key_id,
+      razorpay.key_secret
+    );
+    console.log("req.body: ", req.body); */
 
-  if (req.method === "OPTIONS") {
-    res.set("Access-Control-Allow-Origin", "http://localhost:3000");
-    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.set("Access-Control-Max-Age", "3600");
-    return res.status(204).send("");
-  }
+    try {
+      const { amount, currency } = req.body;
+      console.log("Creating order:", amount, currency);
 
-  res.set("Access-Control-Allow-Origin", "http://localhost:3000");
-  /*   
-  console.log(
-    "Process details",
-    process.env.RAZORPAY_KEY_ID,
-    process.env.RAZORPAY_KEY_SECRET
-  );
-  console.log(
-    "Process Lengths:",
-    process.env.RAZORPAY_KEY_ID.length,
-    process.env.RAZORPAY_KEY_SECRET.length
-  );
-  console.log("Razorpay object details", razorpay.key_id, razorpay.key_secret);
-  console.log("req.body: ", req.body);
-  */
+      if (!amount || !currency) {
+        return res
+          .status(400)
+          .json({ error: "Amount and Currency are required" });
+      }
 
-  try {
-    const { amount, currency } = req.body;
-    console.log("Creating order:", amount, currency);
+      const options = {
+        amount: amount,
+        currency: currency || "INR",
+        payment_capture: 1,
+      };
 
-    if (!amount || !currency) {
-      return res
-        .status(400)
-        .json({ error: "Amount and Currency are required" });
+      const order = await razorpay.orders.create(options);
+      console.log("Order created:", order);
+      res.status(200).json(order);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      res.status(500).send("error creating order: " + error.message);
     }
-
-    const options = {
-      amount: amount,
-      currency: currency || "INR",
-      payment_capture: 1,
-    };
-
-    const order = await razorpay.orders.create(options);
-    console.log("Order created:", order);
-    res.status(200).json(order);
-  } catch (error) {
-    console.error("Error creating order:", error);
-    res.status(500).send("error creating order: " + error.message);
-  }
+  });
 });
 
 exports.generateMemberId = functions.https.onCall(async (data, context) => {
