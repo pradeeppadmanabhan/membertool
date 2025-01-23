@@ -19,7 +19,7 @@ import PropTypes from "prop-types"; // Import PropTypes
 import { getFunctions, httpsCallable } from "firebase/functions";
 import AuthContext from "./AuthContext";
 
-const STATUS_TIMEOUT = 5000; // 5 seconds in milliseconds
+const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const { user, isLoading } = useContext(AuthContext);
@@ -235,10 +235,12 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const handleValidate = () => {
     const formErrors = validateForm();
     const imageErrors = validateImage();
-    setErrors({ ...formErrors, ...imageErrors });
+    const allErrors = { ...formErrors, ...imageErrors };
+
+    setErrors(allErrors);
 
     // Check for errors only once
-    if (Object.keys({ ...formErrors, ...imageErrors }).length > 0) {
+    if (Object.keys(allErrors).length > 0) {
       setStatusMessage(
         <React.Fragment>
           <b>Please fix the errors before submitting:</b>
@@ -254,15 +256,16 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         </React.Fragment>
       );
     }
+    return allErrors;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    handleValidate();
+    const validtionErrors = handleValidate();
 
-    if (Object.keys(errors).length > 0) {
+    if (Object.keys(validtionErrors).length > 0) {
       setIsSubmitting(false);
       return;
     }
