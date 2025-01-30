@@ -202,7 +202,7 @@ const MemberInvite = () => {
   };
 
   return (
-    <div>
+    <div className="mt-5">
       <h2>Invite Member</h2>
       <form onSubmit={handleSubmit}>
         <div>

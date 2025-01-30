@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { database } from "../firebase";
 import { ref, get } from "firebase/database";
 import PrintApplication from "../utils/PrintApplication";
-import Header from "../components/Header";
+import "../global.css"; // Import your CSS file
 
 const ApplicationDetails = () => {
   const { applicationId } = useParams();
@@ -52,8 +52,7 @@ const ApplicationDetails = () => {
   };
 
   return (
-    <div className="application-details-container">
-      <Header />
+    <div className="mt-5">
       <h2>Application Details</h2>
       <button onClick={() => navigate(-1)}>Back to List</button>{" "}
       {/* Back button */}
@@ -62,7 +61,7 @@ const ApplicationDetails = () => {
       <div className="profile-picture-container">
         <img src={applicationData.imageURL} alt="Uploaded" width="200" />
       </div>
-      <table className="application-details-table">
+      <table>
         <tbody>
           <tr>
             <td className="field-name">ID:</td>

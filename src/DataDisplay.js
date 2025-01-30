@@ -4,7 +4,6 @@ import { ref, onValue, off } from "firebase/database";
 import { onAuthStateChanged } from "firebase/auth";
 import { database } from "./firebase";
 import "./global.css"; // Import your CSS file
-import Header from "./components/Header";
 import AuthContext, { auth } from "./AuthContext";
 
 const DataDisplay = () => {
@@ -130,7 +129,6 @@ const DataDisplay = () => {
   return (
     <form onSubmit={handleSearch}>
       <div className="search-container">
-        <Header />
         <h1>Search Member Details</h1>
         <div>
           <input

@@ -176,7 +176,7 @@ The KMA Team`;
   };
 
   return (
-    <div>
+    <div className="mt-5">
       <h2>Members Due for Renewal</h2>
       {/* Display email status message above the table */}
       {emailStatus && (

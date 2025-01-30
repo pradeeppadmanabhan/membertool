@@ -105,12 +105,12 @@ const ApplicationsList = () => {
     });
 
   return (
-    <div>
+    <div className="mt-5">
       <h2>List of Applications</h2>
 
       {/* Filter Controls */}
 
-      <div>
+      <div className="filter-container">
         <label htmlFor="typeFilter">Filter by Membership Type:</label>
         <select
           id="typeFilter"
@@ -128,23 +128,27 @@ const ApplicationsList = () => {
       {/* Date Range Picker */}
       <div className="date-range-picker">
         <br />
-        <label htmlFor="dateFilter">Filter by Date:</label>
-        <div>
-          <label htmlFor="startDate">Start Date:</label>
-          <input
-            type="date"
-            id="startDate"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
 
-          <label htmlFor="endDate">End Date:</label>
-          <input
-            type="date"
-            id="endDate"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
+        <div className="date-range-container">
+          <label htmlFor="dateFilter">Filter by Date:</label>
+          <div className="date-group">
+            <label htmlFor="startDate">Start Date:</label>
+            <input
+              type="date"
+              id="startDate"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+            />
+          </div>
+          <div className="date-group">
+            <label htmlFor="endDate">End Date:</label>
+            <input
+              type="date"
+              id="endDate"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 

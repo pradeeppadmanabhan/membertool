@@ -5,7 +5,7 @@ import logo from "./KMALogo.png"; // Import your logo
 
 const WelcomePage = () => {
   return (
-    <div className="welcome-page">
+    <div className="mt-5">
       <div className="content">
         <img src={logo} alt="KMA Logo" className="logo-image" />
         <h1>Welcome to the Karnataka Mountaineering Association</h1>

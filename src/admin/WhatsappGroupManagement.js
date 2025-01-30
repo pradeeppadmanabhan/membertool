@@ -99,7 +99,7 @@ const WhatsappGroupManagement = () => {
 
       {/* Single Merged Table */}
       {/* <h2>WhatsApp Group</h2> */}
-      <table className="table table-bordered">
+      <table>
         {" "}
         {/* Add Bootstrap class for styling */}
         <thead>

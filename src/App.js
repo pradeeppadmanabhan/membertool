@@ -80,6 +80,7 @@ function App() {
           )}
           <br />
           <br />
+          <br />
         </div>
       </header>
       <div className="button-container">
@@ -89,22 +90,22 @@ function App() {
               <button>New Member Form</button>
             </Link>
             <Link to="/admin/applications">
-              <button>Admin - Applications</button>
+              <button>Applications</button>
             </Link>
             <Link to="/admin/invite-member">
-              <button>Admin - Invite Member</button>
+              <button>Invite Member</button>
             </Link>
             <Link to="/admin/renewals-due">
-              <button>Admin - Renewals Due</button>
+              <button>Renewals Due</button>
             </Link>
             <Link to="/admin/whatsapp-group-management">
-              <button>Admin - Manage WhatsApp Groups</button>
+              <button>Manage WhatsApp</button>
             </Link>
             <Link to="/search">
-              <button>Admin - Search Members</button>
+              <button>Search Members</button>
             </Link>
             <Link to="/admin/dashboard">
-              <button>Admin - Dashboard</button>
+              <button>Dashboard</button>
             </Link>
           </>
         )}
