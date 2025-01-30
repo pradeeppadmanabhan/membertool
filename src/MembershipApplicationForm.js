@@ -425,12 +425,14 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       {/* Display image upload error */}
       <br />
       <br />
-      <button type="submit" disabled={!formData.consent || isSubmitting}>
-        {isSubmitting ? "Submitting..." : "Submit"}
-      </button>
-      <button type="button" onClick={handleClear}>
-        Clear
-      </button>
+      <div className="button-container">
+        <button type="submit" disabled={!formData.consent || isSubmitting}>
+          {isSubmitting ? "Submitting..." : "Submit"}
+        </button>
+        <button type="button" onClick={handleClear}>
+          Clear
+        </button>
+      </div>
       {/* Conditional message for consent */}
       {!formData.consent && (
         <p className="consent-message">

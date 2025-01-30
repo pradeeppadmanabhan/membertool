@@ -40,6 +40,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       "http://localhost:3000", // local development
+      "http://192.168.1.28:3000", //local development on network
       "https://kmaindia.org", // production domain
     ];
 

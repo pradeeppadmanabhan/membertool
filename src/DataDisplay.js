@@ -32,11 +32,6 @@ const DataDisplay = () => {
       }
     });
 
-    /* onValue(dataRef, (snapshot) => {
-      const fetchedData = snapshot.val();
-      //console.log("Fetched data from Firebase:", fetchedData); // Log the fetched data
-      setData(fetchedData);
-    }); */
     // Function to fetch data
     const fetchData = () => {
       onValue(dataRef, (snapshot) => {
@@ -127,13 +122,6 @@ const DataDisplay = () => {
     setSelectedUser(null); // Reset selectedUser to clear the detailed view
   };
 
-  /* // Function to convert camelCase to regular text
-  const camelCaseToText = (str) => {
-    return str
-      .replace(/([A-Z])/g, " $1")
-      .replace(/^./, (str) => str.toUpperCase());
-  }; */
-
   // Helper function to display values, handling "No Data"
   const displayValue = (value) => {
     return value === "No Data" ? "" : value;
@@ -160,8 +148,10 @@ const DataDisplay = () => {
             value={searchParams.mobile}
             onChange={handleChange}
           />
-          <button onClick={handleSearch}>Search</button>
-          <button onClick={handleClear}>Clear</button>
+          <div className="button-container">
+            <button onClick={handleSearch}>Search</button>
+            <button onClick={handleClear}>Clear</button>
+          </div>
         </div>
         <div className="search-results">
           {/* Add a container for search results */}

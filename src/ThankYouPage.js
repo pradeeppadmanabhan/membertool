@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import "./ThankYouPage.css";
+import "./global.css";
 import { useParams } from "react-router-dom";
 import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";

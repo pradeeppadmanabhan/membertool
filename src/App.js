@@ -64,6 +64,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
+        <br />
         <h1>KMA Membership Management System</h1>
         {/* Authentication Controls */}
         <div>
@@ -77,6 +78,7 @@ function App() {
               <button onClick={signInWithGoogle}>Sign in with Google</button>
             </div>
           )}
+          <br />
           <br />
         </div>
       </header>
