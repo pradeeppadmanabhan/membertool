@@ -13,11 +13,11 @@
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
 
-const Razorpay = require("razorpay");
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const express = require("express");
 const cors = require("cors");
+const Razorpay = require("razorpay");
 
 // console.log("ENV:", process.env.NODE_ENV);
 if (process.env.NODE_ENV !== "production") {
@@ -26,12 +26,14 @@ if (process.env.NODE_ENV !== "production") {
 
 const REACT_APP_DATABASE_URL = process.env.REACT_APP_DATABASE_URL;
 
-admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-  databaseURL: REACT_APP_DATABASE_URL,
-});
-const db = admin.database();
+if (admin.apps.length === 0) {
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault(),
+    databaseURL: REACT_APP_DATABASE_URL,
+  });
+}
 
+const db = admin.database();
 const app = express();
 app.use(express.json());
 
@@ -55,10 +57,18 @@ const corsOptions = {
   },
   methods: ["GET", "POST", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
   optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
+
+app.options("*", (req, res) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.sendStatus(204).send("");
+});
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET;
@@ -73,90 +83,101 @@ const razorpay = new Razorpay({
 
 razorpay.log = console.log;
 
-exports.createRazorpayOrder = functions.https.onRequest(async (req, res) => {
-  cors(corsOptions)(req, res, async () => {
-    /* console.log(
-      "Process details",
-      process.env.RAZORPAY_KEY_ID,
-      process.env.RAZORPAY_KEY_SECRET
-    );
-    console.log(
-      "Process Lengths:",
-      process.env.RAZORPAY_KEY_ID.length,
-      process.env.RAZORPAY_KEY_SECRET.length
-    );
-    console.log(
-      "Razorpay object details",
-      razorpay.key_id,
-      razorpay.key_secret
-    );
-    console.log("req.body: ", req.body); */
-
-    try {
-      const { amount, currency } = req.body;
-      console.log("Creating order:", amount, currency);
-
-      if (!amount || !currency) {
-        return res
-          .status(400)
-          .json({ error: "Amount and Currency are required" });
-      }
-
-      const options = {
-        amount: amount,
-        currency: currency || "INR",
-        payment_capture: 1,
-      };
-
-      const order = await razorpay.orders.create(options);
-      console.log("Order created:", order);
-      res.status(200).json(order);
-    } catch (error) {
-      console.error("Error creating order:", error);
-      res.status(500).send("error creating order: " + error.message);
+//Middleware for Firebase Authentication (used in protected routes)
+const authenticateUser = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.log("Unauthorized request");
+      return res.status(403).json({ error: "Unauthorized request" });
     }
-  });
+
+    const idToken = authHeader.split("Bearer ")[1];
+    console.log("Received ID Token:", idToken);
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    console.log("Decoded Token:", decodedToken);
+
+    if (!decodedToken) {
+      console.log("Unauthorized");
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    req.user = decodedToken; // Attach decoded user data to request
+    console.log("Authenticated user:", req.user);
+    next();
+  } catch (error) {
+    console.error("Authentication error:", error);
+    return res.status(403).json({ error: "Invalid or expired token" });
+  }
+};
+
+// ✅ Route: Create Razorpay Order
+app.post("/createRazorpayOrder", async (req, res) => {
+  try {
+    const { amount, currency } = req.body;
+    if (!amount || !currency) {
+      return res
+        .status(400)
+        .json({ error: "Amount and Currency are required" });
+    }
+
+    const options = {
+      amount: amount,
+      currency: currency || "INR",
+      payment_capture: 1,
+    };
+
+    const order = await razorpay.orders.create(options);
+    res.status(200).json(order);
+  } catch (error) {
+    console.error("Error creating order:", error);
+    res.status(500).send("Error creating order: " + error.message);
+  }
 });
 
-exports.generateMemberId = functions.https.onCall(async (data, context) => {
-  if (!data.auth) {
-    throw new functions.https.HttpsError(
-      "unauthenticated",
-      "User Authentication required"
-    );
+// ✅ Route: Generate Member ID (Protected)
+app.post("/generateMemberID", authenticateUser, async (req, res) => {
+  try {
+    const { currentMembershipType } = req.body;
+    if (!currentMembershipType) {
+      return res.status(400).json({ error: "Membership type is required" });
+    }
+
+    const prefix =
+      currentMembershipType === "Life"
+        ? "LM"
+        : currentMembershipType === "Honorary"
+          ? "HM"
+          : "AM";
+    const currentYear = new Date().getFullYear();
+
+    const result = await db
+      .ref(`counters/${prefix}`)
+      .transaction((currentValue) => {
+        return !currentValue || currentValue.year !== currentYear
+          ? { value: 1, year: currentYear }
+          : { value: currentValue.value + 1, year: currentYear };
+      });
+
+    if (!result.committed) {
+      return res.status(500).json({ error: "Failed to update the counter" });
+    }
+
+    const memberId = `${prefix}${currentYear}${String(result.snapshot.val().value).padStart(3, "0")}`;
+
+    console.log("Generated Member ID:", memberId);
+
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+    res.status(200).json({ memberId });
+  } catch (error) {
+    console.error("Error generating Member ID:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
-
-  const { currentMembershipType } = data.data;
-  if (!currentMembershipType) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Membership type is required"
-    );
-  }
-
-  const prefix =
-    currentMembershipType === "Life"
-      ? "LM"
-      : currentMembershipType === "Honorary"
-        ? "HM"
-        : "AM";
-  const currentYear = new Date().getFullYear();
-
-  const result = await db
-    .ref(`counters/${prefix}`)
-    .transaction((currentValue) => {
-      return !currentValue || currentValue.year !== currentYear
-        ? { value: 1, year: currentYear }
-        : { value: currentValue.value + 1, year: currentYear };
-    });
-
-  if (!result.committed) {
-    throw new functions.https.HttpsError(
-      "internal",
-      "Failed to update the counter"
-    );
-  }
-
-  const memberId = `${prefix}${currentYear}${String(result.snapshot.val().value).padStart(3, "0")}`;
-  return { memberId };
 });
+
+// ✅ Export Unified Express App as Firebase Function
+exports.api = functions.https.onRequest(app);

@@ -5,6 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { ref, get, update, runTransaction } from "firebase/database";
 import { database } from "../firebase";
 import "../global.css";
+import { auth } from "../AuthContext";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
@@ -144,18 +145,28 @@ const PaymentDetails = () => {
   }
 
   const handleRazorpayPayment = async () => {
-    //console.log("payment amount:", paymentData.amount);
-
-    //console.log("Creating Razorpay Order at ", new Date().toLocaleString());
-
     try {
-      // Step 1: Fetch Razorpay Order ID from backend
+      console.log("Creating Razorpay Order at", new Date().toLocaleString());
+
+      const user = auth.currentUser;
+      console.log("User in payments:", user);
+
+      if (!user) {
+        throw new Error("User not authenticated");
+      }
+
+      // 🔹 Get Firebase Auth Token (If API Requires Authentication)
+      const idToken = await user.getIdToken();
+      console.log("Firebase Auth Token:", idToken);
+
+      // 🔹 Step 1: Fetch Razorpay Order ID from Backend
       const response = await fetch(
-        "https://us-central1-membertool-test.cloudfunctions.net/createRazorpayOrder",
+        "https://us-central1-membertool-test.cloudfunctions.net/api/createRazorpayOrder",
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`, // 🔹 Include token if required
           },
           body: JSON.stringify({
             amount: paymentData.amount * 100, // Convert to paise
@@ -165,17 +176,16 @@ const PaymentDetails = () => {
       );
 
       if (!response.ok) {
+        console.error("Failed to create Razorpay order:", response.statusText);
         throw new Error("Failed to create Razorpay order");
       }
 
       const order = await response.json();
       console.log("Razorpay Order created:", order);
 
-      const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID;
-
-      // Step 2: Open Razorpay checkout
+      // 🔹 Step 2: Open Razorpay Checkout
       const options = {
-        key: RAZORPAY_KEY_ID, // Replace with your Razorpay Key ID
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID, // ✅ Fetch Razorpay Key ID from env
         amount: order.amount,
         currency: order.currency,
         name: "Membership Payment",
@@ -186,7 +196,7 @@ const PaymentDetails = () => {
 
           let receiptNumber = await generateReceiptNumber(database);
 
-          // Step 3: Save payment details to Firebase
+          // 🔹 Step 3: Save Payment Details to Firebase
           const paymentRecord = {
             paymentMode: "Razorpay",
             paymentID: response.razorpay_payment_id,
@@ -203,14 +213,10 @@ const PaymentDetails = () => {
             receiptNumber: receiptNumber,
           }));
 
-          //console.log("Storing Razorpay payment :", paymentData);
-
-          // Save payment details to Firebase
-
           try {
-            // const memberRef = ref(database, `users/${memberID}`);
             const paymentRef = ref(database, `users/${memberID}/payments/`);
             const updatedPayments = [...payments, paymentRecord];
+
             await update(
               paymentRef,
               updatedPayments.reduce((acc, item, index) => {
@@ -218,6 +224,7 @@ const PaymentDetails = () => {
                 return acc;
               }, {})
             );
+
             setPayments(updatedPayments);
             console.log("Payment saved successfully");
             setStatusMessage("Payment successful!");
@@ -226,8 +233,8 @@ const PaymentDetails = () => {
           }
         },
         prefill: {
-          email: "user@example.com", // Replace with user email if available
-          contact: "1234567890", // Replace with user phone number if available
+          email: user.email, // ✅ Use authenticated user's email
+          contact: "1234567890", // 🔹 Replace with actual phone number if available
         },
         theme: {
           color: "#3399cc",

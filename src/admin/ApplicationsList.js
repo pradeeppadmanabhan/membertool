@@ -174,7 +174,7 @@ const ApplicationsList = () => {
             {/* Add more columns as needed */}
             <th>Payment Mode</th>
             <th>Receipt No</th>
-            <th>Transaction Reference</th>
+            <th>Payment ID</th>
           </tr>
         </thead>
         <tbody>
@@ -215,13 +215,13 @@ const ApplicationsList = () => {
               <td>
                 {application.payments && application.payments.length > 0
                   ? application.payments[application.payments.length - 1]
-                      .receiptNo
+                      .receiptNumber
                   : "--"}
               </td>
               <td>
                 {application.payments && application.payments.length > 0
                   ? application.payments[application.payments.length - 1]
-                      .transactionReference
+                      .paymentID
                   : "--"}
               </td>
             </tr>

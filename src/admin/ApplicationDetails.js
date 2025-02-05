@@ -149,6 +149,30 @@ const ApplicationDetails = () => {
           </tr>
         </tbody>
       </table>
+      <table>
+        <thead>
+          <tr>
+            <th>Amount</th>
+            <th>Date</th>
+            <th>MembershipType</th>
+            <th>Mode</th>
+            <th>Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rs. {applicationData.payments[0].amount}</td>
+            <td>
+              {new Date(
+                applicationData.payments[0].dateOfPayment
+              ).toLocaleDateString()}
+            </td>
+            <td>{applicationData.payments[0].membershipType}</td>
+            <td>{applicationData.payments[0].paymentMode}</td>
+            <td>{applicationData.payments[0].receiptNumber}</td>
+          </tr>
+        </tbody>
+      </table>
       <div className="generate-pdf-button">
         <button onClick={handlePrintApplication}>Download Application</button>
       </div>

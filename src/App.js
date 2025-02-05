@@ -22,6 +22,7 @@ import WelcomePage from "./WelcomePage.js";
 import ThankYouPage from "./ThankYouPage.js";
 import AdminDashboard from "./admin/AdminDashboard.js";
 import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
+import ProfilePage from "./ProfilePage.js";
 
 function App() {
   const { user, signInWithGoogle, logout, isLoading } = useContext(AuthContext);
@@ -113,6 +114,9 @@ function App() {
 
       <Routes>
         <Route path="/" element={<WelcomePage />} />
+        <Route path="/welcome" element={<WelcomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
         <Route path="/payment-details" element={<PaymentDetails />} />
         <Route
           path="/thank-you/:receiptNumber/:memberID"

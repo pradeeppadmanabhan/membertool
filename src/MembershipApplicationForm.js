@@ -1,6 +1,6 @@
 // src/MembershipApplicationForm.js
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { /* useLocation, */ useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set } from "firebase/database"; // Import necessary functions - , push
 import {
@@ -16,13 +16,12 @@ import BackgroundHealth from "./components/BackgroundHealth";
 import MembershipDetails from "./components/MembershipDetails";
 import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
-import { getFunctions, httpsCallable } from "firebase/functions";
 import AuthContext from "./AuthContext";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
-  const { user, isLoading } = useContext(AuthContext);
+  const { user, memberID, isLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Prop Validation using PropTypes
@@ -30,8 +29,13 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     initialMembershipType: PropTypes.oneOf(["Annual", "Life", "Honorary"])
       .isRequired,
   };
+
+  //console.log("user in MembershipApplicationForm:", user);
+  //console.log("memberID in MembershipApplicationForm:", memberID);
+  //console.log("isLoading in MembershipApplicationForm:", isLoading);
+
   const [formData, setFormData] = useState({
-    id: null, // Initially set to null
+    id: memberID, // Initially set to null
     memberName: user?.displayName || "",
     uid: user?.uid || "",
     age: "",
@@ -69,21 +73,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const functions = getFunctions();
-  const generateMemberId = httpsCallable(functions, "generateMemberId");
-
-  const fetchMemberID = useCallback(async () => {
-    try {
-      const { data } = await generateMemberId({
-        currentMembershipType: initialMembershipType,
-      });
-      console.log("MemberID generated successfully:", data.memberId);
-      setFormData((prev) => ({ ...prev, id: data.memberId }));
-    } catch (error) {
-      console.error("Error generating member ID:", error);
-    }
-  }, [initialMembershipType, generateMemberId]);
-
   useEffect(() => {
     /* const location = useLocation(); 
     console.log("MemberApplicationForm: isLoading", isLoading);
@@ -94,11 +83,12 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (!isLoading && !user) {
       console.error("User is Unauthenticated, redirecting to Login Page");
       navigate("/login");
-    } else if (user && !formData.id) {
+    } else if (user && memberID) {
       // Only generate Member ID when user is logged in
-      fetchMemberID();
+      //fetchMemberID();
+      setFormData((prev) => ({ ...prev, id: memberID }));
     }
-  }, [user, isLoading, navigate, formData.id, fetchMemberID]);
+  }, [user, isLoading, memberID, navigate]);
 
   if (isLoading) {
     return <div>Loading...</div>;
