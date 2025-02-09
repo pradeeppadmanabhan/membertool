@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { database } from "../firebase";
 import { ref, get } from "firebase/database";
-import PrintApplication from "../utils/PrintApplication";
+import UserProfile from "../utils/UserProfile";
 import "../global.css"; // Import your CSS file
 
 const ApplicationDetails = () => {
@@ -18,8 +18,8 @@ const ApplicationDetails = () => {
         const applicationRef = ref(database, `users/${applicationId}`);
         const snapshot = await get(applicationRef);
 
-        console.log("looking for application id: users/", applicationId);
-        console.log("Snapshot Data:", snapshot.val());
+        //console.log("looking for application id: users/", applicationId);
+        //console.log("Snapshot Data:", snapshot.val());
 
         if (snapshot.exists()) {
           setApplicationData(snapshot.val());
@@ -45,12 +45,6 @@ const ApplicationDetails = () => {
     return <div>Error: {error}</div>;
   }
 
-  const handlePrintApplication = () => {
-    if (applicationData) {
-      PrintApplication(applicationData);
-    }
-  };
-
   return (
     <div className="mt-5">
       <h2>Application Details</h2>
@@ -58,124 +52,7 @@ const ApplicationDetails = () => {
       {/* Back button */}
       <br />
       <br />
-      <div className="profile-picture-container">
-        <img src={applicationData.imageURL} alt="Uploaded" width="200" />
-      </div>
-      <table>
-        <tbody>
-          <tr>
-            <td className="field-name">ID:</td>
-            <td>{applicationData.id}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Name:</td>
-            <td>{applicationData.memberName}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Date Of Birth:</td>
-            <td>{applicationData.dob}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Gender:</td>
-            <td>{applicationData.gender}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Name of Father / Guardian / Husband:</td>
-            <td>{applicationData.fatherGuardianName}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Address Line1:</td>
-            <td>{applicationData.addressLine1}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Address Line2:</td>
-            <td>{applicationData.addressLine2}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Address Line3:</td>
-            <td>{applicationData.addressLine3}</td>
-          </tr>
-          {/* <tr>
-            <td className="field-name">Landline:</td>
-            <td>{applicationData.landline}</td>
-          </tr> */}
-          <tr>
-            <td className="field-name">Mobile:</td>
-            <td>{applicationData.mobile}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Email ID:</td>
-            <td>{applicationData.email}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Academic Qualification:</td>
-            <td>{applicationData.qualifications}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Profession:</td>
-            <td>{applicationData.profession}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Athletic Background:</td>
-            <td>{applicationData.athleticBackground}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Hobbies:</td>
-            <td>{applicationData.hobbies}</td>
-          </tr>
-          <tr>
-            <td className="field-name">History of serious illness:</td>
-            <td>{applicationData.illnessHistory}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Present General Health:</td>
-            <td>{applicationData.generalHealth}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Blood Group:</td>
-            <td>{applicationData.bloodGroup}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Membership Type:</td>
-            <td>{applicationData.currentMembershipType}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Recommended By:</td>
-            <td>{applicationData.recommendedByName}</td>
-          </tr>
-          <tr>
-            <td className="field-name">Recommended By ID:</td>
-            <td>{applicationData.recommendedByID}</td>
-          </tr>
-        </tbody>
-      </table>
-      <table>
-        <thead>
-          <tr>
-            <th>Amount</th>
-            <th>Date</th>
-            <th>MembershipType</th>
-            <th>Mode</th>
-            <th>Receipt</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Rs. {applicationData.payments[0].amount}</td>
-            <td>
-              {new Date(
-                applicationData.payments[0].dateOfPayment
-              ).toLocaleDateString()}
-            </td>
-            <td>{applicationData.payments[0].membershipType}</td>
-            <td>{applicationData.payments[0].paymentMode}</td>
-            <td>{applicationData.payments[0].receiptNumber}</td>
-          </tr>
-        </tbody>
-      </table>
-      <div className="generate-pdf-button">
-        <button onClick={handlePrintApplication}>Download Application</button>
-      </div>
+      <UserProfile userData={applicationData} />
     </div>
   );
 };

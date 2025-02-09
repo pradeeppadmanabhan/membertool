@@ -297,6 +297,11 @@ button:active {
 .profile-picture-container {
   border: 1px solid #ccc; /* Add a border for a clear boundary */
   background-color: #282c34;
+  width: 300px;
+  height: 400px;
+  margin: 0 auto;
+  border-radius: 10%;
+  overflow: hidden;
   padding: 10px; /* Add padding top and bottom */
   text-align: center; /* Center the image horizontally */
   display: inline-block; /* Make the container wrap its content */
@@ -424,7 +429,127 @@ date-range-picker {
   color: white; /* Adjust text color for contrast */
 }
 
-@media (max-width: 768px) {
+/* Profile Container */
+.profile-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+  background: #ffffff;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+/* Profile Heading */
+.profile-heading {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* Profile Image - Portrait Mode */
+.profile-image {
+  display: block;
+  width: 150px; /* Adjust width */
+  height: 200px; /* Portrait aspect ratio */
+  border-radius: 15px; /* Slightly rounded corners */
+  margin: 10px auto;
+  object-fit: cover;
+  border: 3px solid #ddd;
+}
+
+/* Profile Table */
+.profile-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.profile-table td,
+.profile-table th {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Move <strong> to CSS */
+.profile-table td:first-child {
+  font-weight: bold;
+  color: #444;
+  width: 35%;
+}
+
+/* Payment History Table */
+.profile-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Button Container */
+.button-container {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Edit, Save, Cancel Buttons */
+.edit-button,
+.save-button,
+.cancel-button {
+  padding: 8px 16px;
+  margin: 5px;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.edit-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.save-button {
+  background-color: #28a745;
+  color: white;
+}
+
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+}
+
+.edit-button:hover {
+  background-color: #0056b3;
+}
+
+.save-button:hover {
+  background-color: #218838;
+}
+
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Status Message */
+.status-message {
+  text-align: center;
+  color: green;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+/* Ensure Renewal Date & Button are in the Same Line */
+.renewal-container {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Adds spacing between date & button */
+}
+
+/* ✅ Mobile Responsive Styles */
+
+@media (max-width: 600px) {
   h1,
   h2,
   h3 {
@@ -471,6 +596,43 @@ date-range-picker {
   input[type="date"],
   textarea {
     max-width: 100%; /* Ensure full width on mobile */
+  }
+
+  .profile-container {
+    padding: 15px;
+    max-width: 100%;
+  }
+
+  .profile-image {
+    width: 120px;
+    height: 160px; /* Adjusted for mobile */
+  }
+
+  .profile-heading {
+    font-size: 20px;
+  }
+
+  .profile-table td,
+  .profile-table th {
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .edit-button,
+  .save-button,
+  .cancel-button {
+    width: 90%;
+    font-size: 14px;
+  }
+  .renewal-container {
+    flex-direction: column; /* Stack vertically on small screens */
+    align-items: flex-start;
   }
 }
 

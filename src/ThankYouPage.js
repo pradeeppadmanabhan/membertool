@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "./global.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";
 import sendEmail from "./utils/SendEmail";
@@ -11,6 +11,7 @@ const ThankYouPage = () => {
   const { receiptNumber, memberID } = useParams();
   const [emailStatus, setEmailStatus] = useState("");
   const [isRenewal, setIsRenewal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMemberData = async () => {
@@ -123,6 +124,14 @@ const ThankYouPage = () => {
         <p>
           <strong>{emailStatus}</strong>
         </p>
+
+        {/* ✅ Button to navigate back to Profile Page */}
+        <button
+          className="back-to-profile-button"
+          onClick={() => navigate(`/profile?memberID=${memberID}`)}
+        >
+          Back to Profile
+        </button>
       </div>
     </div>
   );

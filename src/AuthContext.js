@@ -22,9 +22,12 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState(null);
-  const [memberID, setMemberID] = useState(null);
+  const [memberID, setMemberID] = useState(
+    localStorage.getItem("memberID") || null
+  );
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [hasCheckedUser, setHasCheckedUser] = useState(false);
 
   const generateMemberID = async (membershipType) => {
     try {
@@ -84,6 +87,7 @@ export const AuthProvider = ({ children }) => {
       if (uidSnapshot.exists()) {
         const memberID = uidSnapshot.val();
         //console.log("Existing UID mapping found: ", memberID);
+        localStorage.setItem("memberID", memberID);
         setMemberID(memberID);
         await loadUserData(memberID);
         return;
@@ -102,6 +106,7 @@ export const AuthProvider = ({ children }) => {
 
         //Store UID mapping for future logins
         await set(uidRef, memberID);
+        localStorage.setItem("memberID", memberID);
         setMemberID(memberID);
 
         //Load user data
@@ -137,6 +142,7 @@ export const AuthProvider = ({ children }) => {
     if (userSnapshot.exists()) {
       setUserData(userSnapshot.val(), memberID);
       setIsLoading(false);
+      setHasCheckedUser(true);
       navigate("/profile");
     } else {
       navigate("/welcome");
@@ -149,6 +155,9 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setHasRedirected(false);
       localStorage.removeItem("redirectUrl");
+      localStorage.removeItem("memberID");
+      setMemberID(null);
+      setUserData(null);
       navigate("/login");
     } catch (error) {
       console.error("Error signing out:", error);
@@ -156,26 +165,35 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        //console.log("User in Auth Context: ", user);
-        //console.log("User UID:", user.uid);
-        //console.log("User Email:", user.email);
-        console.log("User Name:", user.displayName);
-      }
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        setUser(user);
+        if (user && !hasCheckedUser) {
+          //console.log("User in Auth Context: ", user);
+          //console.log("User UID:", user.uid);
+          //console.log("User Email:", user.email);
+          //console.log("User Name:", user.displayName);
+          const checkUser = async () => {
+            await checkOrExpandLegacyUser(user);
+          };
 
-      setUser(user);
-      setIsLoading(false);
+          checkUser();
+        }
 
-      if (user && !hasRedirected) {
-        const redirectUrl = localStorage.getItem("redirectUrl") || "/";
-        console.log("Redirecting to saved URL after login:", redirectUrl);
+        setIsLoading(false);
 
-        localStorage.removeItem("redirectUrl");
-        setHasRedirected(true);
-        navigate(redirectUrl);
-      }
-    });
+        if (user && !hasRedirected) {
+          const redirectUrl = localStorage.getItem("redirectUrl") || "/";
+          //console.log("Redirecting to saved URL after login:", redirectUrl);
+
+          localStorage.removeItem("redirectUrl");
+          setHasRedirected(true);
+          navigate(redirectUrl);
+        }
+      },
+      [navigate, hasCheckedUser]
+    );
 
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps

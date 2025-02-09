@@ -199,8 +199,8 @@ function App() {
             </ProtectedRoute>
           }
         />
-        {/* Redirect to home if route not found */}
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Redirect to Profile if route not found */}
+        <Route path="*" element={<Navigate to="/profile" />} />
       </Routes>
     </div>
   );
