@@ -252,6 +252,13 @@ button:active {
   font-weight: bold;
 }
 
+.details-card .button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
 .header-container {
   display: flex;
   align-items: center; /* Vertically center logo and text */

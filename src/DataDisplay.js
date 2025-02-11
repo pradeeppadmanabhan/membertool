@@ -104,12 +104,13 @@ const DataDisplay = () => {
       });
       setFilteredUsers(results);
       setShowNoUserMessage(results.length === 0);
-      setSelectedUser(null); // Clear selected user when performing a new search
+      //setSelectedUser(null); // Clear selected user when performing a new search
     }
   };
 
   const handleUserClick = (user) => {
     setSelectedUser(user);
+    setShowMore(false); // Reset showMore when a user is clicked
   };
 
   const handleClear = () => {
@@ -124,6 +125,11 @@ const DataDisplay = () => {
   // Helper function to display values, handling "No Data"
   const displayValue = (value) => {
     return value === "No Data" ? "" : value;
+  };
+
+  const toggleShowMore = (e) => {
+    //e.stopPropagation(); // Prevent event bubbling
+    setShowMore((prev) => !prev);
   };
 
   return (
@@ -154,7 +160,7 @@ const DataDisplay = () => {
         <div className="search-results">
           {/* Add a container for search results */}
           {filteredUsers.length > 0 && !selectedUser ? ( // Show the list only if there are filtered users and no user is selected
-            <div className="card-container" key={user.id}>
+            <div className="card-container">
               {filteredUsers.map((user) => (
                 <div
                   key={user.id}
@@ -231,7 +237,7 @@ const DataDisplay = () => {
                 </tbody>
               </table>
               {/* Show More/Less button */}
-              <button onClick={() => setShowMore(!showMore)}>
+              <button onClick={() => toggleShowMore()}>
                 {showMore ? "Show Less" : "Show More"}
               </button>
               {/* Conditionally display additional details */}
@@ -307,6 +313,12 @@ const DataDisplay = () => {
                   </table>
                 </div>
               )}
+              <br />
+              <div className="button-container">
+                <button onClick={() => setSelectedUser(null)}>
+                  Back to Search
+                </button>
+              </div>
             </div>
           ) : showNoUserMessage && !user ? ( // Show message if no results AND user is not logged in
             <p>Please sign in to search for members.</p>
