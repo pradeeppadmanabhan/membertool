@@ -25,7 +25,8 @@ import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 
 function App() {
-  const { user, signInWithGoogle, logout, isLoading } = useContext(AuthContext);
+  const { user, isAdmin, signInWithGoogle, logout, isLoading } =
+    useContext(AuthContext);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -60,7 +61,7 @@ function App() {
   }, [user, isLoading, navigate, location.pathname, location.search]);
 
   //Define authorized admin emails
-  const authorizedAdminEmails = ["coffeecup.developers@gmail.com"];
+  const authorizedAdminEmails = isAdmin ? [user?.email] : [];
 
   return (
     <div className="App">

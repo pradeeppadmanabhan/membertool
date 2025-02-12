@@ -25,6 +25,7 @@ export const AuthProvider = ({ children }) => {
   const [memberID, setMemberID] = useState(
     localStorage.getItem("memberID") || null
   );
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
   const [hasRedirected, setHasRedirected] = useState(false);
   const [hasCheckedUser, setHasCheckedUser] = useState(false);
@@ -59,6 +60,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchAdminUsers = async () => {
+    try {
+      const adminRef = ref(db, "admins");
+      const adminSnapshot = await get(adminRef);
+      if (adminSnapshot.exists()) {
+        const admins = adminSnapshot.val();
+        //console.log("Admin users:", admins);
+        const adminEmails = Object.values(admins).map((admin) => admin.email);
+        //console.log("Admin emails:", adminEmails);
+        return adminEmails;
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      return [];
+    }
+  };
+
   const signInWithGoogle = async () => {
     try {
       //console.log("Starting google sign in...");
@@ -66,6 +85,9 @@ export const AuthProvider = ({ children }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
       //console.log("Signed in user:", signedInUser);
+      const adminEmails = await fetchAdminUsers();
+      //console.log("SignInWithGoogle - Admin emails:", adminEmails);
+      setIsAdmin(adminEmails.includes(signedInUser.email));
 
       if (signedInUser) {
         await checkOrExpandLegacyUser(signedInUser);
@@ -153,6 +175,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await signOut(auth);
       setUser(null);
+      setIsAdmin(false);
       setHasRedirected(false);
       localStorage.removeItem("redirectUrl");
       localStorage.removeItem("memberID");
@@ -167,7 +190,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
       auth,
-      (user) => {
+      async (user) => {
         setUser(user);
         if (user && !hasCheckedUser) {
           //console.log("User in Auth Context: ", user);
@@ -182,6 +205,14 @@ export const AuthProvider = ({ children }) => {
         }
 
         setIsLoading(false);
+
+        if (user) {
+          const adminEmails = await fetchAdminUsers();
+
+          //console.log("Admin Emails:", adminEmails);
+
+          setIsAdmin(adminEmails.includes(user.email));
+        }
 
         if (user && !hasRedirected) {
           const redirectUrl = localStorage.getItem("redirectUrl") || "/";
@@ -201,7 +232,15 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, userData, memberID, signInWithGoogle, logout }}
+      value={{
+        user,
+        isLoading,
+        isAdmin,
+        userData,
+        memberID,
+        signInWithGoogle,
+        logout,
+      }}
     >
       {!isLoading && children}
     </AuthContext.Provider>
