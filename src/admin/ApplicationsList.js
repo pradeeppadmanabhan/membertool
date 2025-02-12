@@ -146,6 +146,7 @@ const ApplicationsList = () => {
               type="date"
               id="endDate"
               value={endDate}
+              min={startDate}
               onChange={(e) => setEndDate(e.target.value)}
             />
           </div>
