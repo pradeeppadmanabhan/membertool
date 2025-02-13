@@ -15,11 +15,12 @@ const UserProfile = ({ userData }) => {
   const [formData, setFormData] = useState(userData);
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  const { memberID } = useContext(AuthContext);
+  //const { memberID } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
+  /* useEffect(() => {
     const loadData = async () => {
+      console.log("memberID:", memberID);
       if (memberID) {
         const freshData = await fetchMemberData(memberID);
         setFormData(freshData);
@@ -27,7 +28,7 @@ const UserProfile = ({ userData }) => {
       }
     };
     loadData();
-  }, [memberID]);
+  }, [memberID]); */
 
   if (!formData) {
     return <div>Loading user details...</div>;
