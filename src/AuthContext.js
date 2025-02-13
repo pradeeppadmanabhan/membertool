@@ -1,5 +1,11 @@
 // src/AuthContext.js
-import React, { createContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import {
   getAuth,
   signInWithPopup,
@@ -27,10 +33,10 @@ export const AuthProvider = ({ children }) => {
   );
   const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
-  const [hasRedirected, setHasRedirected] = useState(false);
-  const [hasCheckedUser, setHasCheckedUser] = useState(false);
+  const hasRedirected = useRef(false);
+  const hasCheckedUser = useRef(false);
 
-  const generateMemberID = async (membershipType) => {
+  const generateMemberID = useCallback(async (membershipType) => {
     try {
       const user = auth.currentUser;
       if (!user) throw new Error("User not authenticated");
@@ -58,30 +64,24 @@ export const AuthProvider = ({ children }) => {
       console.error("Error generating member ID:", error);
       return null;
     }
-  };
+  }, []);
 
-  const fetchAdminUsers = async () => {
+  const fetchAdminUsers = useCallback(async () => {
     try {
       const adminRef = ref(db, "admins");
       const adminSnapshot = await get(adminRef);
       if (adminSnapshot.exists()) {
-        const admins = adminSnapshot.val();
-        //console.log("Admin users:", admins);
-        const adminEmails = Object.values(admins).map((admin) => admin.email);
-        //console.log("Admin emails:", adminEmails);
-        return adminEmails;
+        return Object.values(adminSnapshot.val()).map((admin) => admin.email);
       }
       return [];
     } catch (error) {
       console.error("Error fetching admin users:", error);
       return [];
     }
-  };
+  }, []);
 
   const signInWithGoogle = async () => {
     try {
-      //console.log("Starting google sign in...");
-
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
       //console.log("Signed in user:", signedInUser);
@@ -98,85 +98,91 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const checkOrExpandLegacyUser = async (signedInUser) => {
-    const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
-    const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
-    const emailRef = ref(db, `emailToMemberID/${emailKey}`);
-
-    try {
-      //Step 1: Check if user already has a UID mapping
-      const uidSnapshot = await get(uidRef);
-      if (uidSnapshot.exists()) {
-        const memberID = uidSnapshot.val();
-        //console.log("Existing UID mapping found: ", memberID);
-        localStorage.setItem("memberID", memberID);
-        setMemberID(memberID);
-        await loadUserData(memberID);
-        return;
+  const loadUserData = useCallback(
+    async (memberID) => {
+      const userRef = ref(db, `users/${memberID}`);
+      const userSnapshot = await get(userRef);
+      if (userSnapshot.exists()) {
+        setUserData(userSnapshot.val(), memberID);
+        setIsLoading(false);
+        hasCheckedUser.current = true;
       } else {
-        console.error("No UID mapping found for user");
+        navigate("/welcome");
       }
+    },
+    [navigate]
+  );
 
-      //Step 2: Check if email is already linked to a memberID
-      const emailSnapshot = await get(emailRef);
-      if (emailSnapshot.exists()) {
-        const memberID = emailSnapshot.val();
-        //console.log("Existing user found in email: ", memberID);
+  const checkOrExpandLegacyUser = useCallback(
+    async (signedInUser) => {
+      const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
+      const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
+      const emailRef = ref(db, `emailToMemberID/${emailKey}`);
 
-        //Store UID in users/{memberID}
-        await update(ref(db, `users/${memberID}`), { uid: signedInUser.uid });
+      try {
+        //Step 1: Check if user already has a UID mapping
+        const uidSnapshot = await get(uidRef);
+        if (uidSnapshot.exists()) {
+          const memberID = uidSnapshot.val();
+          //console.log("Existing UID mapping found: ", memberID);
+          localStorage.setItem("memberID", memberID);
+          setMemberID(memberID);
+          await loadUserData(memberID);
+          return;
+        } else {
+          console.error("No UID mapping found for user");
+        }
 
-        //Store UID mapping for future logins
-        await set(uidRef, memberID);
-        localStorage.setItem("memberID", memberID);
-        setMemberID(memberID);
+        //Step 2: Check if email is already linked to a memberID
+        const emailSnapshot = await get(emailRef);
+        if (emailSnapshot.exists()) {
+          const memberID = emailSnapshot.val();
+          //console.log("Existing user found in email: ", memberID);
 
-        //Load user data
-        await loadUserData(memberID);
-        return;
-      } else {
-        console.error("No user found in email");
+          //Store UID in users/{memberID}
+          await update(ref(db, `users/${memberID}`), { uid: signedInUser.uid });
+
+          //Store UID mapping for future logins
+          await set(uidRef, memberID);
+          localStorage.setItem("memberID", memberID);
+          setMemberID(memberID);
+
+          //Load user data
+          await loadUserData(memberID);
+          return;
+        } else {
+          console.error("No user found in email");
+        }
+
+        //Step 3: No existing data -> Register a new user
+        const newMemberID = await generateMemberID("Annual");
+        setMemberID(newMemberID);
+        await set(ref(db, `users/${newMemberID}`), {
+          uid: signedInUser.uid,
+          email: signedInUser.email,
+          memberName: signedInUser.displayName,
+          membershipType: "Pending",
+        });
+
+        // Store mappings
+        await set(uidRef, newMemberID);
+        await set(emailRef, newMemberID);
+
+        navigate("/welcome");
+      } catch (error) {
+        console.error("Error checking user", error);
       }
-
-      //Step 3: No existing data -> Register a new user
-      const newMemberID = await generateMemberID("Annual");
-      setMemberID(newMemberID);
-      await set(ref(db, `users/${newMemberID}`), {
-        uid: signedInUser.uid,
-        email: signedInUser.email,
-        memberName: signedInUser.displayName,
-        membershipType: "Pending",
-      });
-
-      // Store mappings
-      await set(uidRef, newMemberID);
-      await set(emailRef, newMemberID);
-
-      navigate("/welcome");
-    } catch (error) {
-      console.error("Error checking user", error);
-    }
-  };
-
-  const loadUserData = async (memberID) => {
-    const userRef = ref(db, `users/${memberID}`);
-    const userSnapshot = await get(userRef);
-    if (userSnapshot.exists()) {
-      setUserData(userSnapshot.val(), memberID);
-      setIsLoading(false);
-      setHasCheckedUser(true);
-      navigate("/profile");
-    } else {
-      navigate("/welcome");
-    }
-  };
+    },
+    [navigate, loadUserData, generateMemberID]
+  );
 
   const logout = async () => {
     try {
       await signOut(auth);
       setUser(null);
       setIsAdmin(false);
-      setHasRedirected(false);
+      hasCheckedUser.current = false;
+      hasRedirected.current = false;
       localStorage.removeItem("redirectUrl");
       localStorage.removeItem("memberID");
       setMemberID(null);
@@ -188,47 +194,39 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (user) => {
-        setUser(user);
-        if (user && !hasCheckedUser) {
-          //console.log("User in Auth Context: ", user);
-          //console.log("User UID:", user.uid);
-          //console.log("User Email:", user.email);
-          //console.log("User Name:", user.displayName);
-          const checkUser = async () => {
-            await checkOrExpandLegacyUser(user);
-          };
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setUser(user);
+      if (user && !hasCheckedUser.current) {
+        //console.log("User in Auth Context: ", user);
+        //console.log("User UID:", user.uid);
+        //console.log("User Email:", user.email);
+        //console.log("User Name:", user.displayName);
 
-          checkUser();
-        }
+        await checkOrExpandLegacyUser(user);
+
+        const adminEmails = await fetchAdminUsers();
+        const userIsAdmin = adminEmails.includes(user.email);
+        setIsAdmin(userIsAdmin);
 
         setIsLoading(false);
 
-        if (user) {
-          const adminEmails = await fetchAdminUsers();
-
-          //console.log("Admin Emails:", adminEmails);
-
-          setIsAdmin(adminEmails.includes(user.email));
-        }
-
-        if (user && !hasRedirected) {
-          const redirectUrl = localStorage.getItem("redirectUrl") || "/";
-          //console.log("Redirecting to saved URL after login:", redirectUrl);
+        if (!hasRedirected.current) {
+          const redirectUrl =
+            localStorage.getItem("redirectUrl") ||
+            (userIsAdmin ? "/admin/dashboard" : "/profile");
+          console.log("Redirecting to saved URL after login:", redirectUrl);
 
           localStorage.removeItem("redirectUrl");
-          setHasRedirected(true);
+          hasRedirected.current = true;
           navigate(redirectUrl);
         }
-      },
-      [navigate, hasCheckedUser]
-    );
+      } else {
+        setIsLoading(false);
+      }
+    });
 
     return unsubscribe;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, hasRedirected]);
+  }, [navigate, checkOrExpandLegacyUser, fetchAdminUsers, isAdmin]);
 
   return (
     <AuthContext.Provider

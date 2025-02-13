@@ -43,7 +43,7 @@ const AdminDashboard = () => {
         if (fetchedUsers) {
           const usersArray = Object.values(fetchedUsers);
           setUsers(usersArray);
-          console.log("Users:", usersArray);
+          //console.log("Users:", usersArray);
         }
         setLoading(false);
       } catch (error) {
