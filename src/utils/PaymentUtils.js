@@ -3,6 +3,9 @@ import { ref, get, update, runTransaction } from "firebase/database";
 import { database } from "../firebase";
 import { auth } from "../AuthContext";
 
+export const ANNUAL_MEMBERSHIP_FEE = 250;
+export const LIFE_MEMBERSHIP_FEE = 2000;
+
 /** Fetch member data */
 export const fetchMemberData = async (memberID) => {
   try {
@@ -49,7 +52,8 @@ export const handleRazorpayPayment = async (
   memberID,
   amount,
   membershipType,
-  navigate
+  navigate,
+  onError
 ) => {
   try {
     /* console.log(
@@ -161,11 +165,19 @@ export const handleRazorpayPayment = async (
       },
       prefill: { email: user.email },
       theme: { color: "#3399cc" },
+      modal: {
+        escape: true,
+        ondismiss: () => {
+          console.error("Payment was cancelled by user");
+          if (onError) onError("Payment was cancelled by user");
+        },
+      },
     };
 
     new window.Razorpay(options).open();
   } catch (error) {
     console.error("Error during payment:", error);
+    if (onError) onError(error.message);
   }
 };
 

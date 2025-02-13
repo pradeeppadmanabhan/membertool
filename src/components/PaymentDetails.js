@@ -8,6 +8,10 @@ import {
   handleRazorpayPayment,
   handleCashPayment,
 } from "../utils/PaymentUtils";
+import {
+  ANNUAL_MEMBERSHIP_FEE,
+  LIFE_MEMBERSHIP_FEE,
+} from "../utils/PaymentUtils";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
@@ -20,9 +24,6 @@ const PaymentDetails = () => {
 
   const [memberData, setMemberData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const ANNUAL_MEMBERSHIP_FEE = 250;
-  const LIFE_MEMBERSHIP_FEE = 2000;
 
   const paymentAmount =
     membershipType === "Annual" ? ANNUAL_MEMBERSHIP_FEE : LIFE_MEMBERSHIP_FEE;
@@ -78,7 +79,8 @@ const PaymentDetails = () => {
               memberID,
               paymentAmount,
               membershipType,
-              navigate
+              navigate,
+              setStatusMessage
             );
           }}
           disabled={isSubmitting}

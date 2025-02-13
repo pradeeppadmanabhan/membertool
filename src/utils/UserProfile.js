@@ -4,6 +4,10 @@ import { ref, update } from "firebase/database";
 import { AuthContext } from "../AuthContext";
 import PrintApplication from "../utils/PrintApplication";
 import { handleRazorpayPayment, fetchMemberData } from "../utils/PaymentUtils";
+import {
+  ANNUAL_MEMBERSHIP_FEE,
+  LIFE_MEMBERSHIP_FEE,
+} from "../utils/PaymentUtils";
 import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
 
@@ -51,9 +55,6 @@ const UserProfile = ({ userData }) => {
     }
   };
 
-  const ANNUAL_MEMBERSHIP_FEE = 250;
-  const LIFE_MEMBERSHIP_FEE = 2000;
-
   const isLifeMember = formData.currentMembershipType === "Life";
   const currentDate = new Date();
   const renewalDate = new Date(formData.renewalDueOn);
@@ -68,7 +69,8 @@ const UserProfile = ({ userData }) => {
       formData.id || formData.membershipID,
       ANNUAL_MEMBERSHIP_FEE,
       formData.currentMembershipType,
-      navigate
+      navigate,
+      setStatusMessage
     );
   };
 
@@ -77,7 +79,8 @@ const UserProfile = ({ userData }) => {
       formData.id || formData.membershipID,
       LIFE_MEMBERSHIP_FEE,
       "Life",
-      navigate
+      navigate,
+      setStatusMessage
     );
   };
 
