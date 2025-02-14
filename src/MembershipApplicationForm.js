@@ -328,7 +328,9 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         await set(userRef, userData);
 
         console.log("Data submitted successfully!");
-        setStatusMessage("Application submitted successfully!");
+        setStatusMessage(
+          "Application submitted successfully!, moving to payment page in about 2 seconds.."
+        );
 
         // Delay clearing the form
         setTimeout(() => {

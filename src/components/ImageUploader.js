@@ -20,7 +20,7 @@ const ImageUploader = ({ onImageSelect, selectedImage }) => {
     }
   };
 
-  const resetUploader = () => {
+  /* const resetUploader = () => {
     // New function to reset the uploader
     setFileName(""); // Clear the filename
     if (fileInputRef.current) {
@@ -28,7 +28,7 @@ const ImageUploader = ({ onImageSelect, selectedImage }) => {
       fileInputRef.current.value = ""; // Clear the file input value
     }
     onImageSelect(null); // Reset selected image in parent
-  };
+  }; */
 
   return (
     <div className="image-uploader">
@@ -55,9 +55,9 @@ const ImageUploader = ({ onImageSelect, selectedImage }) => {
         <span className="file-name">
           {fileName ? fileName : "No file selected"}
         </span>
-        <button type="button" onClick={resetUploader} className="reset-btn">
+        {/* <button type="button" onClick={resetUploader} className="reset-btn">
           Clear Image
-        </button>
+        </button> */}
       </div>
     </div>
   );
