@@ -542,8 +542,9 @@ date-range-picker {
 /* Status Message */
 .status-message {
   text-align: center;
-  color: green;
+  color: #007bff;
   font-weight: bold;
+  font-size: larger;
   margin-top: 10px;
 }
 

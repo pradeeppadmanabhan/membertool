@@ -1,24 +1,23 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { database } from "../firebase";
 import { ref, update } from "firebase/database";
-import { AuthContext } from "../AuthContext";
 import PrintApplication from "../utils/PrintApplication";
-import { handleRazorpayPayment, fetchMemberData } from "../utils/PaymentUtils";
 import {
   ANNUAL_MEMBERSHIP_FEE,
   LIFE_MEMBERSHIP_FEE,
+  handleRazorpayPayment,
+  fetchMemberData,
 } from "../utils/PaymentUtils";
 import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
 
-const UserProfile = ({ userData }) => {
-  const [formData, setFormData] = useState(userData);
+const UserProfile = ({ memberID }) => {
+  const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  //const { memberID } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  /* useEffect(() => {
+  useEffect(() => {
     const loadData = async () => {
       console.log("memberID:", memberID);
       if (memberID) {
@@ -28,7 +27,7 @@ const UserProfile = ({ userData }) => {
       }
     };
     loadData();
-  }, [memberID]); */
+  }, [memberID]);
 
   if (!formData) {
     return <div>Loading user details...</div>;
@@ -43,10 +42,7 @@ const UserProfile = ({ userData }) => {
   // ✅ Save updates to Firebase
   const handleSave = async () => {
     try {
-      const userRef = ref(
-        database,
-        `users/${formData.id || formData.membershipID}`
-      );
+      const userRef = ref(database, `users/${formData.id}`);
       await update(userRef, formData);
       setIsEditing(false);
       setStatusMessage("Profile updated successfully!");
@@ -67,7 +63,7 @@ const UserProfile = ({ userData }) => {
 
   const handleRenewal = () => {
     handleRazorpayPayment(
-      formData.id || formData.membershipID,
+      formData.id,
       ANNUAL_MEMBERSHIP_FEE,
       formData.currentMembershipType,
       navigate,
@@ -77,7 +73,7 @@ const UserProfile = ({ userData }) => {
 
   const handleUpgradeToLife = () => {
     handleRazorpayPayment(
-      formData.id || formData.membershipID,
+      formData.id,
       LIFE_MEMBERSHIP_FEE,
       "Life",
       navigate,
@@ -138,7 +134,7 @@ const UserProfile = ({ userData }) => {
             <td>
               <strong>Membership ID:</strong>
             </td>
-            <td>{formData.id || formData.membershipID}</td>
+            <td>{formData.id}</td>
           </tr>
           <tr>
             <td>
@@ -161,12 +157,12 @@ const UserProfile = ({ userData }) => {
                       className="upgrade-button"
                       onClick={handleUpgradeToLife}
                     >
-                      Upgrade to Life - ₹2000
+                      {`Upgrade to Life - ₹${LIFE_MEMBERSHIP_FEE}`}
                     </button>
                   )}
                   {isRenewalDue && (
                     <button className="renew-button" onClick={handleRenewal}>
-                      Renew Annual - ₹250
+                      {`Annual Renewal - ₹${ANNUAL_MEMBERSHIP_FEE}`}
                     </button>
                   )}
                 </>

@@ -14,7 +14,7 @@ const ProfilePage = () => {
     }
   }, [userData, navigate]);
 
-  return <UserProfile userData={userData} />;
+  return <UserProfile memberID={userData.id} />;
 };
 
 export default ProfilePage;

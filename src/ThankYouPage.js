@@ -59,7 +59,7 @@ const ThankYouPage = () => {
       <tr><td>Date of Payment</td><td>${new Date(latestPayment.dateOfPayment).toLocaleDateString()}</td></tr>
       <tr><td>Payment Mode</td><td>${latestPayment.paymentMode}</td></tr>
       <tr><td>Receipt Number</td><td>${receiptNumber}</td></tr>
-      <tr><td>Transaction Reference</td><td>${latestPayment.transactionReference || "N/A"}</td></tr>
+      <tr><td>Payment ID</td><td>${latestPayment.paymentID || "N/A"}</td></tr>
     `;
 
     const memberTableRows = isRenewal
@@ -75,10 +75,12 @@ const ThankYouPage = () => {
       `;
 
     const emailBody = `
+      <p>Dear ${userData.memberName},</p>
+      <br />
       <p>${isRenewal ? "Membership Renewal" : "New Membership"} Details:</p>
       <table border="1" cellpadding="5" cellspacing="0">
         <thead>
-          <tr><th>Field</th><th>Value</th></tr>
+          <tr><th>Description</th><th>Value</th></tr>
         </thead>
         <tbody>
           ${isRenewal ? paymentTableRows : memberTableRows + paymentTableRows}
