@@ -65,6 +65,7 @@ export const handleRazorpayPayment = async (
       membershipType
     ); */
 
+    let mobileNumber;
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
@@ -122,6 +123,7 @@ export const handleRazorpayPayment = async (
         const memberData = await fetchMemberData(memberID);
         //console.log("Memberdata:", memberData);
         //console.log("PaymentRecord:", paymentRecord);
+        mobileNumber = memberData.mobile;
         const updatedPayments = [...(memberData.payments || []), paymentRecord];
         // ✅ Convert array to an object before updating Firebase
         const paymentsObject = updatedPayments.reduce((acc, item, index) => {
@@ -163,7 +165,7 @@ export const handleRazorpayPayment = async (
         // Navigate to thank-you page -
         navigate(`/thank-you/${receiptNumber}/${memberID}`);
       },
-      prefill: { email: user.email },
+      prefill: { email: user.email, contact: mobileNumber },
       theme: { color: "#3399cc" },
       modal: {
         escape: true,
