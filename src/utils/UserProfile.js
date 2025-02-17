@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { database } from "../firebase";
+import { database, storage } from "../firebase";
 import { ref, update } from "firebase/database";
 import PrintApplication from "../utils/PrintApplication";
+import {
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+} from "firebase/storage";
+import ImageUploader from "../components/ImageUploader";
 import {
   ANNUAL_MEMBERSHIP_FEE,
   LIFE_MEMBERSHIP_FEE,
@@ -15,6 +21,7 @@ const UserProfile = ({ memberID }) => {
   const [formData, setFormData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -27,7 +34,7 @@ const UserProfile = ({ memberID }) => {
       }
     };
     loadData();
-  }, [memberID]);
+  }, [memberID, formData.imageURL]);
 
   if (!formData) {
     return <div>Loading user details...</div>;
@@ -43,7 +50,17 @@ const UserProfile = ({ memberID }) => {
   const handleSave = async () => {
     try {
       const userRef = ref(database, `users/${formData.id}`);
-      await update(userRef, formData);
+      let updatedImageUrl = formData.imageURL;
+
+      if (selectedImage) {
+        const imagePath = `images/${formData.id}/${selectedImage.name}`;
+        const storageReference = storageRef(storage, imagePath);
+        const snapshot = await uploadBytes(storageReference, selectedImage);
+        updatedImageUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      await update(userRef, { ...formData, imageURL: updatedImageUrl });
+      setFormData((prevData) => ({ ...prevData, imageURL: updatedImageUrl }));
       setIsEditing(false);
       setStatusMessage("Profile updated successfully!");
     } catch (error) {
@@ -98,8 +115,22 @@ const UserProfile = ({ memberID }) => {
     <div className="profile-container">
       <h2 className="profile-heading">Welcome, {formData.memberName}!</h2>
 
-      {formData.imageURL && (
-        <img className="profile-image" src={formData.imageURL} alt="Profile" />
+      {isEditing ? (
+        <>
+          <label>Upload Passport Size Photo</label>
+          <ImageUploader
+            onImageSelect={setSelectedImage}
+            selectedImage={selectedImage}
+          />
+        </>
+      ) : (
+        formData.imageURL && (
+          <img
+            className="profile-image"
+            src={formData.imageURL}
+            alt="Profile"
+          />
+        )
       )}
 
       {/* ✅ Status Message */}
