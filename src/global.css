@@ -466,6 +466,18 @@ date-range-picker {
   border: 3px solid #ddd;
 }
 
+.profile-image.placeholder {
+  width: 150px; /* Adjust as per your styling */
+  height: 200px; /* Adjust as per your styling */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc; /* Dashed border to indicate image box */
+  color: #888;
+  font-size: 14px;
+  background-color: #f9f9f9;
+}
+
 /* Profile Table */
 .profile-table {
   width: 100%;

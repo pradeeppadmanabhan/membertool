@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
 
 const UserProfile = ({ memberID }) => {
-  const [formData, setFormData] = useState(null);
+  const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -31,12 +31,14 @@ const UserProfile = ({ memberID }) => {
         const freshData = await fetchMemberData(memberID);
         setFormData(freshData);
         //console.log("Loaded data:", freshData);
+      } else {
+        setFormData({});
       }
     };
     loadData();
-  }, [memberID, formData.imageURL]);
+  }, [memberID, formData?.imageURL]);
 
-  if (!formData) {
+  if (!formData || Object.keys(formData).length === 0) {
     return <div>Loading user details...</div>;
   }
 
@@ -117,20 +119,18 @@ const UserProfile = ({ memberID }) => {
 
       {isEditing ? (
         <>
-          <label>Upload Passport Size Photo</label>
+          <label>Upload Profile Pic</label>
           <ImageUploader
             onImageSelect={setSelectedImage}
             selectedImage={selectedImage}
           />
         </>
+      ) : formData?.imageURL ? (
+        <img className="profile-image" src={formData.imageURL} alt="Profile" />
       ) : (
-        formData.imageURL && (
-          <img
-            className="profile-image"
-            src={formData.imageURL}
-            alt="Profile"
-          />
-        )
+        <div className="profile-image placeholder)">
+          Edit to add your Profile Pic
+        </div>
       )}
 
       {/* ✅ Status Message */}
