@@ -10,7 +10,10 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (!userData) {
-      navigate("/welcome");
+      console.error("User data is not available.");
+      return <>Hmm, something's wrong, I can't find a user.</>;
+    } else {
+      console.log("ProfilePage:", userData);
     }
   }, [userData, navigate]);
 

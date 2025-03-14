@@ -13,7 +13,14 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { getDatabase, ref, get, set, update } from "firebase/database";
+import {
+  getDatabase,
+  ref,
+  get,
+  set,
+  update,
+  runTransaction,
+} from "firebase/database";
 import { app } from "./firebase";
 import { useNavigate } from "react-router-dom";
 
@@ -32,6 +39,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.getItem("memberID") || null
   );
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const navigate = useNavigate();
   const hasRedirected = useRef(false);
   const hasCheckedUser = useRef(false);
@@ -84,37 +92,28 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
-      //console.log("Signed in user:", signedInUser);
-      const adminEmails = await fetchAdminUsers();
-      //console.log("SignInWithGoogle - Admin emails:", adminEmails);
-      setIsAdmin(adminEmails.includes(signedInUser.email));
-
-      if (signedInUser) {
-        await checkOrExpandLegacyUser(signedInUser);
-      }
+      console.log("Signed in user:", signedInUser);
+      setUser(signedInUser);
     } catch (error) {
       console.error("Error signing in with Google:", error);
       // Handle error (e.g., display an error message)
     }
   };
 
-  const loadUserData = useCallback(
-    async (memberID) => {
-      const userRef = ref(db, `users/${memberID}`);
-      const userSnapshot = await get(userRef);
-      if (userSnapshot.exists()) {
-        setUserData(userSnapshot.val(), memberID);
-        setIsLoading(false);
-        hasCheckedUser.current = true;
-      } else {
-        navigate("/welcome");
-      }
-    },
-    [navigate]
-  );
+  const loadUserData = useCallback(async (memberID) => {
+    const userRef = ref(db, `users/${memberID}`);
+    const userSnapshot = await get(userRef);
+    if (userSnapshot.exists()) {
+      setUserData(userSnapshot.val(), memberID);
+      setIsLoading(false);
+      hasCheckedUser.current = true;
+    }
+  }, []);
 
   const checkOrExpandLegacyUser = useCallback(
     async (signedInUser) => {
+      if (!signedInUser) return null;
+
       const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
       const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
       const emailRef = ref(db, `emailToMemberID/${emailKey}`);
@@ -124,11 +123,11 @@ export const AuthProvider = ({ children }) => {
         const uidSnapshot = await get(uidRef);
         if (uidSnapshot.exists()) {
           const memberID = uidSnapshot.val();
-          //console.log("Existing UID mapping found: ", memberID);
+          console.log("Existing UID mapping found: ", memberID);
           localStorage.setItem("memberID", memberID);
           setMemberID(memberID);
           await loadUserData(memberID);
-          return;
+          return memberID;
         } else {
           console.error("No UID mapping found for user");
         }
@@ -136,44 +135,64 @@ export const AuthProvider = ({ children }) => {
         //Step 2: Check if email is already linked to a memberID
         const emailSnapshot = await get(emailRef);
         if (emailSnapshot.exists()) {
-          const memberID = emailSnapshot.val();
-          //console.log("Existing user found in email: ", memberID);
+          const existingMemberID = emailSnapshot.val();
+          console.log("Existing user found by email: ", memberID);
 
           //Store UID in users/{memberID}
-          await update(ref(db, `users/${memberID}`), { uid: signedInUser.uid });
+          await update(ref(db, `users/${existingMemberID}`), {
+            uid: signedInUser.uid,
+          });
 
           //Store UID mapping for future logins
-          await set(uidRef, memberID);
-          localStorage.setItem("memberID", memberID);
-          setMemberID(memberID);
+          await runTransaction(uidRef, (currentData) =>
+            currentData === null ? existingMemberID : undefined
+          );
+          localStorage.setItem("memberID", existingMemberID);
+          setMemberID(existingMemberID);
 
           //Load user data
-          await loadUserData(memberID);
-          return;
+          await loadUserData(existingMemberID);
+          return existingMemberID;
         } else {
-          console.error("No user found in email");
+          console.error("No user found by email");
         }
 
         //Step 3: No existing data -> Register a new user
         const newMemberID = await generateMemberID("Annual");
+        if (!newMemberID) return null;
+        setIsNewUser(true);
         setMemberID(newMemberID);
+        console.log("Creating new user with memderID:", newMemberID);
+        localStorage.setItem("memberID", newMemberID);
         await set(ref(db, `users/${newMemberID}`), {
+          id: newMemberID,
           uid: signedInUser.uid,
           email: signedInUser.email,
           memberName: signedInUser.displayName,
-          membershipType: "Pending",
+          membershipType: "Annual",
+          currentMembershipType: "Annual",
+          applicationStatus: "Pending",
+          dateOfSubmission: new Date().toISOString(),
+          payments: [],
         });
 
-        // Store mappings
-        await set(uidRef, newMemberID);
-        await set(emailRef, newMemberID);
+        //Load user data
+        await loadUserData(newMemberID);
 
-        navigate("/welcome");
+        // Store mappings
+        await runTransaction(uidRef, (currentData) =>
+          currentData === null ? newMemberID : undefined
+        );
+        await runTransaction(emailRef, (currentData) =>
+          currentData === null ? newMemberID : undefined
+        );
+
+        return newMemberID;
       } catch (error) {
         console.error("Error checking user", error);
       }
     },
-    [navigate, loadUserData, generateMemberID]
+    [loadUserData, memberID, generateMemberID]
   );
 
   const logout = async () => {
@@ -183,10 +202,12 @@ export const AuthProvider = ({ children }) => {
       setIsAdmin(false);
       hasCheckedUser.current = false;
       hasRedirected.current = false;
+      setIsLoading(true);
       localStorage.removeItem("redirectUrl");
       localStorage.removeItem("memberID");
       setMemberID(null);
       setUserData(null);
+      setIsNewUser(false);
       navigate("/login");
     } catch (error) {
       console.error("Error signing out:", error);
@@ -195,38 +216,61 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user && !hasCheckedUser.current) {
-        //console.log("User in Auth Context: ", user);
-        //console.log("User UID:", user.uid);
-        //console.log("User Email:", user.email);
-        //console.log("User Name:", user.displayName);
-
-        await checkOrExpandLegacyUser(user);
-
-        const adminEmails = await fetchAdminUsers();
-        const userIsAdmin = adminEmails.includes(user.email);
-        setIsAdmin(userIsAdmin);
-
+      console.log("OnAuthStateChanged.. ", user);
+      if (!user) {
+        setUser(null);
         setIsLoading(false);
-
-        if (!hasRedirected.current) {
-          const redirectUrl =
-            localStorage.getItem("redirectUrl") ||
-            (userIsAdmin ? "/admin/dashboard" : "/profile");
-          console.log("Redirecting to saved URL after login:", redirectUrl);
-
-          localStorage.removeItem("redirectUrl");
-          hasRedirected.current = true;
-          navigate(redirectUrl);
-        }
-      } else {
-        setIsLoading(false);
+        return;
       }
+
+      setUser(user);
+
+      if (hasCheckedUser.current) return;
+      hasCheckedUser.current = true;
+
+      console.log("User in Auth Context: ", user);
+      console.log("User UID:", user.uid);
+      console.log("User Email:", user.email);
+      console.log("User Name:", user.displayName);
+
+      const memberID = await checkOrExpandLegacyUser(user);
+
+      if (!memberID) {
+        console.error("Member ID could not be determined, skipping redirect!");
+        setIsLoading(false);
+        return;
+      }
+
+      setMemberID(memberID);
+      localStorage.setItem("memberID", memberID);
+
+      const adminEmails = await fetchAdminUsers();
+      setIsAdmin(adminEmails.includes(user.email));
     });
 
     return unsubscribe;
-  }, [navigate, checkOrExpandLegacyUser, fetchAdminUsers, isAdmin]);
+  }, [checkOrExpandLegacyUser, fetchAdminUsers]);
+
+  useEffect(() => {
+    if (!memberID || hasRedirected.current) return;
+
+    hasRedirected.current = true;
+
+    setTimeout(() => {
+      let redirectUrl;
+
+      if (isNewUser) {
+        redirectUrl = "/new-application";
+      } else {
+        redirectUrl =
+          localStorage.getItem("redirectUrl") ||
+          (isAdmin ? "/admin/dashboard" : "/profile");
+      }
+      console.log("Redirection to ", redirectUrl);
+      localStorage.removeItem("redirectUrl");
+      navigate(redirectUrl);
+    }, 500);
+  }, [navigate, isNewUser, isAdmin, memberID]);
 
   return (
     <AuthContext.Provider

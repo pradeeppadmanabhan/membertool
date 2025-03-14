@@ -30,7 +30,7 @@ const UserProfile = ({ memberID }) => {
       if (memberID) {
         const freshData = await fetchMemberData(memberID);
         setFormData(freshData);
-        //console.log("Loaded data:", freshData);
+        console.log("Loaded data:", freshData);
       } else {
         setFormData({});
       }
@@ -67,7 +67,7 @@ const UserProfile = ({ memberID }) => {
       setStatusMessage("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      setStatusMessage("Error updating profile. Please try again.");
+      setStatusMessage("Error updating profile. Please try again.", error);
     }
   };
 
@@ -165,7 +165,12 @@ const UserProfile = ({ memberID }) => {
             <td>
               <strong>Membership ID:</strong>
             </td>
-            <td>{formData.id}</td>
+            <td>
+              {formData.id}{" "}
+              {formData.applicationStatus !== "Paid"
+                ? "(Pending: Please fill details and make payment to complete profile)"
+                : ""}
+            </td>
           </tr>
           <tr>
             <td>
@@ -460,7 +465,12 @@ const UserProfile = ({ memberID }) => {
           </tbody>
         </table>
       ) : (
-        <p>No payments found.</p>
+        <div>
+          <p>No payments found.</p>
+          <button className="renew-button" onClick={handleRenewal}>
+            {`Annual Due - ₹${ANNUAL_MEMBERSHIP_FEE}`}
+          </button>
+        </div>
       )}
     </div>
   );

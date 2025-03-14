@@ -25,8 +25,7 @@ import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 
 function App() {
-  const { user, isAdmin, signInWithGoogle, logout, isLoading } =
-    useContext(AuthContext);
+  const { user, isAdmin, logout, isLoading } = useContext(AuthContext);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -76,9 +75,7 @@ function App() {
               <button onClick={logout}>Logout</button>
             </div>
           ) : (
-            <div>
-              <button onClick={signInWithGoogle}>Sign in with Google</button>
-            </div>
+            <div></div>
           )}
           <br />
           <br />
@@ -150,7 +147,6 @@ function App() {
           }
         />
 
-        {/* <Route path="/admin/applications" element={<ApplicationsList />} /> */}
         <Route
           path="/admin/invite-member"
           element={
