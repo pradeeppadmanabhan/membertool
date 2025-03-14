@@ -85,9 +85,11 @@ function App() {
       <div className="button-container">
         {authorizedAdminEmails.includes(user?.email) && (
           <>
-            <Link to="/new-application">
-              <button>New Member Form</button>
-            </Link>
+            {!isAdmin && (
+              <Link to="/new-application">
+                <button>New Member Form</button>
+              </Link>
+            )}
             <Link to="/admin/applications">
               <button>Applications</button>
             </Link>
