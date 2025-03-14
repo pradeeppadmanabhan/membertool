@@ -50,17 +50,17 @@ export const AuthProvider = ({ children }) => {
       if (!user) throw new Error("User not authenticated");
       const idToken = await user.getIdToken();
 
-      const response = await fetch(
-        "https://us-central1-membertool-test.cloudfunctions.net/api/generateMemberID",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({ currentMembershipType: membershipType }),
-        }
-      );
+      const API_BASE = process.env.REACT_APP_API_BASE;
+      console.log("API_BASE: ", API_BASE);
+
+      const response = await fetch(`${API_BASE}/api/generateMemberID`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ currentMembershipType: membershipType }),
+      });
 
       if (!response.ok) throw new Error("Failed to generate Member ID");
 
@@ -243,9 +243,6 @@ export const AuthProvider = ({ children }) => {
 
       setMemberID(memberID);
       localStorage.setItem("memberID", memberID);
-
-      const adminEmails = await fetchAdminUsers();
-      setIsAdmin(adminEmails.includes(user.email));
     });
 
     return unsubscribe;
@@ -255,6 +252,10 @@ export const AuthProvider = ({ children }) => {
     if (!memberID || hasRedirected.current) return;
 
     hasRedirected.current = true;
+
+    const adminEmails = ["coffeecup.developers@gmail.com", "info@kmaindia.org"]; // await fetchAdminUsers();
+    const isAdmin = adminEmails.includes(user?.email);
+    setIsAdmin(isAdmin);
 
     setTimeout(() => {
       let redirectUrl;
@@ -270,7 +271,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("redirectUrl");
       navigate(redirectUrl);
     }, 500);
-  }, [navigate, isNewUser, isAdmin, memberID]);
+  }, [navigate, isNewUser, memberID, user?.email]);
 
   return (
     <AuthContext.Provider
