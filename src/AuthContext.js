@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
-      console.log("Signed in user:", signedInUser);
+      //console.log("Signed in user:", signedInUser);
       setUser(signedInUser);
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -216,7 +216,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("OnAuthStateChanged.. ", user);
+      //console.log("OnAuthStateChanged.. ", user);
       if (!user) {
         setUser(null);
         setIsLoading(false);
@@ -229,9 +229,9 @@ export const AuthProvider = ({ children }) => {
       hasCheckedUser.current = true;
 
       console.log("User in Auth Context: ", user);
-      console.log("User UID:", user.uid);
-      console.log("User Email:", user.email);
-      console.log("User Name:", user.displayName);
+      //console.log("User UID:", user.uid);
+      //console.log("User Email:", user.email);
+      //console.log("User Name:", user.displayName);
 
       const memberID = await checkOrExpandLegacyUser(user);
 
