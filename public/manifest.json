@@ -1,6 +1,8 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "KMA Membership Tool",
+  "name": "KMA Membership Tool",
+  "description": "A tool for managing KMA membership.",
+  "lang": "en-US",
   "icons": [
     {
       "src": "favicon.ico",
