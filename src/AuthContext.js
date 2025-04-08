@@ -97,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Error signing in with Google:", error);
       // Handle error (e.g., display an error message)
+      alert("Error signing in with Google. Please try again.");
     }
   };
 
@@ -105,6 +106,11 @@ export const AuthProvider = ({ children }) => {
     const userSnapshot = await get(userRef);
     if (userSnapshot.exists()) {
       setUserData(userSnapshot.val(), memberID);
+      setIsLoading(false);
+      hasCheckedUser.current = true;
+    } else {
+      console.error("EUNM: No user data found for memberID:", memberID);
+      setUserData(null);
       setIsLoading(false);
       hasCheckedUser.current = true;
     }
