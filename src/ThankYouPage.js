@@ -63,16 +63,38 @@ const ThankYouPage = () => {
     `;
 
     const memberTableRows = isRenewal
-      ? ""
-      : `
-        <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
+      ? `
         <tr><td>Member ID</td><td>${userData.id}</td></tr>
+        <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
+        `
+      : `
+        <tr><td>Member ID</td><td>${userData.id}</td></tr>
+        <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
+        
+        <tr><td>Age</td><td>${userData.age}</td></tr>
         <tr><td>Date of Birth</td><td>${new Date(userData.dob).toLocaleDateString()}</td></tr>
         <tr><td>Gender</td><td>${userData.gender}</td></tr>
-        <tr><td>Email</td><td>${userData.email}</td></tr>
+        <tr><td>Father/Guardian Name</td><td>${userData.fatherGuardianName}</td></tr>
+        <tr><td>Address</td><td>${userData.addressLine1}, ${userData.addressLine2}, ${userData.addressLine3}</td></tr>        
         <tr><td>Mobile</td><td>${userData.mobile}</td></tr>
-        <tr><td>Address</td><td>${userData.addressLine1}, ${userData.addressLine2}, ${userData.addressLine3}</td></tr>
-      `;
+        <tr><td>Email</td><td>${userData.email}</td></tr>
+        <tr><td>Qualifications</td><td>${userData.qualifications}</td></tr>
+        <tr><td>Profession</td><td>${userData.profession}</td></tr>
+        <tr><td>Athletic Background</td><td>${userData.athleticBackground}</td></tr>
+        <tr><td>Trekking Experience</td><td>${userData.trekkingExperience}</td></tr>
+        <tr><td>Hobbies</td><td>${userData.hobbies}</td></tr>
+        <tr><td>Illness History</td><td>${userData.illnessHistory}</td></tr>
+        <tr><td>Present Health</td><td>${userData.generalHealth}</td></tr>
+        <tr><td>Blood Group</td><td>${userData.bloodGroup}</td></tr>
+
+        <tr><td>Recommended By</td><td>${userData.recommendedByName}</td></tr>
+
+        <tr><td>Membership Type</td><td>${userData.currentMembershipType}</td></tr>        
+        
+        <tr><td>Renewal Due On</td><td>${new Date(userData.renewalDueOn).toLocaleDateString()}</td></tr>
+        <tr><td>Date of Submission</td><td>${new Date(userData.dateOfSubmission).toLocaleDateString()}</td></tr>
+        
+        `;
 
     const emailBody = `
       <p>Dear ${userData.memberName},</p>
@@ -86,7 +108,7 @@ const ThankYouPage = () => {
           ${isRenewal ? paymentTableRows : memberTableRows + paymentTableRows}
         </tbody>
       </table>
-      <p>We look forward to having you as part of the Karnataka Mountaineering Association.</p>
+      <p>We look forward to having you as part of The Karnataka Mountaineering Association.</p>
     `;
 
     return {
@@ -132,7 +154,7 @@ const ThankYouPage = () => {
           className="back-to-profile-button"
           onClick={() => navigate(`/profile?memberID=${memberID}`)}
         >
-          Back to Profile
+          My Profile
         </button>
       </div>
     </div>
