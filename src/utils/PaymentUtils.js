@@ -69,20 +69,35 @@ export const handleRazorpayPayment = async (
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
 
-    const idToken = await user.getIdToken();
-    const response = await fetch(
-      "https://us-central1-membertool-test.cloudfunctions.net/api/createRazorpayOrder",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${idToken}`,
-        },
-        body: JSON.stringify({ amount: amount * 100, currency: "INR" }),
-      }
-    );
+    const API_BASE = process.env.REACT_APP_API_BASE;
+    /* const API_BASE =
+      "https://us-central1-kma-membership-tool.cloudfunctions.net"; */
+    console.log("Payment Utils API_BASE: ", API_BASE);
 
-    if (!response.ok) throw new Error("Failed to create Razorpay order");
+    //const response = await fetch(`${API_BASE}/api/generateMemberID`, {
+
+    const idToken = await user.getIdToken();
+    const response = await fetch(`${API_BASE}/api/createRazorpayOrder`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${idToken}`,
+      },
+      body: JSON.stringify({ amount: amount * 100, currency: "INR" }),
+    });
+
+    //console.log("Razorpay response:", response);
+
+    if (!response.ok) {
+      console.error(
+        `Failed to create Razorpay order. Status: ${response.status}`
+      );
+      onError(`Failed to create Razorpay order. Status: ${response.status}`);
+      throw new Error(
+        `Failed to create Razorpay order. Status: ${response.status} `
+      );
+    }
+
     const order = await response.json();
 
     // ✅ Ensure Razorpay script is loaded before creating the instance
@@ -95,91 +110,123 @@ export const handleRazorpayPayment = async (
       await new Promise((resolve) => {
         script.onload = resolve;
       });
+      console.log("Razorpay script loaded successfully");
     }
 
-    const options = {
-      key: process.env.REACT_APP_RAZORPAY_KEY_ID,
-      amount: order.amount,
-      currency: order.currency,
-      name: "Membership Payment",
-      description: `Payment for ${membershipType} Membership`,
-      order_id: order.id,
-      handler: async (response) => {
-        console.log("Razorpay payment successful:", response);
-        const receiptNumber = await generateReceiptNumber();
-        const paymentRecord = {
-          paymentMode: "Razorpay",
-          paymentID: response.razorpay_payment_id,
-          orderID: response.razorpay_order_id,
-          amount,
-          receiptNumber,
-          membershipType,
-          dateOfPayment: new Date().toISOString(),
-          applicationStatus: "Paid",
-        };
+    const paymentPromise = await new Promise((resolve, reject) => {
+      const options = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        name: "Membership Payment",
+        description: `Payment for ${membershipType} Membership`,
+        order_id: order.id,
+        handler: async (response) => {
+          console.log("Razorpay payment successful:", response);
+          try {
+            const receiptNumber = await generateReceiptNumber();
+            const paymentRecord = {
+              paymentMode: "Razorpay",
+              paymentID: response.razorpay_payment_id,
+              orderID: response.razorpay_order_id,
+              amount,
+              receiptNumber,
+              membershipType,
+              dateOfPayment: new Date().toISOString(),
+              applicationStatus: "Paid",
+            };
 
-        const paymentRef = ref(database, `users/${memberID}/payments/`);
-        const memberRef = ref(database, `users/${memberID}`);
-        const memberData = await fetchMemberData(memberID);
-        //console.log("Memberdata:", memberData);
-        //console.log("PaymentRecord:", paymentRecord);
-        mobileNumber = memberData.mobile;
-        const updatedPayments = [...(memberData.payments || []), paymentRecord];
-        // ✅ Convert array to an object before updating Firebase
-        const paymentsObject = updatedPayments.reduce((acc, item, index) => {
-          acc[index] = item;
-          return acc;
-        }, {});
-        //console.log("PaymentsObject:", paymentsObject);
-        // ✅ Update
-        await update(paymentRef, paymentsObject);
+            const paymentRef = ref(database, `users/${memberID}/payments/`);
+            const memberRef = ref(database, `users/${memberID}`);
+            const memberData = await fetchMemberData(memberID);
+            //console.log("Memberdata:", memberData);
+            //console.log("PaymentRecord:", paymentRecord);
+            mobileNumber = memberData.mobile;
+            const updatedPayments = [
+              ...(memberData.payments || []),
+              paymentRecord,
+            ];
+            // ✅ Convert array to an object before updating Firebase
+            const paymentsObject = updatedPayments.reduce(
+              (acc, item, index) => {
+                acc[index] = item;
+                return acc;
+              },
+              {}
+            );
+            //console.log("PaymentsObject:", paymentsObject);
+            // ✅ Update
+            await update(paymentRef, paymentsObject);
 
-        //console.log("Payment saved successfully", paymentsObject);
+            //console.log("Payment saved successfully", paymentsObject);
 
-        // ✅ Extend renewal or upgrade membership
-        const updatedMemberData = { ...memberData };
+            // ✅ Extend renewal or upgrade membership
+            const updatedMemberData = { ...memberData };
 
-        if (membershipType === "Life") {
-          updatedMemberData.renewalDueOn = null;
-          updatedMemberData.currentMembershipType = "Life";
-        } else if (membershipType === "Annual") {
-          const now = new Date();
-          const nextYear = memberData.renewalDueOn
-            ? new Date(memberData.renewalDueOn)
-            : now;
-          nextYear.setFullYear(nextYear.getFullYear() + 1);
-          updatedMemberData.renewalDueOn = nextYear.toISOString();
-          updatedMemberData.currentMembershipType = "Annual";
-        }
+            if (membershipType === "Life") {
+              updatedMemberData.renewalDueOn = null;
+              updatedMemberData.currentMembershipType = "Life";
+            } else if (membershipType === "Annual") {
+              const now = new Date();
+              const nextYear = memberData.renewalDueOn
+                ? new Date(memberData.renewalDueOn)
+                : now;
+              nextYear.setFullYear(nextYear.getFullYear() + 1);
+              updatedMemberData.renewalDueOn = nextYear.toISOString();
+              updatedMemberData.currentMembershipType = "Annual";
+            }
 
-        updatedMemberData.applicationStatus = "Paid";
+            updatedMemberData.applicationStatus = "Paid";
 
-        await update(memberRef, {
-          renewalDueOn: updatedMemberData.renewalDueOn,
-          currentMembershipType: updatedMemberData.currentMembershipType,
-          applicationStatus: updatedMemberData.applicationStatus,
-        });
+            await update(memberRef, {
+              renewalDueOn: updatedMemberData.renewalDueOn,
+              currentMembershipType: updatedMemberData.currentMembershipType,
+              applicationStatus: updatedMemberData.applicationStatus,
+            });
 
-        //console.log("Updated Member Data", updatedMemberData);
-
-        // Navigate to thank-you page -
-        navigate(`/thank-you/${receiptNumber}/${memberID}`);
-      },
-      prefill: { email: user.email, contact: mobileNumber },
-      theme: { color: "#3399cc" },
-      modal: {
-        escape: true,
-        ondismiss: () => {
-          console.error("Payment was cancelled by user");
-          if (onError) onError("Payment was cancelled by user");
+            //console.log("Updated Member Data", updatedMemberData);
+            resolve({
+              success: true,
+              message: "Thankyou, Payment successful!",
+            });
+            // Navigate to thank-you page -
+            navigate(`/thank-you/${receiptNumber}/${memberID}`);
+          } catch (error) {
+            console.error("Error during payment processing:", error);
+            reject({
+              success: false,
+              message: "Error during payment processing!, Please try again.",
+            });
+          }
         },
-      },
-    };
+        prefill: { email: user.email, contact: mobileNumber },
+        theme: { color: "#3399cc" },
+        modal: {
+          escape: true,
+          ondismiss: () => {
+            console.error("Payment Unsuccessful!, Please try again.");
+            // if (onError) onError("Payment Unsuccessful!, Please try again.");
+            reject({
+              success: false,
+              message: "Payment Unsuccessful!, Please try again.",
+            });
+          },
+        },
+      };
 
-    new window.Razorpay(options).open();
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+      //console.log("Razorpay instance opened:", result);
+    });
+    return paymentPromise;
   } catch (error) {
     console.error("Error during payment:", error);
     if (onError) onError(error.message);
+    // Return failure response
+    return {
+      success: false,
+      message: error.message || "An unexpected error occurred during payment.",
+    };
   }
 };
 

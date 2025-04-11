@@ -35,6 +35,7 @@ const PaymentDetails = () => {
     if (memberID) {
       fetchMemberData(memberID)
         .then(setMemberData)
+        .catch(() => setStatusMessage("Error fetching member data."))
         .finally(() => setIsLoading(false));
     }
   }, [memberID]);
@@ -60,6 +61,23 @@ const PaymentDetails = () => {
     );
   }
 
+  const handleRazorpay = async () => {
+    setIsSubmitting(true);
+    setStatusMessage("Processing payment...");
+    const paymentResult = await handleRazorpayPayment(
+      memberID,
+      paymentAmount,
+      membershipType,
+      navigate,
+      setStatusMessage
+    );
+    console.log("Payment Result:", paymentResult);
+
+    setStatusMessage(paymentResult.message);
+
+    setIsSubmitting(false);
+  };
+
   return (
     <div>
       <h2>Payment Details</h2>
@@ -74,14 +92,7 @@ const PaymentDetails = () => {
       {paymentMode === "razorpay" ? (
         <button
           onClick={() => {
-            setIsSubmitting(true);
-            handleRazorpayPayment(
-              memberID,
-              paymentAmount,
-              membershipType,
-              navigate,
-              setStatusMessage
-            );
+            handleRazorpay();
           }}
           disabled={isSubmitting}
         >
