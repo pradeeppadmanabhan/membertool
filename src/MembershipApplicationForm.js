@@ -91,7 +91,12 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   }, [user, isLoading, memberID, navigate]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="loader-container">
+        <div className="spinner"></div>
+        <p>Loading your membership application...</p>
+      </div>
+    );
   }
 
   const handleChange = (e) => {
