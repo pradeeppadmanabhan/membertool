@@ -1,21 +1,22 @@
-export const addDeclarationToPDF = (doc, yPos = 50) => {
-  // Centered Text Wrapper Function
-  const addCenteredText = (text, yPos, fontSize = 10) => {
-    doc.setFontSize(fontSize);
-    const textWidth = doc.getTextWidth(text);
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const xPosition = (pageWidth - textWidth) / 2;
-    doc.text(text, xPosition, yPos);
-  };
+// Centered Text Wrapper Function
+export const addCenteredText = (doc, text, yPos, fontSize = 10) => {
+  doc.setFontSize(fontSize);
+  const textWidth = doc.getTextWidth(text);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const xPosition = (pageWidth - textWidth) / 2;
+  doc.text(text, xPosition, yPos);
+};
 
-  const addRightAlignedText = (text, yPos, fontSize = 10) => {
-    doc.setFontSize(fontSize);
-    const textWidth = doc.getTextWidth(text);
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const xPosition = pageWidth - textWidth - 30;
-    doc.text(text, xPosition, yPos);
-  };
+// Right Aligned Text Wrapper Function
+export const addRightAlignedText = (doc, text, yPos, fontSize = 10) => {
+  doc.setFontSize(fontSize);
+  const textWidth = doc.getTextWidth(text);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const xPosition = pageWidth - textWidth - 30;
+  doc.text(text, xPosition, yPos);
+};
 
+export const addDeclarationToPDF = (doc, yPos = 50, imagePath = null) => {
   const xPos = 20;
 
   doc.setFontSize(10);
@@ -50,7 +51,7 @@ export const addDeclarationToPDF = (doc, yPos = 50) => {
   );
   doc.text("Association.", xPos, yPos + 80);
   doc.setFont("helvetica", "bold");
-  addCenteredText("DECLARATION", yPos + 92, 10);
+  addCenteredText(doc, "DECLARATION", yPos + 92, 10);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
 
@@ -76,9 +77,28 @@ export const addDeclarationToPDF = (doc, yPos = 50) => {
   );
   doc.text("and with all my senses under control.", xPos, yPos + 132);
   doc.text("I hope you will kindly accept my membership.", xPos, yPos + 144);
-  addRightAlignedText("Yours Sincerely", yPos + 150, 10);
+  addRightAlignedText(doc, "Yours Sincerely", yPos + 150, 10);
+
+  if (imagePath) {
+    const encodedImageUrl = encodeURI(imagePath); // Encode the URL
+    //console.log("Encoded Image URL:", encodedImageUrl); // Debugging line
+    const imageWidth = 40; // Adjust image width as needed
+    const imageHeight = 20; // Adjust image height as needed
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const imageX = pageWidth - imageWidth - 30; // Position to the right of the text
+    const imageY = yPos + 160; // Position above the text
+    doc.addImage(
+      encodedImageUrl,
+      "JPEG",
+      imageX,
+      imageY,
+      imageWidth,
+      imageHeight
+    );
+  }
+
+  addRightAlignedText(doc, "Signature and date", yPos + 200, 10);
   doc.text("Note – In case of Minor, Guardian should sign.", xPos, yPos + 190);
-  addRightAlignedText("Signature and date", yPos + 190, 10);
   // Return the updated yPos for the next content
   return yPos + 220; // Adjust spacing as needed
 };

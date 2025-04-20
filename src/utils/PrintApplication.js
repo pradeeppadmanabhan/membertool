@@ -3,7 +3,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import "../global.css";
 import { addHeaderToPDF } from "./PDFHeader";
-import { addDeclarationToPDF } from "./PDFDeclaration";
+import { addCenteredText, addDeclarationToPDF } from "./PDFDeclaration";
 
 const PrintApplication = (applicationData) => {
   const doc = new jsPDF();
@@ -11,30 +11,40 @@ const PrintApplication = (applicationData) => {
     /* options */
   }); // Apply the plugin
 
+  const imageUrl = applicationData.imageURL; // Use the image URL from applicationData
+
   let yPos = addHeaderToPDF(doc);
-  yPos = addDeclarationToPDF(doc, yPos);
+  addDeclarationToPDF(doc, yPos, imageUrl); // Add the declaration
+  doc.addPage(); // Add a new page for the application form
 
-  /* // Add the member image to the right side
+  // Add the member image to the right side
   const pageWidth = doc.internal.pageSize.getWidth();
-  const imageWidth = 50; // Adjust image width as needed
-  const imageX = pageWidth - imageWidth - 10; // 10 for margin from right edge
-  const imageY = yPos - 40; // Position above the table
+  const headerHeight = 20; // Height of the header
 
-  if (applicationData.imageURL) {
-    const encodedImageUrl = encodeURI(applicationData.imageURL); // Encode the URL
+  addCenteredText(doc, "APPLICATION FOR MEMBERSHIP", headerHeight, 12); // Add title above the table
+
+  const imageWidth = 40; // Adjust image width as needed
+  const imageHeight = 50; // Adjust image height as needed
+  const imageX = (pageWidth - imageWidth) / 2; // 10 for margin from right edge
+  const imageY = headerHeight + 10; // Position above the table
+
+  if (imageUrl) {
+    const encodedImageUrl = encodeURI(imageUrl); // Encode the URL
     doc.addImage(
       encodedImageUrl,
       "JPEG",
       imageX,
       imageY,
       imageWidth,
-      imageWidth
+      imageHeight
     );
-  } */
+  } else {
+    console.error("Image URL is not available in applicationData.");
+  }
 
   // 3. Table Creation (same as before)
-  const tableColumnWidths = [80, 80];
-  const tableRows = [
+  const tableColumnWidths = [50, 100];
+  const memberTableRows = [
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
@@ -58,24 +68,55 @@ const PrintApplication = (applicationData) => {
     ["History of serious illness:", applicationData.illnessHistory || "N/A"],
     ["Present General Health:", applicationData.generalHealth || "N/A"],
     ["Blood Group:", applicationData.bloodGroup || "N/A"],
-    ["Membership Type:", applicationData.currentMembershipType || "N/A"],
-    ["Payment Transaction No:", "<Transaction No>"],
-    ["Receipt No: / Date: ", "<Receipt No> / <Date>"],
-    [
-      "Recommended By:",
-      applicationData.recommendedByName ||
-        "N/A" + applicationData.recommendedByID ||
-        "N/A",
-    ],
-    //["Recommended By -ID:", applicationData.recommendedByID || "N/A"],
+
     // ... add other fields in the same format ...
   ];
+
+  const memberTableStartY = imageY + imageHeight + 10; // Start the table below the header
 
   // Add the table to the PDF
   doc.autoTable({
     head: [],
-    body: tableRows,
-    startY: yPos, // Start the table below the header
+    body: memberTableRows,
+    startX: 20, // Start the table from the left margin
+    startY: memberTableStartY, // Start the table below the header
+    columnStyles: {
+      0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
+      1: { cellWidth: tableColumnWidths[1] },
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+  });
+
+  doc.addPage(); // Add a new page for the payment details
+
+  const payments = applicationData.payments || [];
+  const latestPayment = payments[payments.length - 1];
+  //console.log("Latest Payment:", latestPayment);
+
+  const paymentTableRows = [
+    // ... (Your table data) ...
+    ["ID:", applicationData.id || "N/A"],
+    ["Applicant's Full Name:", applicationData.memberName || "N/A"],
+    ["Amount:", latestPayment.amount || "N/A"],
+    [
+      "Date of Payment:",
+      new Date(latestPayment.dateOfPayment).toLocaleDateString(),
+    ],
+    ["Payment Mode:", latestPayment.paymentMode || "N/A"],
+    ["Receipt Number:", latestPayment.receiptNumber || "N/A"],
+    ["Payment ID:", latestPayment.paymentID || "N/A"],
+  ];
+
+  addCenteredText(doc, "PAYMENT DETAILS", headerHeight, 12); // Add title above the table
+
+  // Add the payment details table to the PDF
+  doc.autoTable({
+    head: [],
+    body: paymentTableRows,
+    startY: headerHeight + 10, // Start the table below the header
     columnStyles: {
       0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
       1: { cellWidth: tableColumnWidths[1] },
