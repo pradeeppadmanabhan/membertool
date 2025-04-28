@@ -397,6 +397,22 @@ const UserProfile = ({ memberID }) => {
           </tr>
           <tr>
             <td>
+              <strong>Mountaineering Certifications:</strong>
+            </td>
+            <td>
+              {isEditing ? (
+                <textarea
+                  name="mountaineeringCertifications"
+                  value={formData.mountaineeringCertifications}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.mountaineeringCertifications
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td>
               <strong>Recommended By:</strong>
             </td>
             <td>
@@ -408,6 +424,75 @@ const UserProfile = ({ memberID }) => {
                 />
               ) : (
                 formData.recommendedByName
+              )}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="profile-table">
+        <tbody>
+          <tr>
+            <td className="field-name">
+              <strong>Emergency Contact Name:</strong>
+            </td>
+            <td>
+              {isEditing ? (
+                <textarea
+                  name="emergencyContactName"
+                  value={formData.emergencyContactName}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.emergencyContactName
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td className="field-name">
+              <strong>Emergency Contact Phone:</strong>
+            </td>
+            <td>
+              {isEditing ? (
+                <textarea
+                  name="emergencyContactPhone"
+                  value={formData.emergencyContactPhone}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.emergencyContactPhone
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td className="field-name">
+              <strong>Emergency Contact Email:</strong>
+            </td>
+            <td>
+              {isEditing ? (
+                <textarea
+                  name="emergencyContactEmail"
+                  value={formData.emergencyContactEmail}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.emergencyContactEmail
+              )}
+            </td>
+          </tr>
+          <tr>
+            <td className="field-name">
+              <strong>Emergency Contact Relationship:</strong>
+            </td>
+            <td>
+              {isEditing ? (
+                <textarea
+                  name="emergencyContactRelationship"
+                  value={formData.emergencyContactRelationship}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.emergencyContactRelationship
               )}
             </td>
           </tr>
