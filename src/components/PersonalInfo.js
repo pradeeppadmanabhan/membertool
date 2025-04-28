@@ -3,6 +3,7 @@ import React from "react";
 const PersonalInfo = ({ formData, errors, handleChange, handleBlur }) => {
   return (
     <div>
+      <h3>Personal Information</h3>
       <label>Applicant's Full Name*:</label>
       <input
         type="text"

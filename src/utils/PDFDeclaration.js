@@ -1,10 +1,14 @@
 // Centered Text Wrapper Function
 export const addCenteredText = (doc, text, yPos, fontSize = 10) => {
   doc.setFontSize(fontSize);
+  doc.setFont("helvetica", "bold"); // Set font to bold for centered text
+  doc.setTextColor(0, 0, 0); // Set text color to black (0, 0, 0)
   const textWidth = doc.getTextWidth(text);
   const pageWidth = doc.internal.pageSize.getWidth();
   const xPosition = (pageWidth - textWidth) / 2;
   doc.text(text, xPosition, yPos);
+  doc.setFont("helvetica", "normal"); // Reset font to normal after centered text
+  doc.setTextColor(0, 0, 0); // Reset text color to black (0, 0, 0)
 };
 
 // Right Aligned Text Wrapper Function

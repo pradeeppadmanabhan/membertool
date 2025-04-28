@@ -3,6 +3,7 @@ import React from "react";
 const ContactInfo = ({ formData, errors, handleChange }) => {
   return (
     <div>
+      <h3>Contact Information</h3>
       {/* Contact Info */}
       <label>Address Line1*:</label>
       <input

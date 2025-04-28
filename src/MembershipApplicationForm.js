@@ -14,6 +14,7 @@ import PersonalInfo from "./components/PersonalInfo";
 import ContactInfo from "./components/ContactInfo";
 import BackgroundHealth from "./components/BackgroundHealth";
 import MembershipDetails from "./components/MembershipDetails";
+import EmergencyContactDetails from "./components/EmergencyContactDetails";
 import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
 import AuthContext from "./AuthContext";
@@ -55,10 +56,16 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     illnessHistory: "",
     generalHealth: "",
     bloodGroup: "",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
+    emergencyContactEmail: "",
+    emergencyContactRelationship: "",
+    mountaineeringCertifications: "", // Optional field
     currentMembershipType: initialMembershipType, // Default value - Annual
     recommendedByName: "",
     recommendedByID: "",
     imageURL: "", // New field for image URL
+    signatureURL: "", // New field for signature URL
     consent: false, // New field for consent
 
     // New fields with initial values
@@ -71,6 +78,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const [errors, setErrors] = useState({});
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedSignature, setSelectedSignature] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -159,9 +167,15 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       illnessHistory: "",
       generalHealth: "",
       bloodGroup: "",
+      emergencyContactName: "",
+      emergencyContactPhone: "",
+      emergencyContactEmail: "",
+      emergencyContactRelationship: "",
+      mountaineeringCertifications: "", // Optional field
       currentMembershipType: initialMembershipType,
       //paymentTransactionNumber: "",
-      imageURL: "", // Reset image URL
+      imageURL: "", // Reset image
+      signatureURL: "", // Reset signature
       recommendedByName: "",
       recommendedByID: "",
       consent: false, // Reset consent to Decline
@@ -202,25 +216,54 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (!formData.bloodGroup)
       formErrors.bloodGroup = "Blood Group is required.";
 
+    if (!formData.illnessHistory)
+      formErrors.illnessHistory = "History of serious illness is required.";
+    if (!formData.generalHealth)
+      formErrors.generalHealth = "Present General Health is required.";
+    if (!formData.emergencyContactName)
+      formErrors.emergencyContactName = "Emergency contact name is required.";
+    if (!formData.emergencyContactPhone)
+      formErrors.emergencyContactPhone = "Emergency contact phone is required.";
+    if (
+      formData.emergencyContactPhone &&
+      !/^\d{10}$/.test(formData.emergencyContactPhone)
+    )
+      formErrors.emergencyContactPhone =
+        "Emergency contact phone must be 10 digits.";
+    if (!formData.emergencyContactEmail)
+      formErrors.emergencyContactEmail = "Emergency contact email is required.";
+    if (
+      formData.emergencyContactEmail &&
+      !/\S+@\S+\.\S+/.test(formData.emergencyContactEmail)
+    )
+      formErrors.emergencyContactEmail =
+        "Emergency contact email format is invalid.";
+    if (!formData.emergencyContactRelationship)
+      formErrors.emergencyContactRelationship =
+        "Emergency contact relationship is required.";
+
+    if (!formData.recommendedByName)
+      formErrors.recommendedByName = "Recommended by name is required.";
     return formErrors;
   };
 
-  const validateImage = () => {
+  const validateImage = (image, fieldName) => {
     let imageErrors = {};
 
-    if (!selectedImage) {
-      imageErrors.imageURL = "Please upload a passport size photo.";
+    if (!image) {
+      imageErrors[fieldName] =
+        `Please upload a ${fieldName === "imageURL" ? "passport size photo" : "specimen signature"}.`;
     } else {
       // Image type validation (example: allow only JPEG and PNG)
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(selectedImage.type)) {
-        imageErrors.imageURL = "Only JPEG/JPG and PNG images are allowed.";
+        imageErrors[fieldName] = "Only JPEG/JPG and PNG images are allowed.";
       }
 
       // Image size validation (example: maximum 2MB)
       const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
       if (selectedImage.size > maxSizeInBytes) {
-        imageErrors.imageURL = "Image size must be less than 2MB.";
+        imageErrors[fieldName] = "Image size must be less than 2MB.";
       }
     }
 
@@ -229,28 +272,14 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
   const handleValidate = () => {
     const formErrors = validateForm();
-    const imageErrors = validateImage();
+    const imageErrors = {
+      ...validateImage(selectedImage, "imageURL"),
+      ...validateImage(selectedSignature, "signatureURL"),
+    };
     const allErrors = { ...formErrors, ...imageErrors };
 
     setErrors(allErrors);
 
-    // Check for errors only once
-    if (Object.keys(allErrors).length > 0) {
-      setStatusMessage(
-        <React.Fragment>
-          <b>Please fix the errors before submitting:</b>
-          <br />
-          {Object.values({ ...formErrors, ...imageErrors }).map(
-            (message, index) => (
-              <React.Fragment key={index}>
-                {message}
-                <br />
-              </React.Fragment>
-            )
-          )}
-        </React.Fragment>
-      );
-    }
     return allErrors;
   };
 
@@ -261,6 +290,18 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     const validtionErrors = handleValidate();
 
     if (Object.keys(validtionErrors).length > 0) {
+      setStatusMessage(
+        <React.Fragment>
+          <b>Please fix the errors before submitting:</b>
+          <br />
+          {Object.values(errors).map((message, index) => (
+            <React.Fragment key={index}>
+              {message}
+              <br />
+            </React.Fragment>
+          ))}
+        </React.Fragment>
+      );
       setIsSubmitting(false);
       return;
     }
@@ -268,30 +309,36 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     try {
       //console.log("Generated Member ID:", newMemberId);
       const newMemberId = formData.id;
+      let uploadedImageUrl = null;
+      let uploadedSignatureUrl = null;
 
       // 2. Upload Image (if selected)
-      let uploadedImageUrl = null;
-      if (selectedImage) {
-        if (newMemberId) {
-          try {
-            const imagePath = `images/${newMemberId}/${selectedImage.name}`;
-            const storageReference = storageRef(storage, imagePath);
-            const snapshot = await uploadBytes(storageReference, selectedImage);
-            uploadedImageUrl = await getDownloadURL(snapshot.ref);
-            console.log("Uploaded Image URL:", uploadedImageUrl);
-          } catch (error) {
-            console.error("Error uploading image:", error);
-            // Handle upload error (e.g., show an error message)
-            setIsSubmitting(false); // Reset submitting state if image upload fails
-            return;
-          }
-        } else {
-          console.log("Member ID not generated yet, unable to upload image.");
-          console.error("Member ID not generated yet, unable to upload image.");
-          setStatusMessage(
-            "Member ID not generated yet, unable to upload image."
-          );
+      if (newMemberId) {
+        // Upload Profile Photo
+
+        if (selectedImage) {
+          const imagePath = `images/${newMemberId}/${selectedImage.name}`;
+          const storageReference = storageRef(storage, imagePath);
+          const snapshot = await uploadBytes(storageReference, selectedImage);
+          uploadedImageUrl = await getDownloadURL(snapshot.ref);
         }
+
+        // Upload Signature Image
+
+        if (selectedSignature) {
+          const signaturePath = `signatures/${newMemberId}/${selectedSignature.name}`;
+          const storageReference = storageRef(storage, signaturePath);
+          const snapshot = await uploadBytes(
+            storageReference,
+            selectedSignature
+          );
+          uploadedSignatureUrl = await getDownloadURL(snapshot.ref);
+        }
+      } else {
+        console.error("Member ID is not generated yet.");
+        setStatusMessage("Member ID is not generated yet.");
+        setIsSubmitting(false); // Reset submitting state if ID generation fails
+        return;
       }
 
       const age = calculateAge(formData.dob);
@@ -303,6 +350,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           ...formData,
           id: newMemberId,
           imageURL: uploadedImageUrl,
+          signatureURL: uploadedSignatureUrl,
           dateOfSubmission: new Date().toISOString(),
           age: age,
           payments: [],
@@ -313,7 +361,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         if (userData.currentMembershipType === "Honorary") {
           userData.renewalDueOn = "N/A";
           const paymentRecord = {
-            paymentMode: "Cash",
+            paymentMode: "N/A",
             transactionReference: "honorary",
             amount: 0,
             receiptNo: "honorary",
@@ -381,6 +429,17 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setStatusMessage={setStatusMessage}
       />
       <br />
+      <label>Upload your specimen signature photo to record consent*</label>
+      <ImageUploader
+        onImageSelect={(image) => {
+          setSelectedSignature(image);
+          setErrors((prevErrors) => ({ ...prevErrors, signatureURL: "" })); // Clear the error
+        }}
+        selectedImage={selectedSignature}
+      />
+      {errors.signatureURL && (
+        <span className="error">{errors.signatureURL}</span>
+      )}
       <h3>Provisional Application ID: {formData.id} </h3>
       <br />
       {/* Personal Information */}
@@ -405,6 +464,13 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         handleChange={handleChange}
       />
       <br />
+      {/* Emergency Contact Details */}
+      <EmergencyContactDetails
+        formData={formData}
+        errors={errors}
+        handleChange={handleChange}
+      />
+      <br />
       {/* Membership Details */}
       <MembershipDetails
         formData={formData}
@@ -413,12 +479,15 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       />
       <br />
       {/* Image Uploader */}
-      <label>Upload Passport Size Photo*</label>
+      <label>Upload Profile Picture*</label>
       <ImageUploader
-        onImageSelect={setSelectedImage}
+        onImageSelect={(image) => {
+          setSelectedImage(image);
+          setErrors((prevErrors) => ({ ...prevErrors, imageURL: "" })); // Clear the error
+        }}
         selectedImage={selectedImage}
       />
-      {errors.imageURL && <span className="error">{errors.imageURL}</span>}{" "}
+      {errors.imageURL && <span className="error">{errors.imageURL}</span>}
       {/* Display image upload error */}
       <br />
       <br />
