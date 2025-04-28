@@ -3,7 +3,11 @@
     "origin": [
       "http://localhost:3000",
       "http://192.168.1.28:3000",
-      "https://kmaindia.org"
+      "https://kmaindia.org",
+      "https://www.kmaindia.org",
+      "https://members.kmaindia.org",
+      "https://membertool-git-refactorapplication-pradeep-ps-projects.vercel.app",
+      "https://membertool.vercel.app"
     ],
     "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     "maxAgeSeconds": 3600,
