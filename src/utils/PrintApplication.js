@@ -103,6 +103,7 @@ const PrintApplication = (applicationData) => {
 
   // Add Emergency Contact Info.
   doc.addPage(); // Add a new page for the emergency contact details
+
   const emergencyContactTableRows = [
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
@@ -120,7 +121,9 @@ const PrintApplication = (applicationData) => {
       applicationData.emergencyContactRelationship || "N/A",
     ],
   ];
+
   addCenteredText(doc, "EMERGENCY CONTACT DETAILS", headerHeight, 12);
+
   doc.autoTable({
     head: [],
     body: emergencyContactTableRows,
