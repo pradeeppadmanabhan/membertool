@@ -86,6 +86,11 @@ const ThankYouPage = () => {
         <tr><td>Illness History</td><td>${userData.illnessHistory}</td></tr>
         <tr><td>Present Health</td><td>${userData.generalHealth}</td></tr>
         <tr><td>Blood Group</td><td>${userData.bloodGroup}</td></tr>
+        <tr><td>Emergency Contact Name</td><td>${userData.emergencyContactName}</td></tr>
+        <tr><td>Emergency Contact Number</td><td>${userData.emergencyContactPhone}</td></tr>
+        <tr><td>Emergency Contact Relationship</td><td>${userData.emergencyContactRelationship}</td></tr>
+        <tr><td>Emergency Contact Email</td><td>${userData.emergencyContactEmail}</td></tr>
+        <tr><td>Mountaineering Certifications</td><td>${userData.mountaineeringCertifications}</td></tr>
 
         <tr><td>Recommended By</td><td>${userData.recommendedByName}</td></tr>
 

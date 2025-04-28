@@ -12,9 +12,10 @@ const PrintApplication = (applicationData) => {
   }); // Apply the plugin
 
   const imageUrl = applicationData.imageURL; // Use the image URL from applicationData
+  const signatureUrl = applicationData.signatureURL; // Use the signature URL from applicationData
 
   let yPos = addHeaderToPDF(doc);
-  addDeclarationToPDF(doc, yPos, imageUrl); // Add the declaration
+  addDeclarationToPDF(doc, yPos, signatureUrl); // Add the declaration
   doc.addPage(); // Add a new page for the application form
 
   // Add the member image to the right side
@@ -69,6 +70,16 @@ const PrintApplication = (applicationData) => {
     ["Present General Health:", applicationData.generalHealth || "N/A"],
     ["Blood Group:", applicationData.bloodGroup || "N/A"],
 
+    [
+      "Mountaineering Certifications:",
+      applicationData.mountaineeringCertifications || "N/A",
+    ],
+    ["Recommended By:", applicationData.recommendedByName || "N/A"],
+
+    [
+      "Date of Application Submission:",
+      new Date(applicationData.dateOfSubmission).toLocaleDateString() || "N/A",
+    ],
     // ... add other fields in the same format ...
   ];
 
@@ -90,6 +101,40 @@ const PrintApplication = (applicationData) => {
     },
   });
 
+  // Add Emergency Contact Info.
+  doc.addPage(); // Add a new page for the emergency contact details
+  const emergencyContactTableRows = [
+    ["ID:", applicationData.id || "N/A"],
+    ["Applicant's Full Name:", applicationData.memberName || "N/A"],
+    ["Emergency Contact Name:", applicationData.emergencyContactName || "N/A"],
+    [
+      "Emergency Contact Phone:",
+      applicationData.emergencyContactPhone || "N/A",
+    ],
+    [
+      "Emergency Contact Email:",
+      applicationData.emergencyContactEmail || "N/A",
+    ],
+    [
+      "Emergency Contact Relationship:",
+      applicationData.emergencyContactRelationship || "N/A",
+    ],
+  ];
+  addCenteredText(doc, "EMERGENCY CONTACT DETAILS", headerHeight, 12);
+  doc.autoTable({
+    head: [],
+    body: emergencyContactTableRows,
+    startY: headerHeight + 10, // Start the table below the header
+    columnStyles: {
+      0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
+      1: { cellWidth: tableColumnWidths[1] },
+    },
+    styles: {
+      fontSize: 9,
+      cellPadding: 3,
+    },
+  });
+
   doc.addPage(); // Add a new page for the payment details
 
   const payments = applicationData.payments || [];
@@ -100,7 +145,7 @@ const PrintApplication = (applicationData) => {
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
-    ["Amount:", latestPayment.amount || "N/A"],
+    ["Amount:", "Rs." + latestPayment.amount || "N/A"],
     [
       "Date of Payment:",
       new Date(latestPayment.dateOfPayment).toLocaleDateString(),
@@ -108,6 +153,11 @@ const PrintApplication = (applicationData) => {
     ["Payment Mode:", latestPayment.paymentMode || "N/A"],
     ["Receipt Number:", latestPayment.receiptNumber || "N/A"],
     ["Payment ID:", latestPayment.paymentID || "N/A"],
+    ["Membership Type:", applicationData.currentMembershipType || "N/A"],
+    [
+      "Renewal Due on:",
+      new Date(applicationData.renewalDueOn).toLocaleDateString() || "N/A",
+    ],
   ];
 
   addCenteredText(doc, "PAYMENT DETAILS", headerHeight, 12); // Add title above the table

@@ -3,6 +3,7 @@ import React from "react";
 const BackgroundHealth = ({ formData, errors, handleChange }) => {
   return (
     <div>
+      <h3>General Background & Health Information</h3>
       <label>Academic Qualifications:</label>
       <textarea
         name="qualifications"
@@ -34,18 +35,26 @@ const BackgroundHealth = ({ formData, errors, handleChange }) => {
         value={formData.hobbies}
         onChange={handleChange}
       />
-      <label>History of serious illness/injury, if any:</label>
+      <label>History of serious illness/injury, if any*:</label>
       <textarea
         name="illnessHistory"
         value={formData.illnessHistory}
         onChange={handleChange}
       />
-      <label>Present General Health:</label>
+      {errors.illnessHistory && (
+        <span className="error">{errors.illnessHistory}</span>
+      )}
+      <br />
+      <label>Present General Health*:</label>
       <textarea
         name="generalHealth"
         value={formData.generalHealth}
         onChange={handleChange}
       />
+      {errors.generalHealth && (
+        <span className="error">{errors.generalHealth}</span>
+      )}
+      <br />
       <label>Blood Group*:</label>
       <input
         type="text"
