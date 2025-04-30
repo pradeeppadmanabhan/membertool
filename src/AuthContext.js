@@ -130,6 +130,14 @@ export const AuthProvider = ({ children }) => {
         if (uidSnapshot.exists()) {
           const memberID = uidSnapshot.val();
           console.log("Existing UID mapping found: ", memberID);
+
+          // Ensure the `uid` field is set in the `users` node
+          const userRef = ref(db, `users/${memberID}`);
+          const userSnapshot = await get(userRef);
+          if (userSnapshot.exists() && !userSnapshot.val().uid) {
+            await update(userRef, { uid: signedInUser.uid });
+          }
+
           localStorage.setItem("memberID", memberID);
           setMemberID(memberID);
           await loadUserData(memberID);

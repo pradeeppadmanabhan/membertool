@@ -274,13 +274,35 @@ const UserProfile = ({ memberID }) => {
             <td>
               <strong>Gender:</strong>
             </td>
-            <td>{formData.gender}</td>
+            <td>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                />
+              ) : (
+                formData.gender
+              )}
+            </td>
           </tr>
           <tr>
             <td>
               <strong>Date of Birth:</strong>
             </td>
-            <td>{formData.dob}</td>
+            <td>
+              {isEditing ? (
+                <input
+                  type="text"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleChange}
+                />
+              ) : (
+                new Date(formData.dob).toLocaleDateString()
+              )}
+            </td>
           </tr>
           <tr>
             <td>
