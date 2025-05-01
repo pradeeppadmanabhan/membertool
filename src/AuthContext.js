@@ -204,6 +204,7 @@ export const AuthProvider = ({ children }) => {
         return newMemberID;
       } catch (error) {
         console.error("Error checking user", error);
+        throw new Error("Error checking user: " + error.message);
       }
     },
     [loadUserData, memberID, generateMemberID]

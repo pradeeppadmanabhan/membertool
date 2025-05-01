@@ -12,19 +12,43 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const memberID = localStorage.getItem("memberID");
+
+    if (!memberID) {
+      console.error("Member ID is not available.");
+      setError(
+        "Member ID could not be loaded. Please contact admin with error code 'EMID'."
+      );
+      setIsLoading(false);
+      return;
+    }
+
     if (!userData) {
-      console.error("User data is not available.");
+      console.error("User data is not available for memberID: " + memberID);
       setError(
         "User data could not be loaded for memberID: " +
           memberID +
-          ". Please contact admin with error code 'EUNM'."
+          ". Please contact admin with error code 'EUPNF' (Error: User Profile Not Found)."
       );
       setIsLoading(false);
-    } else {
-      console.log("ProfilePage:", userData);
-      setError(null); // Clear any previous errors
-      setIsLoading(false);
+      return;
     }
+
+    if (userData && userData.id !== memberID) {
+      console.error(
+        "Mismatch between memberID in localStorage and UserData: ",
+        memberID,
+        userData.id
+      );
+      setError(
+        "Mismatch between memberID in localStorage and UserData. Please contact admin with error code 'EUMISMATCH'."
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("ProfilePage:", userData);
+    setError(null); // Clear any previous errors
+    setIsLoading(false);
   }, [userData, navigate]);
 
   if (isLoading) {
