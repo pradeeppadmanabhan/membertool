@@ -5,7 +5,7 @@ import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";
 import sendEmail from "./utils/SendEmail";
 
-const BCC_KMA_EMAILS = "pradeeppadmanabhan81@gmail.com";
+const BCC_KMA_EMAILS = "receipts@kmaindia.org";
 
 const ThankYouPage = () => {
   const { receiptNumber, memberID } = useParams();
