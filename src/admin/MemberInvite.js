@@ -45,7 +45,7 @@ const MemberInvite = () => {
   };
 
   // 1. Construct the invitation link
-  const invitationLink = `https://membertool.vercel.app/new-application?initialMembershipType=${membershipType}`;
+  const invitationLink = `https://members.kmaindia.org/new-application?initialMembershipType=${membershipType}`;
 
   const honoraryMemberInvite = `<!DOCTYPE html>
   <html>

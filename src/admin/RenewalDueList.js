@@ -4,6 +4,8 @@ import { ref, onValue } from "firebase/database";
 import { database } from "../firebase";
 import "../global.css"; // Import your CSS file
 import sendEmail from "../utils/SendEmail";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const RenewalDueList = () => {
   const [membersDue, setMembersDue] = useState([]);
@@ -62,15 +64,30 @@ const RenewalDueList = () => {
       const timeDiff = dueDate.getTime() - today.getTime();
       const daysDiff = Math.round(timeDiff / (1000 * 3600 * 24));
 
+      // Format the renewalDueOn date to a human-readable format
+      const formattedDueDate = dueDate.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
       let subjectLine = "";
       let message = "";
 
       if (daysDiff > 0) {
         subjectLine = `KMA Membership Renewal Reminder - ${daysDiff} days left`;
-        message = `Dear ${user.memberName},\n\nThis is a friendly reminder that your KMA membership is due for renewal in ${daysDiff} days, on ${user.renewalDueOn}.`;
+        message = `Dear ${user.memberName},\n\nThis is a friendly reminder that your KMA membership is due for renewal in ${daysDiff} days, on ${formattedDueDate}.
+        \n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
+        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
+
+        \n\nSincerely,\nThe KMA Team`;
       } else if (daysDiff === 0) {
         subjectLine = `KMA Membership Renewal Due Today`;
-        message = `Dear ${user.memberName},\n\nThis is a reminder that your KMA membership is due for renewal today, ${user.renewalDueOn}.`;
+        message = `Dear ${user.memberName},\n\nThis is a reminder that your KMA membership is due for renewal today, ${formattedDueDate}.
+        \n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
+        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
+
+        \n\nSincerely,\nThe KMA Team`;
       } else {
         subjectLine = `KMA Membership Renewal - ${Math.abs(
           daysDiff
@@ -79,7 +96,10 @@ const RenewalDueList = () => {
           user.memberName
         },\n\nThis is a reminder that your KMA membership was due for renewal ${Math.abs(
           daysDiff
-        )} days ago, on ${user.renewalDueOn}.`;
+        )} days ago, on ${formattedDueDate}.\n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
+        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
+
+        \n\nSincerely,\nThe KMA Team`;
       }
 
       // Prepare email data
@@ -95,12 +115,17 @@ const RenewalDueList = () => {
 
       if (success) {
         // Optionally show a success message to the user
+        toast.success(`Reminder email sent to ${user.memberName}!`);
         console.log("Reminder email sent successfully!");
       } else {
         // Handle email sending error, e.g., show an error message
+        toast.error(`Failed to send reminder email to ${user.memberName}.`);
         console.error("Failed to send reminder email.");
       }
     } catch (error) {
+      toast.error(
+        `Error sending reminder email to ${user.memberName}: ${error.message}`
+      );
       console.error("Error sending reminder:", error);
       // Handle error appropriately
     }
@@ -109,7 +134,7 @@ const RenewalDueList = () => {
   const handleElevateToLifeMember = async (user) => {
     try {
       // 1. Construct the payment link [TODO: Update Payment Gateway link]
-      const paymentLink = `https://your-payment-gateway.com/checkout?userId=${user.id}&membershipType=Life`; // Replace with your actual payment gateway URL
+      const profileLink = `https://members.kmaindia.org`; // Replace with your actual payment gateway URL
 
       // 2. Prepare email content
       const subjectLine = "Invitation to Upgrade to KMA Life Membership";
@@ -123,9 +148,9 @@ As a valued member, we recognize your continued support and dedication to our as
 * Exemption from annual renewal fees
 * ... And a host of other benefits
 
-To upgrade your membership, simply click on the following link, which will direct you to our secure payment portal:
+To upgrade your membership, simply click on the following link, which will direct you to your profile from where you can upgrade to Life Membership: 
 
-${paymentLink}
+${profileLink}
 
 We encourage you to seize this opportunity and join our esteemed community of Life Members.
 
@@ -146,10 +171,16 @@ The KMA Team`;
       const success = await sendEmail(emailData);
 
       if (success) {
+        toast.success(
+          `Life membership invitation email sent to ${user.memberName}!`
+        );
         console.log("Life membership invitation email sent successfully!");
         setEmailStatus(`Invitation sent successfully to ${user.memberName}!`); // Set success message with name
         setSentInvites([...sentInvites, user.id]);
       } else {
+        toast.error(
+          `Failed to send life membership invitation email to ${user.memberName}.`
+        );
         console.error("Failed to send life membership invitation email.");
         setEmailStatus(`Failed to send invitation to ${user.memberName}.`); // Set error message with name
       }
@@ -159,6 +190,9 @@ The KMA Team`;
         setEmailStatus(null);
       }, 5000); // 5000 milliseconds = 5 seconds
     } catch (error) {
+      toast.error(
+        `Error sending life membership invitation email to ${user.memberName}: ${error.message}`
+      );
       console.error("Error sending life membership invitation:", error);
       setEmailStatus(
         `Error sending invitation to ${user.memberName}, due to ${error.message}`
@@ -177,6 +211,7 @@ The KMA Team`;
 
   return (
     <div className="mt-5">
+      <ToastContainer /> {/* Toast container for notifications */}
       <h2>Members Due for Renewal</h2>
       {/* Display email status message above the table */}
       {emailStatus && (
@@ -219,21 +254,21 @@ The KMA Team`;
                 </td>
                 <td>
                   {/* Conditionally render the "Elevate to Life Member" button */}
-                  {user.currentMembershipType === "Annual" &&
-                    isApproachingSecondAnniversary(
-                      new Date(user.dateOfSubmission)
-                    ) && (
-                      <button
-                        onClick={() => handleElevateToLifeMember(user)}
-                        className={
-                          sentInvites.includes(user.id)
-                            ? "invite-sent-button"
-                            : ""
-                        }
-                      >
-                        Send Invite
-                      </button>
-                    )}
+
+                  <button
+                    onClick={() => handleElevateToLifeMember(user)}
+                    disabled={
+                      user.currentMembershipType !== "Annual" ||
+                      !isApproachingSecondAnniversary(
+                        new Date(user.dateOfSubmission)
+                      )
+                    }
+                    className={
+                      sentInvites.includes(user.id) ? "invite-sent-button" : ""
+                    }
+                  >
+                    Send Invite
+                  </button>
                 </td>
               </tr>
             ))}
