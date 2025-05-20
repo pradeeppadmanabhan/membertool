@@ -25,7 +25,8 @@ import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 
 function App() {
-  const { user, isAdmin, logout, isLoading } = useContext(AuthContext);
+  const { user, isAdmin, logout, isLoading, userData } =
+    useContext(AuthContext);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,6 +62,24 @@ function App() {
 
   //Define authorized admin emails
   const authorizedAdminEmails = isAdmin ? [user?.email] : [];
+
+  // Fallback for loading state
+  if (isLoading) {
+    return <div>Loading...</div>; // Show a loading spinner or message
+  }
+
+  // Fallback for missing userData
+  if (!userData && user) {
+    return (
+      <div>
+        <p>
+          Error: User data could not be loaded. Please contact support or try
+          logging out, clear your browser cache, and logging back in.
+        </p>
+        <button onClick={logout}>Logout</button>
+      </div>
+    );
+  }
 
   return (
     <div className="App">

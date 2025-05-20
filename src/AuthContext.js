@@ -90,6 +90,12 @@ export const AuthProvider = ({ children }) => {
 
   const signInWithGoogle = async () => {
     try {
+      //Clear cached data
+      localStorage.removeItem("memberID");
+      localStorage.removeItem("redirectUrl");
+      setMemberID(null);
+      setUserData(null);
+
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
       //console.log("Signed in user:", signedInUser);
@@ -102,17 +108,26 @@ export const AuthProvider = ({ children }) => {
   };
 
   const loadUserData = useCallback(async (memberID) => {
-    const userRef = ref(db, `users/${memberID}`);
-    const userSnapshot = await get(userRef);
-    if (userSnapshot.exists()) {
-      setUserData(userSnapshot.val(), memberID);
-      setIsLoading(false);
-      hasCheckedUser.current = true;
-    } else {
-      console.error("EUNM: No user data found for memberID:", memberID);
+    try {
+      const userRef = ref(db, `users/${memberID}`);
+      const userSnapshot = await get(userRef);
+      if (userSnapshot.exists()) {
+        setUserData(userSnapshot.val(), memberID);
+        setIsLoading(false);
+        hasCheckedUser.current = true;
+      } else {
+        console.error("EUNM: No user data found for memberID:", memberID);
+        setUserData(null);
+        setIsLoading(false);
+        hasCheckedUser.current = true;
+        throw new Error("No user data found for memberID: " + memberID);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
       setUserData(null);
       setIsLoading(false);
       hasCheckedUser.current = true;
+      throw new Error("Error loading user data: " + error.message);
     }
   }, []);
 
