@@ -25,7 +25,7 @@ import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 
 function App() {
-  const { user, isAdmin, logout, isLoading, userData } =
+  const { user, isAdmin, logout, isLoading, authError, userData } =
     useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -71,12 +71,25 @@ function App() {
   // Fallback for missing userData
   if (!userData && user) {
     return (
-      <div>
-        <p>
-          Error: User data could not be loaded. Please contact support or try
-          logging out, clear your browser cache, and logging back in.
+      <div className="center-text" style={{ marginTop: "20px" }}>
+        <p className="status-message error">
+          Error: {authError}. Please contact support or try logging out, clear
+          your browser cache, and logging back in.
         </p>
-        <button onClick={logout}>Logout</button>
+        <button onClick={logout} className="cancel-button">
+          Logout
+        </button>
+        {/*  <button
+          onClick={() => {
+            // Clear all cached data and reload the app
+            localStorage.clear();
+
+            window.location.reload();
+          }}
+          className="retry-button"
+        >
+          Retry
+        </button> */}
       </div>
     );
   }
