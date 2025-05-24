@@ -198,7 +198,7 @@ const DataDisplay = () => {
                   </tr>
                   <tr>
                     <td className="field-name">Date Of Birth:</td>
-                    <td>{selectedUser.dob}</td>
+                    <td>{new Date(selectedUser.dob).toLocaleDateString()}</td>
                   </tr>
                   <tr>
                     <td className="field-name">Gender:</td>

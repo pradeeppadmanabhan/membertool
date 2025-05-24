@@ -22,6 +22,7 @@ const UserProfile = ({ memberID }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [errors, setErrors] = useState({}); // State to hold validation errors
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -42,14 +43,108 @@ const UserProfile = ({ memberID }) => {
     return <div>Loading user details...</div>;
   }
 
+  //Handle form Validation
+  const validateField = (name, value) => {
+    switch (name) {
+      case "mobile":
+      case "emergencyContactPhone":
+        if (!/^\d{10}$/.test(value)) {
+          return "Must be a valid 10-digit number.";
+        }
+        break;
+
+      case "dob":
+        const date = new Date(value);
+        if (isNaN(date.getTime()) || date > new Date()) {
+          return "Must be a valid date and not in the future.";
+        }
+        break;
+
+      case "addressLine1":
+      case "addressLine2":
+      case "addressLine3":
+      case "fatherGuardianName":
+      case "recommendedByName":
+      case "emergencyContactName":
+      case "emergencyContactRelationship":
+        if (value.length > 50) {
+          return "Must not exceed 50 characters.";
+        }
+        break;
+
+      case "bloodGroup":
+        if (!/^(A|B|AB|O)[+-]$/.test(value)) {
+          return "Must be a valid blood group (e.g., A+, O-).";
+        }
+        break;
+
+      case "gender":
+        if (!["Male", "Female", "Other"].includes(value)) {
+          return "Must be Male, Female, or Other.";
+        }
+        break;
+
+      case "qualifications":
+      case "profession":
+      case "athleticBackground":
+      case "trekkingExperience":
+      case "illnessHistory":
+      case "generalHealth":
+      case "hobbies":
+      case "mountaineeringCertifications":
+        if (value.length > 500) {
+          return "Must not exceed 500 characters.";
+        }
+        break;
+
+      case "emergencyContactEmail":
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          return "Must be a valid email address.";
+        }
+        break;
+
+      default:
+        break;
+    }
+    return null; // No validation error
+  };
+
   // ✅ Handle form input changes
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    // Validate the field
+    const error = validateField(name, value);
+    if (error) {
+      setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
+    } else {
+      setErrors((prevErrors) => {
+        const { [name]: removedError, ...rest } = prevErrors;
+        return rest;
+      });
+    }
+
+    // Update form data
     setFormData((prevData) => ({ ...prevData, [name]: value }));
   };
 
   // ✅ Save updates to Firebase
   const handleSave = async () => {
+    // Validate all fields before saving
+    const newErrors = {};
+    Object.keys(formData).forEach((key) => {
+      const error = validateField(key, formData[key]);
+      if (error) {
+        newErrors[key] = error;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setStatusMessage("Please fix validation errors before saving.");
+      return;
+    }
+
     try {
       const userRef = ref(database, `users/${formData.id}`);
       let updatedImageUrl = formData.imageURL;
@@ -150,12 +245,17 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="mobile"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                />
+                <>
+                  <input
+                    type="text"
+                    name="mobile"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                  />
+                  {errors.mobile && (
+                    <p className="error-message">{errors.mobile}</p>
+                  )}
+                </>
               ) : (
                 formData.mobile
               )}
@@ -230,6 +330,15 @@ const UserProfile = ({ memberID }) => {
                     value={formData.addressLine3}
                     onChange={handleChange}
                   />
+                  {errors.addressLine1 && (
+                    <p className="error-message">{errors.addressLine1}</p>
+                  )}
+                  {errors.addressLine2 && (
+                    <p className="error-message">{errors.addressLine2}</p>
+                  )}
+                  {errors.addressLine3 && (
+                    <p className="error-message">{errors.addressLine3}</p>
+                  )}
                 </>
               ) : (
                 `${formData.addressLine1}, ${formData.addressLine2}, ${formData.addressLine3}`
@@ -242,12 +351,17 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="bloodGroup"
-                  value={formData.bloodGroup}
-                  onChange={handleChange}
-                />
+                <>
+                  <input
+                    type="text"
+                    name="bloodGroup"
+                    value={formData.bloodGroup}
+                    onChange={handleChange}
+                  />
+                  {errors.bloodGroup && (
+                    <p className="error-message">{errors.bloodGroup}</p>
+                  )}
+                </>
               ) : (
                 formData.bloodGroup
               )}
@@ -259,12 +373,17 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="fatherGuardianName"
-                  value={formData.fatherGuardianName}
-                  onChange={handleChange}
-                />
+                <>
+                  <input
+                    type="text"
+                    name="fatherGuardianName"
+                    value={formData.fatherGuardianName}
+                    onChange={handleChange}
+                  />
+                  {errors.fatherGuardianName && (
+                    <p className="error-message">{errors.fatherGuardianName}</p>
+                  )}
+                </>
               ) : (
                 formData.fatherGuardianName
               )}
@@ -276,12 +395,17 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <input
-                  type="text"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                />
+                <>
+                  <input
+                    type="text"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                  />
+                  {errors.gender && (
+                    <p className="error-message">{errors.gender}</p>
+                  )}
+                </>
               ) : (
                 formData.gender
               )}
@@ -292,16 +416,29 @@ const UserProfile = ({ memberID }) => {
               <strong>Date of Birth:</strong>
             </td>
             <td>
-              {isEditing ? (
-                <input
-                  type="text"
-                  name="dob"
-                  value={formData.dob}
-                  onChange={handleChange}
-                />
-              ) : (
-                new Date(formData.dob).toLocaleDateString()
-              )}
+              {
+                isEditing ? (
+                  <>
+                    <input
+                      type="date"
+                      name="dob"
+                      value={
+                        formData.dob
+                          ? new Date(formData.dob).toISOString().split("T")[0]
+                          : ""
+                      }
+                      onChange={handleChange}
+                    />
+                    {errors.dob && (
+                      <p className="error-message">{errors.dob}</p>
+                    )}
+                  </>
+                ) : formData.dob ? (
+                  new Date(formData.dob).toLocaleDateString()
+                ) : (
+                  "dd/mm/yyyy"
+                ) // Placeholder for empty date
+              }
             </td>
           </tr>
           <tr>
@@ -310,11 +447,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="qualifications"
-                  value={formData.qualifications}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="qualifications"
+                    value={formData.qualifications}
+                    onChange={handleChange}
+                  />
+                  {errors.qualifications && (
+                    <p className="error-message">{errors.qualifications}</p>
+                  )}
+                </>
               ) : (
                 formData.qualifications
               )}
@@ -327,11 +469,16 @@ const UserProfile = ({ memberID }) => {
 
             <td>
               {isEditing ? (
-                <textarea
-                  name="profession"
-                  value={formData.profession}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="profession"
+                    value={formData.profession}
+                    onChange={handleChange}
+                  />
+                  {errors.profession && (
+                    <p className="error-message">{errors.profession}</p>
+                  )}
+                </>
               ) : (
                 formData.profession
               )}
@@ -343,11 +490,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="athleticBackground"
-                  value={formData.athleticBackground}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="athleticBackground"
+                    value={formData.athleticBackground}
+                    onChange={handleChange}
+                  />
+                  {errors.athleticBackground && (
+                    <p className="error-message">{errors.athleticBackground}</p>
+                  )}
+                </>
               ) : (
                 formData.athleticBackground
               )}
@@ -359,11 +511,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="trekkingExperience"
-                  value={formData.trekkingExperience}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="trekkingExperience"
+                    value={formData.trekkingExperience}
+                    onChange={handleChange}
+                  />
+                  {errors.trekkingExperience && (
+                    <p className="error-message">{errors.trekkingExperience}</p>
+                  )}
+                </>
               ) : (
                 formData.trekkingExperience
               )}
@@ -375,11 +532,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="illnessHistory"
-                  value={formData.illnessHistory}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="illnessHistory"
+                    value={formData.illnessHistory}
+                    onChange={handleChange}
+                  />
+                  {errors.illnessHistory && (
+                    <p className="error-message">{errors.illnessHistory}</p>
+                  )}
+                </>
               ) : (
                 formData.illnessHistory
               )}
@@ -391,11 +553,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="generalHealth"
-                  value={formData.generalHealth}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="generalHealth"
+                    value={formData.generalHealth}
+                    onChange={handleChange}
+                  />
+                  {errors.generalHealth && (
+                    <p className="error-message">{errors.generalHealth}</p>
+                  )}
+                </>
               ) : (
                 formData.generalHealth
               )}
@@ -407,11 +574,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="hobbies"
-                  value={formData.hobbies}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="hobbies"
+                    value={formData.hobbies}
+                    onChange={handleChange}
+                  />
+                  {errors.hobbies && (
+                    <p className="error-message">{errors.hobbies}</p>
+                  )}
+                </>
               ) : (
                 formData.hobbies
               )}
@@ -423,11 +595,18 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="mountaineeringCertifications"
-                  value={formData.mountaineeringCertifications}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="mountaineeringCertifications"
+                    value={formData.mountaineeringCertifications}
+                    onChange={handleChange}
+                  />
+                  {errors.mountaineeringCertifications && (
+                    <p className="error-message">
+                      {errors.mountaineeringCertifications}
+                    </p>
+                  )}
+                </>
               ) : (
                 formData.mountaineeringCertifications
               )}
@@ -439,11 +618,16 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="recommendedByName"
-                  value={formData.recommendedByName}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="recommendedByName"
+                    value={formData.recommendedByName}
+                    onChange={handleChange}
+                  />
+                  {errors.recommendedByName && (
+                    <p className="error-message">{errors.recommendedByName}</p>
+                  )}
+                </>
               ) : (
                 formData.recommendedByName
               )}
@@ -460,11 +644,18 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="emergencyContactName"
-                  value={formData.emergencyContactName}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="emergencyContactName"
+                    value={formData.emergencyContactName}
+                    onChange={handleChange}
+                  />
+                  {errors.emergencyContactName && (
+                    <p className="error-message">
+                      {errors.emergencyContactName}
+                    </p>
+                  )}
+                </>
               ) : (
                 formData.emergencyContactName
               )}
@@ -476,11 +667,18 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="emergencyContactPhone"
-                  value={formData.emergencyContactPhone}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="emergencyContactPhone"
+                    value={formData.emergencyContactPhone}
+                    onChange={handleChange}
+                  />
+                  {errors.emergencyContactPhone && (
+                    <p className="error-message">
+                      {errors.emergencyContactPhone}
+                    </p>
+                  )}
+                </>
               ) : (
                 formData.emergencyContactPhone
               )}
@@ -492,11 +690,18 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="emergencyContactEmail"
-                  value={formData.emergencyContactEmail}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="emergencyContactEmail"
+                    value={formData.emergencyContactEmail}
+                    onChange={handleChange}
+                  />
+                  {errors.emergencyContactEmail && (
+                    <p className="error-message">
+                      {errors.emergencyContactEmail}
+                    </p>
+                  )}
+                </>
               ) : (
                 formData.emergencyContactEmail
               )}
@@ -508,11 +713,18 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {isEditing ? (
-                <textarea
-                  name="emergencyContactRelationship"
-                  value={formData.emergencyContactRelationship}
-                  onChange={handleChange}
-                />
+                <>
+                  <textarea
+                    name="emergencyContactRelationship"
+                    value={formData.emergencyContactRelationship}
+                    onChange={handleChange}
+                  />
+                  {errors.emergencyContactRelationship && (
+                    <p className="error-message">
+                      {errors.emergencyContactRelationship}
+                    </p>
+                  )}
+                </>
               ) : (
                 formData.emergencyContactRelationship
               )}

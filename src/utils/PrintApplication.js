@@ -49,7 +49,10 @@ const PrintApplication = (applicationData) => {
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
-    ["Date of Birth:", applicationData.dob || "N/A"],
+    [
+      "Date of Birth:",
+      new Date(applicationData.dob).toLocaleDateString() || "N/A",
+    ],
     ["Age:", applicationData.age || "N/A"],
     ["Gender:", applicationData.gender || "N/A"],
     [
