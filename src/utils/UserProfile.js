@@ -168,13 +168,6 @@ const UserProfile = ({ memberID }) => {
 
   const isLifeMember = formData.currentMembershipType === "Life";
   const currentDate = new Date();
-  const renewalDate = new Date(formData.renewalDueOn);
-  const oneMonthInMillis = 30 * 24 * 60 * 60 * 1000; // 1 month in milliseconds
-
-  const isRenewalDue =
-    renewalDate.getTime() - oneMonthInMillis <= currentDate.getTime() &&
-    currentDate.getTime() <= renewalDate.getTime() + oneMonthInMillis;
-
   const handleRenewal = () => {
     handleRazorpayPayment(
       formData.id,
@@ -296,7 +289,7 @@ const UserProfile = ({ memberID }) => {
                       {`Upgrade to Life - ₹${LIFE_MEMBERSHIP_FEE}`}
                     </button>
                   )}
-                  {isRenewalDue && (
+                  {formData.applicationStatus === "Due" && (
                     <button className="renew-button" onClick={handleRenewal}>
                       {`Annual Renewal - ₹${ANNUAL_MEMBERSHIP_FEE}`}
                     </button>
