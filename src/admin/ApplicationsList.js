@@ -102,6 +102,36 @@ const ApplicationsList = () => {
       } else {
         return 0;
       }
+      /* 
+    // Custom sorting logic for receiptNumber
+  
+    const valueA =
+      sortConfig.key === "receiptNumber" && a.payments && a.payments.length > 0
+        ? a.payments[a.payments.length - 1].receiptNumber
+        : a[sortConfig.key];
+    const valueB =
+      sortConfig.key === "receiptNumber" && b.payments && b.payments.length > 0
+        ? b.payments[b.payments.length - 1].receiptNumber
+        : b[sortConfig.key];
+    console.log(
+      "Sorting by:",
+      sortConfig.key,
+      "Direction:",
+      sortConfig.direction
+    );
+    console.log("Value A:", valueA, "Value B:", valueB);
+    if (valueA === "No Data") return 1; // Push "No Data" to the end
+    if (valueB === "No Data") return -1; // Push "No Data" to the end
+    if (valueA === undefined) return 1; // Handle undefined values
+    if (valueB === undefined) return -1; // Handle undefined values
+    if (valueA === null) return 1; // Handle null values
+    if (valueB === null) return -1;
+    // Compare values based on the sort direction
+    if (sortConfig.direction === "ascending") {
+      return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
+    } else {
+      return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
+    } */
     });
 
   return (
@@ -158,6 +188,8 @@ const ApplicationsList = () => {
           <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>Email</th>
+            <th>Mobile</th>
             <th>Membership Type</th>
             <th onClick={() => requestSort("dateOfSubmission")}>
               Date of Submission
@@ -173,8 +205,15 @@ const ApplicationsList = () => {
               )}
             </th>
             {/* Add more columns as needed */}
-            <th>Payment Mode</th>
+
+            {/* <th onClick={() => requestSort("receiptNumber")}>
+              Receipt No
+              {sortConfig.key === "receiptNumber" && (
+                <span>{sortConfig.direction === "ascending" ? "▲" : "▼"}</span>
+              )}
+            </th> */}
             <th>Receipt No</th>
+            <th>Payment Mode</th>
             <th>Payment ID</th>
           </tr>
         </thead>
@@ -189,6 +228,8 @@ const ApplicationsList = () => {
                 </Link>
               </td>
               <td>{application.memberName}</td>
+              <td>{application.email}</td>
+              <td>{application.mobile}</td>
               <td>{application.currentMembershipType}</td>
               <td>
                 {application.dateOfSubmission &&
@@ -207,16 +248,17 @@ const ApplicationsList = () => {
               </td>
               {/* Format date */}
               {/* Add more cells for other data */}
+
               <td>
                 {application.payments && application.payments.length > 0
                   ? application.payments[application.payments.length - 1]
-                      .paymentMode
+                      .receiptNumber
                   : "--"}
               </td>
               <td>
                 {application.payments && application.payments.length > 0
                   ? application.payments[application.payments.length - 1]
-                      .receiptNumber
+                      .paymentMode
                   : "--"}
               </td>
               <td>
