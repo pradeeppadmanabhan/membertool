@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
-import { ref, set } from "firebase/database"; // Import necessary functions - , push
+import { ref, set, runTransaction } from "firebase/database"; // Import necessary functions - , push
 import {
   ref as storageRef,
   uploadBytes,
@@ -18,11 +18,12 @@ import EmergencyContactDetails from "./components/EmergencyContactDetails";
 import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
 import AuthContext from "./AuthContext";
+import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
-  const { user, memberID, isLoading } = useContext(AuthContext);
+  const { user, isLoading, logout, generateMemberID } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Prop Validation using PropTypes
@@ -36,7 +37,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   //console.log("isLoading in MembershipApplicationForm:", isLoading);
 
   const [formData, setFormData] = useState({
-    id: memberID, // Initially set to null
+    id: null, // Initially set to null
     memberName: user?.displayName || "",
     uid: user?.uid || "",
     age: "",
@@ -69,8 +70,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     consent: false, // New field for consent
 
     // New fields with initial values
-    applicationStatus: "Submitted", // Default status on submission
-    dateOfSubmission: new Date().toISOString(), // Set on form submission
+    applicationStatus: "Pending", // Default status on creation
+    dateOfSubmission: "" /*  new Date().toISOString() */, // Set on form submission
     renewalDueOn: null,
     whatsappGroupStatus: "Add", //Available states -> "Add", "Added", "Remove", "Removed"
   });
@@ -91,12 +92,73 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     if (!isLoading && !user) {
       console.error("User is Unauthenticated, redirecting to Login Page");
       navigate("/login");
-    } else if (user && memberID) {
+    } else if (user && formData.id != null) {
       // Only generate Member ID when user is logged in
       //fetchMemberID();
-      setFormData((prev) => ({ ...prev, id: memberID }));
+      //setFormData((prev) => ({ ...prev, id: memberID }));
+      console.log(
+        "User is authenticated, checking form submission status..., user ID:",
+        user.uid,
+        "formData ID:",
+        formData.id
+      );
+      // Check if form is incomplete
+      const savedFormData = localStorage.getItem("formData");
+      const parsedFormData = savedFormData ? JSON.parse(savedFormData) : null;
+
+      if (parsedFormData && !parsedFormData.dateOfSubmission) {
+        console.log("Form is incomplete, staying on the form page.");
+        setFormData(parsedFormData); // Load saved form data
+      } else {
+        console.log("Form is submitted, redirecting to profile page.");
+        navigate(`/profile/${formData.id}`);
+      }
     }
-  }, [user, isLoading, memberID, navigate]);
+  }, [user, isLoading, formData.id, navigate]);
+
+  //Handle user refreshing the page while filling the form
+  useEffect(() => {
+    // Load formData from local storage on component mount
+    const savedFormData = localStorage.getItem("formData");
+    console.log("Saved Form Data:", savedFormData);
+    // If savedFormData exists, parse it and set it to formData state
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Whenever formData changes, log it to the console for debugging
+    // Save formData to local storage whenever it changes
+    localStorage.setItem("formData", JSON.stringify(formData));
+    // console.log("Form Data Changed:", formData);
+  }, [formData]);
+
+  //Handle back navigation to logout user
+  // This effect listens for back navigation and logs out the user
+  useEffect(() => {
+    const handlePopState = () => {
+      console.log("Back navigation detected.");
+      const confirmationMessage =
+        "Navigating back might cause all unsaved data to be lost and you will be logged out. Are you sure you want to proceed?";
+      if (window.confirm(confirmationMessage)) {
+        console.log("User confirmed back navigation. Logging out...");
+        logout(); // Ensure `logout` is defined in AuthContext
+        navigate("/login");
+      } else {
+        // If user cancels the confirmation, do nothing
+        // Push the current URL back into history to prevent navigation
+        window.history.pushState(null, null, window.location.href);
+        return;
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [user, navigate, logout]);
 
   if (isLoading) {
     return (
@@ -251,8 +313,9 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     let imageErrors = {};
 
     if (!image) {
-      imageErrors[fieldName] =
-        `Please upload a ${fieldName === "imageURL" ? "passport size photo" : "specimen signature"}.`;
+      imageErrors[fieldName] = `Please upload a ${
+        fieldName === "imageURL" ? "passport size photo" : "specimen signature"
+      }.`;
     } else {
       // Image type validation (example: allow only JPEG and PNG)
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
@@ -260,8 +323,8 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         imageErrors[fieldName] = "Only JPEG/JPG and PNG images are allowed.";
       }
 
-      // Image size validation (example: maximum 2MB)
-      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+      // Image size validation (example: maximum 1MB)
+      const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
       if (selectedImage.size > maxSizeInBytes) {
         imageErrors[fieldName] = "Image size must be less than 2MB.";
       }
@@ -308,7 +371,10 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
     try {
       //console.log("Generated Member ID:", newMemberId);
-      const newMemberId = formData.id;
+      const newMemberId = await generateMemberID(
+        formData.currentMembershipType
+      ); // Function to generate a unique member ID
+      console.log("Newly Generated Member ID:", newMemberId);
       let uploadedImageUrl = null;
       let uploadedSignatureUrl = null;
 
@@ -351,6 +417,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
           id: newMemberId,
           imageURL: uploadedImageUrl,
           signatureURL: uploadedSignatureUrl,
+          applicationStatus: "Submitted",
           dateOfSubmission: new Date().toISOString(),
           age: age,
           payments: [],
@@ -384,6 +451,28 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setStatusMessage(
           "Application submitted successfully!, moving to payment page in about 2 seconds.."
         );
+
+        // Set UID mapping
+        const uidRef = getUidRef(user.uid, database);
+        const emailRef = getEmailRef(user.email, database);
+
+        await runTransaction(uidRef, (currentData) => {
+          if (currentData === null) {
+            return newMemberId; // Create mapping if it doesn't exist
+          }
+          console.warn("UID mapping already exists:", currentData);
+          return; // Abort transaction if mapping already exists
+        });
+
+        await runTransaction(emailRef, (currentData) => {
+          if (currentData === null) {
+            return newMemberId; // Create mapping if it doesn't exist
+          }
+          console.warn("Email mapping already exists:", currentData);
+          return; // Abort transaction if mapping already exists
+        });
+
+        console.log("Mappings updated successfully!");
 
         // Delay clearing the form
         setTimeout(() => {
@@ -440,7 +529,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       {errors.signatureURL && (
         <span className="error">{errors.signatureURL}</span>
       )}
-      <h3>Provisional Application ID: {formData.id} </h3>
+      {/*<h3>Provisional Application ID: {formData.id} </h3>*/}
       <br />
       {/* Personal Information */}
       <PersonalInfo

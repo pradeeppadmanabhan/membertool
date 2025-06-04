@@ -66,7 +66,7 @@ const ProfilePage = () => {
     ); // Display the error message
   }
 
-  return <UserProfile memberID={userData.id} />;
+  return <UserProfile memberID={userData?.id} />;
 };
 
 export default ProfilePage;

@@ -25,7 +25,7 @@ import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 
 function App() {
-  const { user, isAdmin, logout, isLoading, authError, userData } =
+  const { user, isAdmin, logout, isLoading, authError, isNewUser, userData } =
     useContext(AuthContext);
 
   const navigate = useNavigate();
@@ -68,30 +68,31 @@ function App() {
     return <div>Loading...</div>; // Show a loading spinner or message
   }
 
-  // Fallback for missing userData
-  if (!userData && user) {
-    return (
-      <div className="center-text" style={{ marginTop: "20px" }}>
-        <p className="status-message error">
-          Error: {authError}. Please contact support or try logging out, clear
-          your browser cache, and logging back in.
-        </p>
-        <button onClick={logout} className="cancel-button">
-          Logout
-        </button>
-        {/*  <button
-          onClick={() => {
-            // Clear all cached data and reload the app
-            localStorage.clear();
+  /* console.log("User Data:", userData);
+  console.log("User:", user);
+  console.log("Is New User:", isNewUser);
+  console.log("Auth Error:", authError); */
 
-            window.location.reload();
-          }}
-          className="retry-button"
-        >
-          Retry
-        </button> */}
-      </div>
-    );
+  // Fallback for missing userData
+  if (user) {
+    if (authError) {
+      if (!isNewUser && !userData) {
+        console.error(
+          "User is not new and userData is missing, displaying error."
+        );
+        return (
+          <div className="center-text" style={{ marginTop: "20px" }}>
+            <p className="status-message error">
+              Error: {authError}. Please contact support or try logging out,
+              clear your browser cache, and logging back in.
+            </p>
+            <button onClick={logout} className="cancel-button">
+              Logout
+            </button>
+          </div>
+        );
+      }
+    }
   }
 
   return (
@@ -114,6 +115,7 @@ function App() {
           <br />
         </div>
       </header>
+
       <div className="button-container">
         {authorizedAdminEmails.includes(user?.email) && (
           <>

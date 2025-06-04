@@ -17,12 +17,12 @@ import {
   getDatabase,
   ref,
   get,
-  set,
   update,
   runTransaction,
 } from "firebase/database";
 import { app } from "./firebase";
 import { useNavigate } from "react-router-dom";
+import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 
 const auth = getAuth(app);
 export { auth };
@@ -39,11 +39,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.getItem("memberID") || null
   );
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
   const [authError, setAuthError] = useState(null);
   const navigate = useNavigate();
   const hasRedirected = useRef(false);
   const hasCheckedUser = useRef(false);
+  const isNewUserRef = useRef(false);
 
   const generateMemberID = useCallback(async (membershipType) => {
     try {
@@ -75,20 +75,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const fetchAdminUsers = useCallback(async () => {
-    try {
-      const adminRef = ref(db, "admins");
-      const adminSnapshot = await get(adminRef);
-      if (adminSnapshot.exists()) {
-        return Object.values(adminSnapshot.val()).map((admin) => admin.email);
-      }
-      return [];
-    } catch (error) {
-      console.error("Error fetching admin users:", error);
-      return [];
-    }
-  }, []);
-
+  // Function to sign in with Google
+  // This function clears any cached data before signing in
   const signInWithGoogle = async () => {
     try {
       //Clear cached data
@@ -142,9 +130,11 @@ export const AuthProvider = ({ children }) => {
     async (signedInUser) => {
       if (!signedInUser) return null;
 
-      const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
+      /* const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
       const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
-      const emailRef = ref(db, `emailToMemberID/${emailKey}`);
+      const emailRef = ref(db, `emailToMemberID/${emailKey}`); */
+      const uidRef = getUidRef(signedInUser.uid, db);
+      const emailRef = getEmailRef(signedInUser.email, db);
 
       try {
         //Step 1: Check if user already has a UID mapping
@@ -162,17 +152,21 @@ export const AuthProvider = ({ children }) => {
 
           localStorage.setItem("memberID", memberID);
           setMemberID(memberID);
+          isNewUserRef.current = false;
           await loadUserData(memberID);
           return memberID;
         } else {
-          console.error("No UID mapping found for user");
+          console.log(
+            "No UID mapping found for user with UID:",
+            signedInUser.uid
+          );
         }
 
         //Step 2: Check if email is already linked to a memberID
         const emailSnapshot = await get(emailRef);
         if (emailSnapshot.exists()) {
           const existingMemberID = emailSnapshot.val();
-          console.log("Existing user found by email: ", memberID);
+          console.log("Existing user found by email: ", existingMemberID);
 
           //Store UID in users/{memberID}
           await update(ref(db, `users/${existingMemberID}`), {
@@ -185,45 +179,21 @@ export const AuthProvider = ({ children }) => {
           );
           localStorage.setItem("memberID", existingMemberID);
           setMemberID(existingMemberID);
+          isNewUserRef.current = false;
 
           //Load user data
           await loadUserData(existingMemberID);
           return existingMemberID;
         } else {
-          console.error("No user found by email");
+          console.log("No user found by email :", signedInUser.email);
         }
 
         //Step 3: No existing data -> Register a new user
-        const newMemberID = await generateMemberID("Annual");
-        if (!newMemberID) return null;
-        setIsNewUser(true);
-        setMemberID(newMemberID);
-        console.log("Creating new user with memderID:", newMemberID);
-        localStorage.setItem("memberID", newMemberID);
-        await set(ref(db, `users/${newMemberID}`), {
-          id: newMemberID,
-          uid: signedInUser.uid,
-          email: signedInUser.email,
-          memberName: signedInUser.displayName,
-          membershipType: "Annual",
-          currentMembershipType: "Annual",
-          applicationStatus: "Pending",
-          dateOfSubmission: new Date().toISOString(),
-          payments: [],
-        });
+        isNewUserRef.current = true;
+        console.log("isNewUserRef.current:", isNewUserRef.current);
+        console.log("Creating new user profile for:", signedInUser.email);
 
-        //Load user data
-        await loadUserData(newMemberID);
-
-        // Store mappings
-        await runTransaction(uidRef, (currentData) =>
-          currentData === null ? newMemberID : undefined
-        );
-        await runTransaction(emailRef, (currentData) =>
-          currentData === null ? newMemberID : undefined
-        );
-
-        return newMemberID;
+        return null; // Return null to indicate new user creation
       } catch (error) {
         console.error("Error checking user", error);
         setAuthError(error.message);
@@ -234,117 +204,23 @@ export const AuthProvider = ({ children }) => {
       }
     },
 
-    /* // 3. Simulate UID mapping exists but profile node not found
-    async (signedInUser) => {
-      if (!signedInUser) return null;
-
-      const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
-      const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
-      const emailRef = ref(db, `emailToMemberID/${emailKey}`);
-
-      try {
-        // Simulate UID mapping exists
-        console.log(
-          "Simulating UID mapping exists but profile node not found..."
-        );
-        const memberID = "mockMemberID"; // Simulated memberID
-        const userRef = ref(db, `users/${memberID}`);
-        const userSnapshot = await get(userRef);
-
-        if (!userSnapshot.exists()) {
-          console.error(
-            "Simulated: Profile node not found for memberID:",
-            memberID
-          );
-          throw new Error("Profile node not found for memberID: " + memberID);
-        }
-
-        return memberID;
-      } catch (error) {
-        console.error("Error checking user:", error);
-        throw new Error("Error checking user: " + error.message);
-      }
-    }, */
-    /* //4. Simulate Email Has a Profile Match, but UID Mapping Missing
-    async (signedInUser) => {
-      if (!signedInUser) return null;
-
-      const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
-      const emailRef = ref(db, `emailToMemberID/${emailKey}`);
-
-      try {
-        // Simulate email mapping exists
-        console.log(
-          "Simulating email mapping exists but UID mapping missing..."
-        );
-        const memberID = "mockMemberID"; // Simulated memberID
-        const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
-        const userRef = ref(db, `users/${memberID}`);
-
-        // Simulate missing UID mapping
-        const userSnapshot = await get(userRef);
-        if (!userSnapshot.exists()) {
-          console.error(
-            "Simulated: Profile node not found for memberID:",
-            memberID
-          );
-          throw new Error("Profile node not found for memberID: " + memberID);
-        }
-
-        return memberID;
-      } catch (error) {
-        console.error("Error checking user:", error);
-        throw new Error("Error checking user: " + error.message);
-      }
-    }, */
-
-    /*  //5. Simulate New User Creation
-    async (signedInUser) => {
-      if (!signedInUser) return null;
-
-      try {
-        console.log("Simulating new user creation...");
-        const newMemberID = "mockNewMemberID"; // Simulated new memberID
-        setIsNewUser(true);
-        setMemberID(newMemberID);
-        localStorage.setItem("memberID", newMemberID);
-
-        // Simulate creating a new user profile
-        await set(ref(db, `users/${newMemberID}`), {
-          id: newMemberID,
-          uid: signedInUser.uid,
-          email: signedInUser.email,
-          memberName: signedInUser.displayName,
-          membershipType: "Annual",
-          currentMembershipType: "Annual",
-          applicationStatus: "Pending",
-          dateOfSubmission: new Date().toISOString(),
-          payments: [],
-        });
-
-        return newMemberID;
-      } catch (error) {
-        console.error("Error creating new user:", error);
-        throw new Error("Error creating new user: " + error.message);
-      }
-    }, */
-
-    [loadUserData, memberID, generateMemberID]
+    [loadUserData]
   );
 
   const logout = async () => {
     try {
+      console.log("Logging out user:", user?.email);
       await signOut(auth);
       setUser(null);
       setIsAdmin(false);
       hasCheckedUser.current = false;
       hasRedirected.current = false;
-      setIsLoading(true);
+      setIsLoading(false);
       localStorage.removeItem("redirectUrl");
       localStorage.removeItem("memberID");
       setMemberID(null);
       setUserData(null);
-      setIsNewUser(false);
+      isNewUserRef.current = true;
       setAuthError(null);
       // Redirect to login page
       navigate("/login");
@@ -381,17 +257,17 @@ export const AuthProvider = ({ children }) => {
         //console.log("User Name:", user.displayName);
 
         const memberID = await checkOrExpandLegacyUser(user);
+        console.log("Member ID from checkOrExpandLegacyUser:", memberID);
 
-        if (!memberID) {
-          console.error(
-            "Member ID could not be determined, skipping redirect!"
-          );
+        if (memberID === null) {
+          console.log("New user detected, proceeding without MemberID...");
           setIsLoading(false);
           return;
         }
 
         setMemberID(memberID);
         localStorage.setItem("memberID", memberID);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error in Authenticaion Process:", error);
         setAuthError(error.message);
@@ -401,10 +277,10 @@ export const AuthProvider = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [checkOrExpandLegacyUser, fetchAdminUsers]);
+  }, [checkOrExpandLegacyUser]);
 
   useEffect(() => {
-    if (!memberID || hasRedirected.current) return;
+    if (!user || hasRedirected.current) return;
 
     hasRedirected.current = true;
 
@@ -415,18 +291,35 @@ export const AuthProvider = ({ children }) => {
     setTimeout(() => {
       let redirectUrl;
 
-      if (isNewUser) {
-        redirectUrl = "/new-application";
-      } else {
-        redirectUrl =
-          localStorage.getItem("redirectUrl") ||
-          (isAdmin ? "/admin/dashboard" : "/profile");
+      /* console.log("isNewUserRef:", isNewUserRef.current);
+      console.log("memberID:", memberID);
+      console.log("user:", user);
+      console.log("isAdmin:", isAdmin);
+      console.log("userData:", userData); */
+
+      if (!user) {
+        console.log("User is logged out. Skipping redirection.");
+        setIsLoading(false);
+        return; // Skip redirection if the user is logged out
+      }
+
+      if (isNewUserRef.current) {
+        console.log("Redirecting new user to application form");
+        redirectUrl = "/new-application"; // Redirect new users to the application form
+      } /* else if (userData?.applicationStatus === "Submitted") {
+        redirectUrl = `/payment-details?memberID=${memberID}&membershipType=${userData.currentMembershipType}`;
+      } else if (userData?.applicationStatus === "Paid") {
+        redirectUrl = `/profile/${memberID}`;
+      } else if (userData?.applicationStatus === "Pending") {
+        redirectUrl = "/new-application"; // Redirect to incomplete application
+      } */ else {
+        redirectUrl = isAdmin ? "/admin/dashboard" : "/profile";
       }
       console.log("Redirection to ", redirectUrl);
       localStorage.removeItem("redirectUrl");
       navigate(redirectUrl);
     }, 500);
-  }, [navigate, isNewUser, memberID, user?.email]);
+  }, [navigate, isNewUserRef, memberID, user, isAdmin, userData]);
 
   return (
     <AuthContext.Provider
@@ -437,8 +330,10 @@ export const AuthProvider = ({ children }) => {
         userData,
         memberID,
         authError,
+        isNewUser: isNewUserRef.current,
         signInWithGoogle,
         logout,
+        generateMemberID,
       }}
     >
       {!isLoading && children}
