@@ -34,7 +34,7 @@ const WelcomePage = () => {
           <a href="/privacy-policy">Privacy Policy</a>.
         </p> */}
         <p>
-          For any issues, please contact us at{" "}
+          We are in "Beta mode". If you find any issues, please contact us at{" "}
           <a href="mailto:info@kmaindia.org">info@kmaindia.org</a>.
         </p>
         <p>
