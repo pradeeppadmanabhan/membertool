@@ -125,6 +125,14 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const updateUserData = (newUserData) => {
+    console.log("Updating user data:", newUserData);
+    setUserData((prevData) => ({
+      ...prevData,
+      ...newUserData,
+    }));
+  };
+
   const checkOrExpandLegacyUser = useCallback(
     //Normal Functionality
     async (signedInUser) => {
@@ -328,6 +336,7 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         isAdmin,
         userData,
+        updateUserData,
         memberID,
         authError,
         isNewUser: isNewUserRef.current,

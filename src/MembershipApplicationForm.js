@@ -23,7 +23,8 @@ import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
 const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
-  const { user, isLoading, logout, generateMemberID } = useContext(AuthContext);
+  const { user, isLoading, logout, generateMemberID, updateUserData } =
+    useContext(AuthContext);
   const navigate = useNavigate();
 
   // Prop Validation using PropTypes
@@ -451,6 +452,13 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         setStatusMessage(
           "Application submitted successfully!, moving to payment page in about 2 seconds.."
         );
+
+        updateUserData(userData); // Update user data in AuthContext
+
+        // Save the memberID to local storage for persistence
+        localStorage.setItem("memberID", newMemberId);
+        // Save the form data to local storage for persistence
+        localStorage.setItem("formData", JSON.stringify(userData));
 
         // Set UID mapping
         const uidRef = getUidRef(user.uid, database);
