@@ -46,6 +46,31 @@ body {
   width: 100%;
 }
 
+/* Ribbon Banner Styles */
+.ribbon-banner {
+  background-color: #ffcc00; /* Yellow background for visibility */
+  color: #000; /* Black text */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 100%;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Welcome Container Styles */
+.welcome-container {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 18px;
+}
+.welcome-container button {
+  margin-left: 10px;
+}
+
 h1 {
   color: #0056b3;
   text-align: center;

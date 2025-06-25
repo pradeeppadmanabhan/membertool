@@ -100,10 +100,19 @@ function App() {
       <header className="App-header">
         <br />
         <h1>KMA Membership Management System</h1>
+        {/* Ribbon Banner */}
+        <div className="ribbon-banner">
+          <p>
+            🚧 This application is in Beta mode. Please report issues to{" "}
+            <a href="mailto:info@kmaindia.org">info@kmaindia.org</a> / whatsapp
+            to +91-988-058-8172. 🚧
+          </p>
+        </div>
         {/* Authentication Controls */}
-        <div>
+        <div className="welcome-container">
           {user ? (
             <div>
+              <br />
               <span>Welcome, {user.displayName}! </span>
               <button onClick={logout}>Logout</button>
             </div>
