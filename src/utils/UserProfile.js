@@ -260,7 +260,7 @@ const UserProfile = ({ memberID }) => {
             </td>
             <td>
               {formData.id}{" "}
-              {formData.applicationStatus !== "Paid"
+              {formData.applicationStatus === "Submitted"
                 ? "(Pending: Please fill details and make payment to complete profile)"
                 : ""}
             </td>
