@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { database, storage } from "../firebase";
 import { ref, update } from "firebase/database";
 import PrintApplication from "../utils/PrintApplication";
@@ -16,14 +16,25 @@ import {
 } from "../utils/PaymentUtils";
 import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
+import AuthContext from "../AuthContext";
 
 const UserProfile = ({ memberID }) => {
+  const { isAdmin } = useContext(AuthContext);
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [errors, setErrors] = useState({}); // State to hold validation errors
   const navigate = useNavigate();
+  const [newPayment, setNewPayment] = useState({
+    amount: "",
+    membershipType: "",
+    dateOfPayment: "",
+    paymentMode: "",
+    receiptNumber: "",
+    paymentID: "",
+    orderID: "",
+  });
 
   useEffect(() => {
     const loadData = async () => {
@@ -42,6 +53,91 @@ const UserProfile = ({ memberID }) => {
   if (!formData || Object.keys(formData).length === 0) {
     return <div>Loading user details...</div>;
   }
+
+  const handleAddPayment = async () => {
+    if (
+      !newPayment.dateOfPayment ||
+      !newPayment.paymentMode ||
+      !newPayment.receiptNumber ||
+      !newPayment.membershipType ||
+      (newPayment.paymentMode === "Razorpay" &&
+        (!newPayment.paymentID || !newPayment.orderID))
+    ) {
+      setStatusMessage("Please fill in all required payment details.");
+      return;
+    }
+
+    try {
+      const paymentRecord = {
+        paymentMode: newPayment.paymentMode,
+        amount:
+          newPayment.membershipType === "Annual"
+            ? ANNUAL_MEMBERSHIP_FEE
+            : LIFE_MEMBERSHIP_FEE,
+        receiptNumber: newPayment.receiptNumber,
+        membershipType: newPayment.membershipType,
+        dateOfPayment: newPayment.dateOfPayment,
+        applicationStatus: "Paid",
+        ...(newPayment.paymentMode === "Razorpay" && {
+          paymentID: newPayment.paymentID,
+          orderID: newPayment.orderID,
+        }), // Add Razorpay-specific fields
+      };
+
+      const memberData = await fetchMemberData(memberID); // Fetch existing member data
+      const updatedPayments = [...(memberData.payments || []), paymentRecord];
+
+      // ✅ Convert array to object using reduce (from PaymentUtils.js)
+      const paymentsObject = updatedPayments.reduce((acc, item, index) => {
+        acc[index] = item;
+        return acc;
+      }, {});
+
+      const paymentRef = ref(database, `users/${memberID}/payments`);
+      await update(paymentRef, paymentsObject); // Update payments in Firebase
+
+      // Update membership details
+      const updatedMemberData = { ...memberData };
+      if (newPayment.membershipType === "Life") {
+        updatedMemberData.renewalDueOn = null;
+        updatedMemberData.currentMembershipType = "Life";
+      } else if (newPayment.membershipType === "Annual") {
+        const now = new Date();
+        const nextYear = memberData.renewalDueOn
+          ? new Date(memberData.renewalDueOn)
+          : now;
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        updatedMemberData.renewalDueOn = nextYear.toISOString();
+        updatedMemberData.currentMembershipType = "Annual";
+      }
+      updatedMemberData.applicationStatus = "Paid";
+
+      const memberRef = ref(database, `users/${memberID}`);
+      await update(memberRef, {
+        renewalDueOn: updatedMemberData.renewalDueOn,
+        currentMembershipType: updatedMemberData.currentMembershipType,
+        applicationStatus: updatedMemberData.applicationStatus,
+      });
+
+      // ✅ Fetch updated payments from the database
+      const refreshedMemberData = await fetchMemberData(memberID);
+      setFormData(refreshedMemberData); // Update local state with refreshed data
+
+      setNewPayment({
+        paymentMode: "",
+        receiptNumber: "",
+        dateOfPayment: "",
+        membershipType: "",
+        paymentID: "",
+        orderID: "",
+      });
+
+      setStatusMessage("Payment added successfully!");
+    } catch (error) {
+      console.error("Error adding payment:", error);
+      setStatusMessage("Error adding payment. Please try again.");
+    }
+  };
 
   //Handle form Validation
   const validateField = (name, value) => {
@@ -168,6 +264,7 @@ const UserProfile = ({ memberID }) => {
 
   const isLifeMember = formData.currentMembershipType === "Life";
   const currentDate = new Date();
+
   const handleRenewal = () => {
     handleRazorpayPayment(
       formData.id,
@@ -186,6 +283,19 @@ const UserProfile = ({ memberID }) => {
       navigate,
       setStatusMessage
     );
+  };
+
+  const handlePaymentFieldChange = (field, value) => {
+    setNewPayment((prevPayment) => ({
+      ...prevPayment,
+      [field]: value,
+      amount:
+        field === "membershipType" && value === "Annual"
+          ? ANNUAL_MEMBERSHIP_FEE
+          : field === "membershipType" && value === "Life"
+          ? LIFE_MEMBERSHIP_FEE
+          : 0, // Automatically set amount based on selected membership type
+    }));
   };
 
   // Calculate if user is eligible for upgrade
@@ -742,7 +852,7 @@ const UserProfile = ({ memberID }) => {
           </>
         ) : (
           <button className="edit-button" onClick={() => setIsEditing(true)}>
-            Edit
+            Edit Profile
           </button>
         )}
       </div>
@@ -762,6 +872,7 @@ const UserProfile = ({ memberID }) => {
               <th>Membership Type</th>
               <th>Mode</th>
               <th>Receipt</th>
+              {/*{isAdmin && <th>Actions</th>}  Admin-only actions */}
             </tr>
           </thead>
           <tbody>
@@ -772,6 +883,27 @@ const UserProfile = ({ memberID }) => {
                 <td>{payment.membershipType}</td>
                 <td>{payment.paymentMode}</td>
                 <td>{payment.receiptNumber}</td>
+                {/*{isAdmin && (
+                  <td>
+                    <button
+                      className="edit-button"
+                      onClick={() => {
+                        console.log("Edit payment:", payment);
+                      }}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="delete-button"
+                      onClick={() => {
+                        console.log("Delete payment:", payment);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                )}{" "}
+                 Admin-only actions */}
               </tr>
             ))}
           </tbody>
@@ -782,6 +914,90 @@ const UserProfile = ({ memberID }) => {
           <button className="renew-button" onClick={handleRenewal}>
             {`Annual Due - ₹${ANNUAL_MEMBERSHIP_FEE}`}
           </button>
+        </div>
+      )}
+
+      {/* Admin Add Payment Section */}
+      {isAdmin && (
+        <div className="add-payment-container">
+          <h4>Add Payment Details</h4>
+          <div className="payment-fields-row">
+            <select
+              value={newPayment.paymentMode}
+              onChange={(e) =>
+                handlePaymentFieldChange("paymentMode", e.target.value)
+              }
+              className="filter-select"
+            >
+              <option value="">Select Payment Mode</option>
+              <option value="Cash">Cash</option>
+              <option value="Razorpay">Razorpay</option>
+            </select>
+            <input
+              type="date"
+              placeholder="Date of Payment"
+              value={newPayment.dateOfPayment}
+              onChange={(e) =>
+                handlePaymentFieldChange("dateOfPayment", e.target.value)
+              }
+              className="input"
+            />
+
+            <select
+              value={newPayment.membershipType}
+              onChange={(e) =>
+                handlePaymentFieldChange("membershipType", e.target.value)
+              }
+              className="filter-select"
+            >
+              <option value="">Select Membership Type</option>
+              <option value="Annual">Annual</option>
+              <option value="Life">Life</option>
+            </select>
+
+            {/* Display-only Amount */}
+            <div className="amount-display">
+              Fees Paid: ₹{newPayment.amount || 0}{" "}
+              {/* Display the calculated amount */}
+            </div>
+
+            <input
+              type="text"
+              placeholder="Receipt Number"
+              value={newPayment.receiptNumber}
+              onChange={(e) =>
+                handlePaymentFieldChange("receiptNumber", e.target.value)
+              }
+              className="input"
+            />
+            {newPayment.paymentMode === "Razorpay" && (
+              <>
+                <input
+                  type="text"
+                  placeholder="Payment ID"
+                  value={newPayment.paymentID}
+                  onChange={(e) =>
+                    handlePaymentFieldChange("paymentID", e.target.value)
+                  }
+                  className="input"
+                />
+                <input
+                  type="text"
+                  placeholder="Order ID"
+                  value={newPayment.orderID}
+                  onChange={(e) =>
+                    handlePaymentFieldChange("orderID", e.target.value)
+                  }
+                  className="input"
+                />
+              </>
+            )}
+          </div>
+          <div className="button-container">
+            <button className="add-button" onClick={handleAddPayment}>
+              Add Payment
+            </button>
+          </div>
         </div>
       )}
     </div>

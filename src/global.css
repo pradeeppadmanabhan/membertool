@@ -388,7 +388,7 @@ consent-message {
 
 table {
   background-color: #ffffff;
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   border-radius: 20px !important;
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -446,11 +446,12 @@ th {
 /* src/global.css */
 .filter-select {
   /* Apply this class to your select element */
-  width: 150px; /* Adjust width as needed */
+  width: auto; /* Adjust width as needed */
   padding: 8px 12px; /* Adjust padding for better appearance */
   border: 1px solid #ced4da; /* Match the border style of react-datepicker */
   border-radius: 4px; /* Match the border radius of react-datepicker */
   font-size: 16px; /* Adjust font size to match other inputs */
+  margin-bottom: 15px; /* Add some space below the select */
   /* Add any other styles you want to match react-datepicker */
 }
 
@@ -555,10 +556,56 @@ date-range-picker {
 }
 
 /* Payment History Table */
-.profile-table th {
+/* .profile-table th {
   background-color: #f4f4f4;
   font-weight: bold;
   text-transform: uppercase;
+} */
+
+/* Add Payment Section */
+.add-payment-container {
+  margin-top: 20px;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-payment-heading {
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.payment-fields-row {
+  display: flex;
+  gap: 10px; /* Space between fields */
+  justify-content: center; /* Center align the fields */
+  margin-bottom: 15px; /* Space below the fields */
+  flex-wrap: wrap; /* Ensure responsiveness */
+}
+
+.payment-field {
+  flex: 1; /* Make fields evenly spaced */
+  min-width: 150px; /* Minimum width for smaller screens */
+  max-width: 300px; /* Maximum width for larger screens */
+  padding: 8px;
+  /*border: 1px solid #ccc;*/
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.amount-display {
+  padding: 8px;
+  /* border: 1px solid #ccc; 
+  border-radius: 4px;
+  background-color: #f9f9f9;*/
+  font-size: 17px;
+  color: #333;
+  min-width: 150px;
+  text-align: center;
 }
 
 /* Button Container */
