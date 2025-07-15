@@ -27,8 +27,8 @@ const UserProfile = ({ memberID }) => {
   const [errors, setErrors] = useState({}); // State to hold validation errors
   const navigate = useNavigate();
   const [newPayment, setNewPayment] = useState({
-    amount: "",
-    membershipType: "",
+    amount: ANNUAL_MEMBERSHIP_FEE, // Default to Annual Membership Fee
+    membershipType: "Annual", // Default to Annual Membership
     dateOfPayment: "",
     paymentMode: "",
     receiptNumber: "",
@@ -151,7 +151,7 @@ const UserProfile = ({ memberID }) => {
 
       case "dob":
         const date = new Date(value);
-        if (isNaN(date.getTime()) || date > new Date()) {
+        if (!value || isNaN(date.getTime()) || date > new Date()) {
           return "Must be a valid date and not in the future.";
         }
         break;
@@ -289,21 +289,32 @@ const UserProfile = ({ memberID }) => {
     setNewPayment((prevPayment) => ({
       ...prevPayment,
       [field]: value,
-      amount:
-        field === "membershipType" && value === "Annual"
-          ? ANNUAL_MEMBERSHIP_FEE
-          : field === "membershipType" && value === "Life"
-          ? LIFE_MEMBERSHIP_FEE
-          : 0, // Automatically set amount based on selected membership type
+      ...(field === "membershipType" && {
+        amount:
+          value === "Annual"
+            ? ANNUAL_MEMBERSHIP_FEE
+            : value === "Life"
+            ? LIFE_MEMBERSHIP_FEE
+            : 0, // Automatically set amount based on selected membership type
+      }),
     }));
   };
 
   // Calculate if user is eligible for upgrade
-  const submissionDate = new Date(formData.dateOfSubmission);
-  const twoYearsLater = new Date(submissionDate);
-  twoYearsLater.setFullYear(twoYearsLater.getFullYear() + 2);
+  const submissionDate =
+    formData.dateOfSubmission &&
+    !isNaN(new Date(formData.dateOfSubmission).getTime())
+      ? new Date(formData.dateOfSubmission)
+      : null;
 
-  const canUpgradeToLife = !isLifeMember && currentDate >= twoYearsLater;
+  const twoYearsLater = submissionDate
+    ? new Date(submissionDate.getTime()).setFullYear(
+        submissionDate.getFullYear() + 2
+      )
+    : null;
+
+  const canUpgradeToLife =
+    !isLifeMember && twoYearsLater && currentDate >= twoYearsLater;
 
   const handlePrintApplication = () => {
     if (formData) {
@@ -390,7 +401,10 @@ const UserProfile = ({ memberID }) => {
                 "Life Time Validity"
               ) : (
                 <>
-                  {new Date(formData.renewalDueOn).toLocaleDateString()}
+                  {formData.renewalDueOn &&
+                  !isNaN(new Date(formData.renewalDueOn).getTime())
+                    ? new Date(formData.renewalDueOn).toLocaleDateString()
+                    : "N/A"}
                   {canUpgradeToLife && (
                     <button
                       className="upgrade-button"
@@ -526,7 +540,7 @@ const UserProfile = ({ memberID }) => {
                       type="date"
                       name="dob"
                       value={
-                        formData.dob
+                        formData.dob && !isNaN(new Date(formData.dob).getTime())
                           ? new Date(formData.dob).toISOString().split("T")[0]
                           : ""
                       }
@@ -536,7 +550,7 @@ const UserProfile = ({ memberID }) => {
                       <p className="error-message">{errors.dob}</p>
                     )}
                   </>
-                ) : formData.dob ? (
+                ) : formData.dob && !isNaN(new Date(formData.dob).getTime()) ? (
                   new Date(formData.dob).toLocaleDateString()
                 ) : (
                   "dd/mm/yyyy"
@@ -879,7 +893,12 @@ const UserProfile = ({ memberID }) => {
             {formData.payments.map((payment, index) => (
               <tr key={index}>
                 <td>₹{payment.amount}</td>
-                <td>{new Date(payment.dateOfPayment).toLocaleDateString()}</td>
+                <td>
+                  {payment.dateOfPayment &&
+                  !isNaN(new Date(payment.dateOfPayment).getTime())
+                    ? new Date(payment.dateOfPayment).toLocaleDateString()
+                    : "N/A"}
+                </td>
                 <td>{payment.membershipType}</td>
                 <td>{payment.paymentMode}</td>
                 <td>{payment.receiptNumber}</td>
@@ -936,7 +955,12 @@ const UserProfile = ({ memberID }) => {
             <input
               type="date"
               placeholder="Date of Payment"
-              value={newPayment.dateOfPayment}
+              value={
+                newPayment.dateOfPayment &&
+                !isNaN(new Date(newPayment.dateOfPayment).getTime())
+                  ? newPayment.dateOfPayment
+                  : ""
+              }
               onChange={(e) =>
                 handlePaymentFieldChange("dateOfPayment", e.target.value)
               }
