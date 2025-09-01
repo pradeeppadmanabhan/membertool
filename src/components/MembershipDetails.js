@@ -17,7 +17,7 @@ const MembershipDetails = ({ formData, errors, handleChange }) => {
       </div>
       <div>
         <h3>Membership Details</h3>
-        <label>Recommended By: Name of the person recommending you:</label>
+        <label>Recommended By*: Name of the person recommending you:</label>
         <input
           type="text"
           name="recommendedByName"
