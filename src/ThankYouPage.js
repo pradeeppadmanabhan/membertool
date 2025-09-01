@@ -148,7 +148,7 @@ const ThankYouPage = () => {
     return {
       to_name: userData.memberName || "Member",
       to_email: userData.email,
-      KMA_EMAILS,
+      cc_email: KMA_EMAILS,
       bcc_email: BCC_KMA_EMAILS,
       subject: isRenewal
         ? `KMA Membership Renewal - ${userData.memberName} (ID: ${userData.id})`
