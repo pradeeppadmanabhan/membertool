@@ -17,6 +17,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
+import { isEligibleForLifeMembership } from "./EligibilityUtils";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin } = useContext(AuthContext);
@@ -263,7 +264,6 @@ const UserProfile = ({ memberID }) => {
   };
 
   const isLifeMember = formData.currentMembershipType === "Life";
-  const currentDate = new Date();
 
   const handleRenewal = () => {
     handleRazorpayPayment(
@@ -307,14 +307,8 @@ const UserProfile = ({ memberID }) => {
       ? new Date(formData.dateOfSubmission)
       : null;
 
-  const twoYearsLater = submissionDate
-    ? new Date(submissionDate.getTime()).setFullYear(
-        submissionDate.getFullYear() + 2
-      )
-    : null;
-
   const canUpgradeToLife =
-    !isLifeMember && twoYearsLater && currentDate >= twoYearsLater;
+    !isLifeMember && isEligibleForLifeMembership(submissionDate);
 
   const handlePrintApplication = () => {
     if (formData) {

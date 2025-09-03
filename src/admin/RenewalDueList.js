@@ -6,11 +6,15 @@ import "../global.css"; // Import your CSS file
 import sendEmail from "../utils/SendEmail";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { isEligibleForLifeMembership } from "../utils/EligibilityUtils";
 
 const RenewalDueList = () => {
   const [membersDue, setMembersDue] = useState([]);
   const [emailStatus, setEmailStatus] = useState(null); // State to track email status
   const [sentInvites, setSentInvites] = useState([]); // Array to track sent invites
+
+  const TOAST_DISPLAY_DURATION = 2000; // Duration to display toast messages (in milliseconds)
+  //let emailStatusTimeout = null; // Timeout ID for clearing email status
 
   useEffect(() => {
     const dataRef = ref(database, "users");
@@ -51,7 +55,20 @@ const RenewalDueList = () => {
   }, []);
 
   const handleSendReminder = async (user) => {
+    const toastId = toast.info(`Sending reminder to ${user.memberName}...`, {
+      autoClose: false, // Keep the toast open until updated
+    });
+
     try {
+      if (!user.renewalDueOn || isNaN(new Date(user.renewalDueOn).getTime())) {
+        toast.update(toastId, {
+          render: `${user.memberName} has an invalid renewal date.`,
+          type: "error",
+          autoClose: TOAST_DISPLAY_DURATION,
+        });
+        console.error(`${user.memberName} has an invalid renewal date.`);
+        return;
+      }
       const today = new Date();
       const dueDate = new Date(user.renewalDueOn);
       const timeDiff = dueDate.getTime() - today.getTime();
@@ -108,23 +125,63 @@ const RenewalDueList = () => {
 
       if (success) {
         // Optionally show a success message to the user
-        toast.success(`Reminder email sent to ${user.memberName}!`);
+        toast.update(toastId, {
+          render: `Reminder email sent to ${user.memberName}!`,
+          type: "success",
+          autoClose: TOAST_DISPLAY_DURATION,
+        });
         console.log("Reminder email sent successfully!");
       } else {
         // Handle email sending error, e.g., show an error message
-        toast.error(`Failed to send reminder email to ${user.memberName}.`);
+        toast.update(toastId, {
+          render: `Failed to send reminder email to ${user.memberName}.`,
+          type: "error",
+          autoClose: TOAST_DISPLAY_DURATION,
+        });
         console.error("Failed to send reminder email.");
       }
     } catch (error) {
-      toast.error(
-        `Error sending reminder email to ${user.memberName}: ${error.message}`
-      );
+      toast.update(toastId, {
+        render: `Error sending reminder email to ${user.memberName}: ${error.message}`,
+        type: "error",
+        autoClose: TOAST_DISPLAY_DURATION,
+      });
       console.error("Error sending reminder:", error);
       // Handle error appropriately
     }
   };
 
   const handleElevateToLifeMember = async (user) => {
+    const toastId = toast.info(
+      `Processing life membership invitation for ${user.memberName}...`,
+      {
+        autoClose: false, // Keep the toast open until updated
+      }
+    );
+
+    if (
+      !user.dateOfSubmission ||
+      isNaN(new Date(user.dateOfSubmission).getTime())
+    ) {
+      toast.update(toastId, {
+        render: `${user.memberName} has an invalid joining date.`,
+        type: "error",
+        autoClose: TOAST_DISPLAY_DURATION,
+      });
+      console.error(`${user.memberName} has an invalid joining date.`);
+      return;
+    }
+
+    if (!isEligibleForLifeMembership(new Date(user.dateOfSubmission))) {
+      toast.update(toastId, {
+        render: `${user.memberName} is not eligible for Life Membership.`,
+        type: "error",
+        autoClose: TOAST_DISPLAY_DURATION,
+      });
+      console.error(`${user.memberName} is not eligible for Life Membership.`);
+      return;
+    }
+
     try {
       // 1. Construct the payment link [TODO: Update Payment Gateway link]
       const profileLink = `https://members.kmaindia.org`; // Replace with your actual payment gateway URL
@@ -164,16 +221,20 @@ The KMA Team`;
       const success = await sendEmail(emailData);
 
       if (success) {
-        toast.success(
-          `Life membership invitation email sent to ${user.memberName}!`
-        );
+        toast.update(toastId, {
+          render: `Life membership invitation email sent to ${user.memberName}!`,
+          type: "success",
+          autoClose: TOAST_DISPLAY_DURATION,
+        });
         console.log("Life membership invitation email sent successfully!");
         setEmailStatus(`Invitation sent successfully to ${user.memberName}!`); // Set success message with name
         setSentInvites([...sentInvites, user.id]);
       } else {
-        toast.error(
-          `Failed to send life membership invitation email to ${user.memberName}.`
-        );
+        toast.update(toastId, {
+          render: `Failed to send life membership invitation email to ${user.memberName}.`,
+          type: "error",
+          autoClose: TOAST_DISPLAY_DURATION,
+        });
         console.error("Failed to send life membership invitation email.");
         setEmailStatus(`Failed to send invitation to ${user.memberName}.`); // Set error message with name
       }
@@ -181,25 +242,18 @@ The KMA Team`;
       // Set a timeout to clear the emailStatus after 5 seconds
       setTimeout(() => {
         setEmailStatus(null);
-      }, 5000); // 5000 milliseconds = 5 seconds
+      }, TOAST_DISPLAY_DURATION); // TOAST_DISPLAY_DURATION milliseconds = 5 seconds
     } catch (error) {
-      toast.error(
-        `Error sending life membership invitation email to ${user.memberName}: ${error.message}`
-      );
+      toast.update(toastId, {
+        render: `Error sending life membership invitation email to ${user.memberName}: ${error.message}`,
+        type: "error",
+        autoClose: TOAST_DISPLAY_DURATION,
+      });
       console.error("Error sending life membership invitation:", error);
       setEmailStatus(
         `Error sending invitation to ${user.memberName}, due to ${error.message}`
       ); // Set error message with name
     }
-  };
-
-  const isApproachingSecondAnniversary = (joiningDate) => {
-    const today = new Date();
-    const secondAnniversary = new Date(joiningDate);
-    secondAnniversary.setFullYear(secondAnniversary.getFullYear() + 2);
-    secondAnniversary.setMonth(secondAnniversary.getMonth() - 1); // Set to the last month of the 2nd year
-
-    return today >= secondAnniversary;
   };
 
   return (
@@ -239,7 +293,7 @@ The KMA Team`;
                 <td>{user.email}</td>
                 <td>{user.mobile}</td>
                 <td>{new Date(user.renewalDueOn).toLocaleDateString()}</td>
-                <td>{user.renewalStatus}</td> {/* Display renewal status */}
+                <td>{user.renewalStatus}</td>
                 <td>
                   <button onClick={() => handleSendReminder(user)}>
                     Send Reminder
@@ -252,7 +306,7 @@ The KMA Team`;
                     onClick={() => handleElevateToLifeMember(user)}
                     disabled={
                       user.currentMembershipType !== "Annual" ||
-                      !isApproachingSecondAnniversary(
+                      !isEligibleForLifeMembership(
                         new Date(user.dateOfSubmission)
                       )
                     }
