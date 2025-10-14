@@ -1,5 +1,5 @@
 // Define the eligibility duration as a constant (in years)
-export const LIFE_MEMBERSHIP_ELIGIBILITY_YEARS = 1;
+export const LIFE_MEMBERSHIP_ELIGIBILITY_YEARS = 2;
 
 // Utility function to check if a user is eligible for life membership
 export const isEligibleForLifeMembership = (joiningDate) => {
