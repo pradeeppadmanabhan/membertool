@@ -1,4 +1,5 @@
 import React from "react";
+import PhoneNumberInput from "../utils/PhoneNumberInput";
 
 const EmergencyContactDetails = ({ formData, errors, handleChange }) => {
   return (
@@ -16,16 +17,13 @@ const EmergencyContactDetails = ({ formData, errors, handleChange }) => {
       )}
       <br />
 
-      <label>Contact Phone Number*</label>
-      <input
-        type="text"
+      <PhoneNumberInput
         name="emergencyContactPhone"
         value={formData.emergencyContactPhone}
         onChange={handleChange}
+        error={errors.emergencyContactPhone}
+        label="Contact Phone Number*"
       />
-      {errors.emergencyContactPhone && (
-        <span className="error">{errors.emergencyContactPhone}</span>
-      )}
       <br />
 
       <label>Contact Email*</label>

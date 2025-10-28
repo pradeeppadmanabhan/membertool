@@ -1,4 +1,5 @@
 import React from "react";
+import PhoneNumberInput from "../utils/PhoneNumberInput";
 
 const ContactInfo = ({ formData, errors, handleChange }) => {
   return (
@@ -38,26 +39,16 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
         <span className="error">{errors.addressLine3}</span>
       )}
       <br />
-      {/* <label>Landline:</label>
-      <input
-        type="text"
-        name="landline"
-        value={formData.landline}
-        onChange={handleChange}
-      />
-      {errors.landline && <span className="error">{errors.landline}</span>} */}
+
       <br />
-      <label>
-        Mobile* (please provide a Whatsapp enabled number we can use for
-        communication):
-      </label>
-      <input
-        type="text"
+      <PhoneNumberInput
         name="mobile"
         value={formData.mobile}
         onChange={handleChange}
+        error={errors.mobile}
+        label="Mobile* (please provide a Whatsapp enabled number we can use for communication):"
       />
-      {errors.mobile && <span className="error">{errors.mobile}</span>}
+
       <br />
       <label>E-mail ID* :</label>
       <input

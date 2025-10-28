@@ -19,6 +19,7 @@ import ImageUploader from "./components/ImageUploader";
 import PropTypes from "prop-types"; // Import PropTypes
 import AuthContext from "./AuthContext";
 import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
+import { validatePhoneNumber } from "./utils/PhoneNumberInput";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
@@ -221,7 +222,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       addressLine2: "",
       addressLine3: "",
       mobile: "",
-      email: "",
       qualifications: "",
       profession: "",
       athleticBackground: "",
@@ -264,35 +264,27 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       formErrors.addressLine2 = "Address Line 2 is required.";
     if (!formData.addressLine3)
       formErrors.addressLine3 = "Address Line 3 is required.";
-    if (!formData.mobile) {
-      formErrors.mobile = "Mobile is required.";
+    const mobileError = validatePhoneNumber(formData.mobile);
+    if (mobileError) {
+      formErrors.mobile = mobileError;
     }
-    if (formData.mobile && !/^\d{10}$/.test(formData.mobile))
-      formErrors.mobile = "Mobile number must be 10 digits.";
-
     if (!formData.email) formErrors.email = "Email is required.";
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
       formErrors.email = "Email format is invalid.";
-
-    /* if (formData.landline && !/^\d+$/.test(formData.landline))
-      formErrors.landline = "Landline number must be numeric."; */
     if (!formData.bloodGroup)
       formErrors.bloodGroup = "Blood Group is required.";
-
     if (!formData.illnessHistory)
       formErrors.illnessHistory = "History of serious illness is required.";
     if (!formData.generalHealth)
       formErrors.generalHealth = "Present General Health is required.";
     if (!formData.emergencyContactName)
       formErrors.emergencyContactName = "Emergency contact name is required.";
-    if (!formData.emergencyContactPhone)
-      formErrors.emergencyContactPhone = "Emergency contact phone is required.";
-    if (
-      formData.emergencyContactPhone &&
-      !/^\d{10}$/.test(formData.emergencyContactPhone)
-    )
-      formErrors.emergencyContactPhone =
-        "Emergency contact phone must be 10 digits.";
+    const emergencyContactPhoneError = validatePhoneNumber(
+      formData.emergencyContactPhone
+    );
+    if (emergencyContactPhoneError) {
+      formErrors.emergencyContactPhone = emergencyContactPhoneError;
+    }
     if (!formData.emergencyContactEmail)
       formErrors.emergencyContactEmail = "Emergency contact email is required.";
     if (
