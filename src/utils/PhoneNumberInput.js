@@ -4,7 +4,14 @@ import "react-phone-number-input/style.css";
 
 const PhoneNumberInput = ({ name, value, onChange, error, label }) => {
   const handlePhoneChange = (phoneValue) => {
-    onChange({ target: { name, value: phoneValue } });
+    // Validate the phone number internally
+    const validationError = !phoneValue
+      ? "Phone number is required."
+      : !isValidPhoneNumber(phoneValue)
+        ? "Invalid phone number."
+        : null;
+
+    onChange({ target: { name, value: phoneValue, error: validationError } });
   };
 
   return (

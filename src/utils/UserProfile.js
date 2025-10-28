@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
 import { isEligibleForLifeMembership } from "./EligibilityUtils";
+import PhoneNumberInput from "../utils/PhoneNumberInput";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin } = useContext(AuthContext);
@@ -143,13 +144,6 @@ const UserProfile = ({ memberID }) => {
   //Handle form Validation
   const validateField = (name, value) => {
     switch (name) {
-      case "mobile":
-      case "emergencyContactPhone":
-        if (!/^\d{10}$/.test(value)) {
-          return "Must be a valid 10-digit number.";
-        }
-        break;
-
       case "dob":
         const date = new Date(value);
         if (!value || isNaN(date.getTime()) || date > new Date()) {
@@ -208,10 +202,10 @@ const UserProfile = ({ memberID }) => {
 
   // ✅ Handle form input changes
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, error } = e.target;
 
     // Validate the field
-    const error = validateField(name, value);
+    //const error = validateField(name, value);
     if (error) {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
     } else {
@@ -294,8 +288,8 @@ const UserProfile = ({ memberID }) => {
           value === "Annual"
             ? ANNUAL_MEMBERSHIP_FEE
             : value === "Life"
-            ? LIFE_MEMBERSHIP_FEE
-            : 0, // Automatically set amount based on selected membership type
+              ? LIFE_MEMBERSHIP_FEE
+              : 0, // Automatically set amount based on selected membership type
       }),
     }));
   };
@@ -354,15 +348,13 @@ const UserProfile = ({ memberID }) => {
             <td>
               {isEditing ? (
                 <>
-                  <input
-                    type="text"
+                  <PhoneNumberInput
                     name="mobile"
                     value={formData.mobile}
                     onChange={handleChange}
+                    error={errors.mobile}
+                    label="Mobile Number"
                   />
-                  {errors.mobile && (
-                    <p className="error-message">{errors.mobile}</p>
-                  )}
                 </>
               ) : (
                 formData.mobile
@@ -779,16 +771,13 @@ const UserProfile = ({ memberID }) => {
             <td>
               {isEditing ? (
                 <>
-                  <textarea
+                  <PhoneNumberInput
                     name="emergencyContactPhone"
                     value={formData.emergencyContactPhone}
                     onChange={handleChange}
+                    error={errors.emergencyContactPhone}
+                    label="Emergency Contact Phone"
                   />
-                  {errors.emergencyContactPhone && (
-                    <p className="error-message">
-                      {errors.emergencyContactPhone}
-                    </p>
-                  )}
                 </>
               ) : (
                 formData.emergencyContactPhone
