@@ -5,13 +5,19 @@ import { useNavigate } from "react-router-dom";
 import UserProfile from "./utils/UserProfile";
 
 const ProfilePage = () => {
-  const { userData } = useContext(AuthContext);
+  const { userData, isNewUser } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState(null); // State to track errors
   const [isLoading, setIsLoading] = useState(true); // State to track loading
 
   useEffect(() => {
     const memberID = localStorage.getItem("memberID");
+
+    if (!memberID && isNewUser) {
+      console.log("New user detected. Redirecting to application form.");
+      navigate("/new-application");
+      return;
+    }
 
     if (!memberID) {
       console.error("Member ID is not available.");

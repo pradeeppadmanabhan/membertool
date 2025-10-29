@@ -339,6 +339,18 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     return allErrors;
   };
 
+  const generateMemberIDWithRetry = async (membershipType, retries = 3) => {
+    for (let i = 0; i < retries; i++) {
+      try {
+        const memberId = await generateMemberID(membershipType);
+        if (memberId) return memberId;
+      } catch (error) {
+        console.error(`Attempt ${i + 1} to generate Member ID failed:`, error);
+      }
+    }
+    throw new Error("Failed to generate Member ID after multiple attempts.");
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -364,7 +376,7 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
     try {
       //console.log("Generated Member ID:", newMemberId);
-      const newMemberId = await generateMemberID(
+      const newMemberId = await generateMemberIDWithRetry(
         formData.currentMembershipType
       ); // Function to generate a unique member ID
       console.log("Newly Generated Member ID:", newMemberId);
@@ -437,8 +449,15 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
 
         //console.log("Submitting to id:", newMemberId);
 
-        const userRef = ref(database, `users/${newMemberId}`);
-        await set(userRef, userData);
+        try {
+          const userRef = ref(database, `users/${newMemberId}`);
+          await set(userRef, userData);
+        } catch (error) {
+          console.error("Error saving user data to Firebase:", error);
+          setStatusMessage("Error saving your data. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
 
         console.log("Data submitted successfully!");
         setStatusMessage(
@@ -448,9 +467,23 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
         updateUserData(userData); // Update user data in AuthContext
 
         // Save the memberID to local storage for persistence
-        localStorage.setItem("memberID", newMemberId);
+        try {
+          localStorage.setItem("memberID", newMemberId);
+        } catch (error) {
+          console.warn(
+            "Failed to save memberID to localStorage. Falling back to session storage."
+          );
+          sessionStorage.setItem("memberID", newMemberId);
+        }
         // Save the form data to local storage for persistence
-        localStorage.setItem("formData", JSON.stringify(userData));
+        try {
+          localStorage.setItem("formData", JSON.stringify(userData));
+        } catch (error) {
+          console.warn(
+            "Failed to save formData to localStorage. Falling back to session storage."
+          );
+          sessionStorage.setItem("formData", JSON.stringify(userData));
+        }
 
         // Set UID mapping
         const uidRef = getUidRef(user.uid, database);
