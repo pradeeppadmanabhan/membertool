@@ -3,6 +3,10 @@ import { database } from "../firebase";
 import { ref, onValue } from "firebase/database";
 import { Link } from "react-router-dom"; // Import Link
 import "../global.css"; // Import your CSS file
+import * as XLSX from "xlsx";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { format } from "date-fns";
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
@@ -134,6 +138,67 @@ const ApplicationsList = () => {
     } */
     });
 
+  const downloadExcel = () => {
+    if (filteredApplications.length === 0) {
+      toast.error("No data to download.");
+      return;
+    }
+
+    try {
+      // Generate file name with local timestamp
+      const timestamp = format(new Date(), "yyyyMMdd'T'HHmmss"); // Local time
+      const fileName = `MembersList_${timestamp}.xlsx`;
+
+      // Convert data to worksheet
+      const worksheetData = filteredApplications.map((application) => ({
+        ID: application.id,
+        Name: application.memberName,
+        Email: application.email,
+        Mobile: application.mobile,
+        "Membership Type": application.currentMembershipType,
+        "Date of Submission": application.dateOfSubmission
+          ? new Date(application.dateOfSubmission).toLocaleDateString()
+          : "--/--/----",
+        "Date of Last Payment":
+          application.payments && application.payments.length > 0
+            ? new Date(
+                application.payments[
+                  application.payments.length - 1
+                ].dateOfPayment
+              ).toLocaleDateString()
+            : "--/--/----",
+        "Receipt Number":
+          application.payments && application.payments.length > 0
+            ? application.payments[application.payments.length - 1]
+                .receiptNumber
+            : "--",
+        "Payment Mode":
+          application.payments && application.payments.length > 0
+            ? application.payments[application.payments.length - 1].paymentMode
+            : "--",
+        "Payment ID":
+          application.payments && application.payments.length > 0
+            ? application.payments[application.payments.length - 1].paymentID
+            : "--",
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
+
+      // Write workbook to file
+      XLSX.writeFile(workbook, fileName);
+
+      // Show success toast message
+      toast.success("File downloaded successfully!");
+    } catch (error) {
+      console.error("Error generating Excel file:", error);
+      toast.error(
+        "An error occurred while generating the Excel file. Please try again."
+      );
+    }
+  };
+
   return (
     <div className="mt-5">
       <h2>List of Applications</h2>
@@ -182,6 +247,12 @@ const ApplicationsList = () => {
           </div>
         </div>
       </div>
+
+      <div className="download-container">
+        <button onClick={downloadExcel}>Download as Excel</button>
+      </div>
+      {/* Toast Container */}
+      <ToastContainer />
 
       <table>
         <thead>
