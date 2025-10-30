@@ -7,10 +7,6 @@ import * as XLSX from "xlsx";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { format } from "date-fns";
-import * as XLSX from "xlsx";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import { format } from "date-fns";
 
 const ApplicationsList = () => {
   const [applications, setApplications] = useState([]);
@@ -251,12 +247,6 @@ const ApplicationsList = () => {
           </div>
         </div>
       </div>
-
-      <div className="download-container">
-        <button onClick={downloadExcel}>Download as Excel</button>
-      </div>
-      {/* Toast Container */}
-      <ToastContainer />
 
       <div className="download-container">
         <button onClick={downloadExcel}>Download as Excel</button>
