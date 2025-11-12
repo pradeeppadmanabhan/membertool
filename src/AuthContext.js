@@ -138,16 +138,15 @@ export const AuthProvider = ({ children }) => {
     async (signedInUser) => {
       if (!signedInUser) return null;
 
+      /* const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
+      const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
+      const emailRef = ref(db, `emailToMemberID/${emailKey}`); */
       const uidRef = getUidRef(signedInUser.uid, db);
       const emailRef = getEmailRef(signedInUser.email, db);
 
       try {
-        // Fetch both snapshots in parallel
-        const [uidSnapshot, emailSnapshot] = await Promise.all([
-          get(uidRef),
-          get(emailRef),
-        ]);
         //Step 1: Check if user already has a UID mapping
+        const uidSnapshot = await get(uidRef);
         if (uidSnapshot.exists()) {
           const memberID = uidSnapshot.val();
           console.log("Existing UID mapping found: ", memberID);
@@ -172,6 +171,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         //Step 2: Check if email is already linked to a memberID
+        const emailSnapshot = await get(emailRef);
         if (emailSnapshot.exists()) {
           const existingMemberID = emailSnapshot.val();
           console.log("Existing user found by email: ", existingMemberID);
@@ -287,18 +287,14 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, [checkOrExpandLegacyUser]);
 
-  const isAdminUser = (email) => {
-    const adminEmails = ["coffeecup.developers@gmail.com", "info@kmaindia.org"];
-    return adminEmails.includes(email);
-  };
-
   useEffect(() => {
-    const isAdmin = isAdminUser(user?.email);
-    setIsAdmin(isAdmin);
-
     if (!user || hasRedirected.current) return;
 
     hasRedirected.current = true;
+
+    const adminEmails = ["coffeecup.developers@gmail.com", "info@kmaindia.org"]; // await fetchAdminUsers();
+    const isAdmin = adminEmails.includes(user?.email);
+    setIsAdmin(isAdmin);
 
     setTimeout(() => {
       let redirectUrl;
@@ -318,7 +314,13 @@ export const AuthProvider = ({ children }) => {
       if (isNewUserRef.current) {
         console.log("Redirecting new user to application form");
         redirectUrl = "/new-application"; // Redirect new users to the application form
-      } else {
+      } /* else if (userData?.applicationStatus === "Submitted") {
+        redirectUrl = `/payment-details?memberID=${memberID}&membershipType=${userData.currentMembershipType}`;
+      } else if (userData?.applicationStatus === "Paid") {
+        redirectUrl = `/profile/${memberID}`;
+      } else if (userData?.applicationStatus === "Pending") {
+        redirectUrl = "/new-application"; // Redirect to incomplete application
+      } */ else {
         redirectUrl = isAdmin ? "/admin/dashboard" : "/profile";
       }
       console.log("Redirection to ", redirectUrl);
