@@ -46,7 +46,7 @@ const ProfilePage = () => {
       return;
     }
 
-    console.log("ProfilePage:", userData);
+    //console.log("ProfilePage:", userData);
     setError(null); // Clear any previous errors
     setIsLoading(false);
   }, [userData, navigate]);

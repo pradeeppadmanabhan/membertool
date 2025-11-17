@@ -44,7 +44,7 @@ const UserProfile = ({ memberID }) => {
       if (memberID) {
         const freshData = await fetchMemberData(memberID);
         setFormData(freshData);
-        console.log("Loaded data:", freshData);
+        //console.log("Loaded data:", freshData);
       } else {
         setFormData({});
       }

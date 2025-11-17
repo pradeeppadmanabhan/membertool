@@ -40,10 +40,10 @@ export const AuthProvider = ({ children }) => {
   );
   const [isAdmin, setIsAdmin] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [isNewUser, setIsNewUser] = useState(false); // Replace useRef with useState
   const navigate = useNavigate();
   const hasRedirected = useRef(false);
   const hasCheckedUser = useRef(false);
-  const isNewUserRef = useRef(false);
 
   const generateMemberID = useCallback(async (membershipType) => {
     try {
@@ -111,10 +111,6 @@ export const AuthProvider = ({ children }) => {
         hasCheckedUser.current = true;
         throw new Error("No user data found for memberID: " + memberID);
       }
-      /* //1. Simulate userData Not Found
-      console.log("Simulating userData not found for memberID:", memberID);
-      // Simulate no user data found
-      throw new Error("No user data found for memberID: " + memberID); */
     } catch (error) {
       console.error("Error loading user data:", error);
       setAuthError(error.message);
@@ -133,14 +129,11 @@ export const AuthProvider = ({ children }) => {
     }));
   };
 
-  const checkOrExpandLegacyUser = useCallback(
+  const fetchOrInitializeUser = useCallback(
     //Normal Functionality
     async (signedInUser) => {
       if (!signedInUser) return null;
 
-      /* const emailKey = signedInUser.email.replace(/\./g, ","); // Firebase keys cannot contain dots
-      const uidRef = ref(db, `uidToMemberID/${signedInUser.uid}`);
-      const emailRef = ref(db, `emailToMemberID/${emailKey}`); */
       const uidRef = getUidRef(signedInUser.uid, db);
       const emailRef = getEmailRef(signedInUser.email, db);
 
@@ -160,7 +153,7 @@ export const AuthProvider = ({ children }) => {
 
           localStorage.setItem("memberID", memberID);
           setMemberID(memberID);
-          isNewUserRef.current = false;
+          setIsNewUser(false);
           await loadUserData(memberID);
           return memberID;
         } else {
@@ -187,7 +180,7 @@ export const AuthProvider = ({ children }) => {
           );
           localStorage.setItem("memberID", existingMemberID);
           setMemberID(existingMemberID);
-          isNewUserRef.current = false;
+          setIsNewUser(false);
 
           //Load user data
           await loadUserData(existingMemberID);
@@ -197,8 +190,8 @@ export const AuthProvider = ({ children }) => {
         }
 
         //Step 3: No existing data -> Register a new user
-        isNewUserRef.current = true;
-        console.log("isNewUserRef.current:", isNewUserRef.current);
+        setIsNewUser(true);
+        console.log("isNewUser:", isNewUser);
         console.log("Creating new user profile for:", signedInUser.email);
 
         return null; // Return null to indicate new user creation
@@ -212,7 +205,7 @@ export const AuthProvider = ({ children }) => {
       }
     },
 
-    [loadUserData]
+    [loadUserData, isNewUser]
   );
 
   const logout = async () => {
@@ -228,7 +221,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("memberID");
       setMemberID(null);
       setUserData(null);
-      isNewUserRef.current = true;
+      setIsNewUser(true);
       setAuthError(null);
       // Redirect to login page
       navigate("/login");
@@ -240,41 +233,51 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       try {
-        //console.log("OnAuthStateChanged.. ", user);
-        /*  
-        //Clearing for Retry mechanism
-        localStorage.removeItem("redirectUrl");
-        localStorage.removeItem("memberID");
-        setMemberID(null);
-        setUserData(null); */
-
         if (!user) {
+          console.log("User is signed out.");
           setUser(null);
           setIsLoading(false);
           return;
         }
 
         setUser(user);
+        let redirectUrl;
 
         if (hasCheckedUser.current) return;
         hasCheckedUser.current = true;
 
-        console.log("User in Auth Context: ", user);
+        //console.log("User in Auth Context: ", user);
         //console.log("User UID:", user.uid);
         //console.log("User Email:", user.email);
         //console.log("User Name:", user.displayName);
 
-        const memberID = await checkOrExpandLegacyUser(user);
-        console.log("Member ID from checkOrExpandLegacyUser:", memberID);
+        const memberID = await fetchOrInitializeUser(user);
+        console.log("Member ID from fetchOrInitializeUser:", memberID);
 
         if (memberID === null) {
           console.log("New user detected, proceeding without MemberID...");
           setIsLoading(false);
+          redirectUrl = "/new-application"; // Redirect new users to the application form
+          console.log("Redirecting new user to:", redirectUrl);
+          navigate(redirectUrl);
           return;
         }
 
         setMemberID(memberID);
         localStorage.setItem("memberID", memberID);
+        setIsLoading(false);
+
+        const adminEmails = [
+          "coffeecup.developers@gmail.com",
+          "info@kmaindia.org",
+        ]; // await fetchAdminUsers();
+        const isAdmin = adminEmails.includes(user?.email);
+        setIsAdmin(isAdmin);
+
+        redirectUrl = isAdmin ? "/admin/dashboard" : "/profile";
+        console.log("Redirecting existing user to:", redirectUrl);
+        navigate(redirectUrl);
+
         setIsLoading(false);
       } catch (error) {
         console.error("Error in Authenticaion Process:", error);
@@ -285,49 +288,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     return unsubscribe;
-  }, [checkOrExpandLegacyUser]);
-
-  useEffect(() => {
-    if (!user || hasRedirected.current) return;
-
-    hasRedirected.current = true;
-
-    const adminEmails = ["coffeecup.developers@gmail.com", "info@kmaindia.org"]; // await fetchAdminUsers();
-    const isAdmin = adminEmails.includes(user?.email);
-    setIsAdmin(isAdmin);
-
-    setTimeout(() => {
-      let redirectUrl;
-
-      /* console.log("isNewUserRef:", isNewUserRef.current);
-      console.log("memberID:", memberID);
-      console.log("user:", user);
-      console.log("isAdmin:", isAdmin);
-      console.log("userData:", userData); */
-
-      if (!user) {
-        console.log("User is logged out. Skipping redirection.");
-        setIsLoading(false);
-        return; // Skip redirection if the user is logged out
-      }
-
-      if (isNewUserRef.current) {
-        console.log("Redirecting new user to application form");
-        redirectUrl = "/new-application"; // Redirect new users to the application form
-      } /* else if (userData?.applicationStatus === "Submitted") {
-        redirectUrl = `/payment-details?memberID=${memberID}&membershipType=${userData.currentMembershipType}`;
-      } else if (userData?.applicationStatus === "Paid") {
-        redirectUrl = `/profile/${memberID}`;
-      } else if (userData?.applicationStatus === "Pending") {
-        redirectUrl = "/new-application"; // Redirect to incomplete application
-      } */ else {
-        redirectUrl = isAdmin ? "/admin/dashboard" : "/profile";
-      }
-      console.log("Redirection to ", redirectUrl);
-      localStorage.removeItem("redirectUrl");
-      navigate(redirectUrl);
-    }, 500);
-  }, [navigate, isNewUserRef, memberID, user, isAdmin, userData]);
+  }, [fetchOrInitializeUser, navigate]);
 
   return (
     <AuthContext.Provider
@@ -339,7 +300,7 @@ export const AuthProvider = ({ children }) => {
         updateUserData,
         memberID,
         authError,
-        isNewUser: isNewUserRef.current,
+        isNewUser,
         signInWithGoogle,
         logout,
         generateMemberID,
