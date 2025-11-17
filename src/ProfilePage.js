@@ -19,6 +19,7 @@ const ProfilePage = () => {
         "Member ID could not be loaded. Please contact admin with error code 'EMID'."
       );
       setIsLoading(false);
+      navigate("/login");
       return;
     }
 
@@ -30,6 +31,7 @@ const ProfilePage = () => {
           ". Please contact admin with error code 'EUPNF' (Error: User Profile Not Found)."
       );
       setIsLoading(false);
+      navigate("/login");
       return;
     }
 
@@ -43,6 +45,7 @@ const ProfilePage = () => {
         "Mismatch between memberID in localStorage and UserData. Please contact admin with error code 'EUMISMATCH'."
       );
       setIsLoading(false);
+      navigate("/login");
       return;
     }
 
