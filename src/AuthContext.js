@@ -79,6 +79,11 @@ export const AuthProvider = ({ children }) => {
   // This function clears any cached data before signing in
   const signInWithGoogle = async () => {
     try {
+      //Preserve the membershipType in localStorage before login
+      const initialMembershipType = localStorage.getItem(
+        "initialMembershipType"
+      );
+
       //Clear cached data
       localStorage.removeItem("memberID");
       localStorage.removeItem("redirectUrl");
@@ -88,6 +93,12 @@ export const AuthProvider = ({ children }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
       //console.log("Signed in user:", signedInUser);
+
+      //Restore the membershipType after login
+      if (initialMembershipType) {
+        localStorage.setItem("initialMembershipType", initialMembershipType);
+      }
+
       setUser(signedInUser);
     } catch (error) {
       console.error("Error signing in with Google:", error);
@@ -219,6 +230,7 @@ export const AuthProvider = ({ children }) => {
       setIsLoading(false);
       localStorage.removeItem("redirectUrl");
       localStorage.removeItem("memberID");
+      localStorage.removeItem("initialMembershipType");
       setMemberID(null);
       setUserData(null);
       setIsNewUser(true);
@@ -257,7 +269,10 @@ export const AuthProvider = ({ children }) => {
         if (memberID === null) {
           console.log("New user detected, proceeding without MemberID...");
           setIsLoading(false);
-          redirectUrl = "/new-application"; // Redirect new users to the application form
+
+          const initialMembershipType =
+            localStorage.getItem("initialMembershipType") || "Annual";
+          redirectUrl = `/new-application?initialMembershipType=${initialMembershipType}`; // Redirect new users to the application form
           console.log("Redirecting new user to:", redirectUrl);
           navigate(redirectUrl);
           return;

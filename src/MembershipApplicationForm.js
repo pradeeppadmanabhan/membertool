@@ -1,6 +1,6 @@
 // src/MembershipApplicationForm.js
 import React, { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { database, storage } from "./firebase"; // Import the Firebase config
 import { ref, set, runTransaction } from "firebase/database"; // Import necessary functions - , push
 import {
@@ -16,23 +16,22 @@ import BackgroundHealth from "./components/BackgroundHealth";
 import MembershipDetails from "./components/MembershipDetails";
 import EmergencyContactDetails from "./components/EmergencyContactDetails";
 import ImageUploader from "./components/ImageUploader";
-import PropTypes from "prop-types"; // Import PropTypes
 import AuthContext from "./AuthContext";
 import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 import { validatePhoneNumber } from "./utils/PhoneNumberInput";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
-const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
+const MembershipApplicationForm = () => {
   const { user, isLoading, logout, generateMemberID, updateUserData } =
     useContext(AuthContext);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialMembershipType = searchParams.get("initialMembershipType");
 
-  // Prop Validation using PropTypes
-  MembershipApplicationForm.propTypes = {
-    initialMembershipType: PropTypes.oneOf(["Annual", "Life", "Honorary"])
-      .isRequired,
-  };
+  /* useEffect(() => {
+    console.log("Membership Type on Load:", initialMembershipType);
+  }, [initialMembershipType]); */
 
   //console.log("user in MembershipApplicationForm:", user);
   //console.log("memberID in MembershipApplicationForm:", memberID);
@@ -85,19 +84,10 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    /* const location = useLocation(); 
-    console.log("MemberApplicationForm: isLoading", isLoading);
-    console.log("MemberApplicationForm: user", user);
-    console.log("MemberApplicationForm Path:", location.pathname);
-    console.log("MemberApplicationForm Search:", location.search); */
-
     if (!isLoading && !user) {
       console.error("User is Unauthenticated, redirecting to Login Page");
       navigate("/login");
     } else if (user && formData.id != null) {
-      // Only generate Member ID when user is logged in
-      //fetchMemberID();
-      //setFormData((prev) => ({ ...prev, id: memberID }));
       console.log(
         "User is authenticated, checking form submission status..., user ID:",
         user.uid,
@@ -179,7 +169,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
   };
 
   const handleBlur = (e) => {
-    //const { name, value } = e.target;
     const enteredDate = new Date(e.target.value);
     const today = new Date();
     const minDate = new Date("1900-01-01");
@@ -236,7 +225,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       emergencyContactRelationship: "",
       mountaineeringCertifications: "", // Optional field
       currentMembershipType: initialMembershipType,
-      //paymentTransactionNumber: "",
       imageURL: "", // Reset image
       signatureURL: "", // Reset signature
       recommendedByName: "",
@@ -363,7 +351,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
     }
 
     try {
-      //console.log("Generated Member ID:", newMemberId);
       const newMemberId = await generateMemberID(
         formData.currentMembershipType
       ); // Function to generate a unique member ID
@@ -401,7 +388,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       }
 
       const age = calculateAge(formData.dob);
-      //setFormData({ ...formData, age });
 
       // 4. Submit Data to Firebase
       try {
@@ -529,7 +515,6 @@ const MembershipApplicationForm = ({ initialMembershipType = "Annual" }) => {
       {errors.signatureURL && (
         <span className="error">{errors.signatureURL}</span>
       )}
-      {/*<h3>Provisional Application ID: {formData.id} </h3>*/}
       <br />
       {/* Personal Information */}
       <PersonalInfo

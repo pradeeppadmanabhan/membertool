@@ -32,6 +32,14 @@ function App() {
   const location = useLocation();
 
   useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const initialMembershipType = searchParams.get("initialMembershipType");
+
+    if (initialMembershipType) {
+      console.log("Initial Membership Type from URL:", initialMembershipType);
+      localStorage.setItem("initialMembershipType", initialMembershipType);
+    }
+
     /* console.log("Current Route:", location.pathname);
     console.log("Current User:", user);
     console.log("search:", location.search);

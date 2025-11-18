@@ -11,7 +11,7 @@ const DeclarationConsent = ({
   return (
     <div>
       <Header /> {/* Render the Header component */}
-      <h2>APPLICATION FOR MEMBERSHIP </h2>
+      <h2>Application For {formData.currentMembershipType} Membership </h2>
       <div className="declaration-text">
         {" "}
         {/*Add class for styling */}
