@@ -1,6 +1,8 @@
 // src/admin/components/HonoraryMemberInvite.js
 import React, { useState, useEffect } from "react";
 import sendEmail from "../utils/SendEmail";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const MemberInvite = () => {
   const [name, setName] = useState(""); // State for the name input
@@ -179,6 +181,7 @@ const MemberInvite = () => {
       const emailData = {
         to_name: name, // Use the entered name
         to_email: email,
+        cc_email: "coffeecup.developers@gmail.com",
         subject: subjectLine,
         message: emailMessage,
         contentType: "text/html",
@@ -189,15 +192,18 @@ const MemberInvite = () => {
 
       if (success) {
         console.log("Invitation sent successfully!", success);
+        toast.success("Invitation sent successfully!");
         setMessage("Invitation sent successfully!");
         setName(""); // Clear the name input field
         setEmail(""); // Clear the email input field
       } else {
         setMessage("Failed to send invitation. Please try again.");
+        toast.error("Failed to send invitation. Please try again.");
       }
     } catch (error) {
       console.error("Error sending invitation:", error);
       setMessage("An error occurred. Please try again later.");
+      toast.error("An error occurred. Please try again later.");
     }
   };
 
@@ -251,6 +257,8 @@ const MemberInvite = () => {
           <p>{message}</p>
         </div>
       )}
+      {/* Toast Container */}
+      <ToastContainer />
     </div>
   );
 };
