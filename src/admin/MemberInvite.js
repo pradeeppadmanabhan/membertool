@@ -81,6 +81,12 @@ const MemberInvite = () => {
     ${invitationLink}</p>
   
     <p>We believe that your presence as an Honorary Member will greatly enrich our association.</p>
+
+    <p>Please keep handy the below for your application:</p>
+    <ul>
+      <li>Picture of your signature for the declaration of membership</li>
+      <li>Passport-sized photograph</li>
+    </ul>
   
     <p>Sincerely,<br />
     The KMA Team</p>
@@ -110,6 +116,12 @@ const MemberInvite = () => {
   
     <p>If the link above doesn't work, you can copy and paste the following URL into your browser:<br />
     ${invitationLink}</p>
+
+    <p>Please keep handy the below for your application:</p>
+    <ul>
+      <li>Picture of your signature for the declaration of membership</li>
+      <li>Passport-sized photograph</li>
+    </ul>
   
     <p>Sincerely,<br />
     The KMA Team</p>
@@ -136,6 +148,12 @@ const MemberInvite = () => {
 
     <p>If the link above doesn't work, you can copy and paste the following URL into your browser:<br />
     ${invitationLink}</p>
+
+    <p>Please keep handy the below for your application:</p>
+    <ul>
+      <li>Picture of your signature for the declaration of membership</li>
+      <li>Passport-sized photograph</li>
+    </ul>
 
     <p>Sincerely,<br />
     The KMA Team</p>
