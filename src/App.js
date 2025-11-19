@@ -175,17 +175,7 @@ function App() {
         />
         <Route
           path="/new-application"
-          element={<MembershipApplicationForm initialMembershipType="Annual" />}
-        />
-        <Route
-          path="/new-application/life"
-          element={<MembershipApplicationForm initialMembershipType="Life" />}
-        />
-        <Route
-          path="/new-application/honorary"
-          element={
-            <MembershipApplicationForm initialMembershipType="Honorary" />
-          }
+          element={<MembershipApplicationForm />}
         />
 
         <Route path="/login" element={<LoginPage />} />
