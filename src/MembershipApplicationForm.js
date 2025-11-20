@@ -112,7 +112,7 @@ const MembershipApplicationForm = () => {
   useEffect(() => {
     // Load formData from local storage on component mount
     const savedFormData = localStorage.getItem("formData");
-    console.log("Saved Form Data:", savedFormData);
+    // console.log("Saved Form Data:", savedFormData);
     // If savedFormData exists, parse it and set it to formData state
     if (savedFormData) {
       setFormData(JSON.parse(savedFormData));
@@ -416,6 +416,7 @@ const MembershipApplicationForm = () => {
             membershipType: "Honorary",
           };
           userData.payments.push(paymentRecord);
+          userData.applicationStatus = "Paid";
           targetPage = `/thank-you/honorary/${newMemberId}`;
         } else {
           targetPage = `/payment-details?memberID=${newMemberId}&membershipType=${formData.currentMembershipType}`;
