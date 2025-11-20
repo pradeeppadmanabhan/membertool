@@ -150,9 +150,11 @@ function App() {
             <Link to="/admin/renewals-due">
               <button>Renewals Due</button>
             </Link>
-            <Link to="/admin/whatsapp-group-management">
+            {/* <Link to="/admin/whatsapp-group-management">
               <button>Manage WhatsApp</button>
             </Link>
+            Note: Functionality moved out of Admin Dashboard. Feature not used by KMA.
+             */}
             <Link to="/search">
               <button>Search Members</button>
             </Link>
