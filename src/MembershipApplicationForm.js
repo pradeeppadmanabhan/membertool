@@ -350,6 +350,19 @@ const MembershipApplicationForm = () => {
       return;
     }
 
+    // Notify the user about the email difference
+    if (formData.email !== user.email) {
+      const confirmProceed = window.confirm(
+        `The email you entered (${formData.email}) is different from your login email (${user.email}). Do you want to proceed?`
+      );
+
+      if (!confirmProceed) {
+        setStatusMessage("Please update your email before submitting.");
+        setIsSubmitting(false);
+        return; // Stop submission if the user chooses "No"
+      }
+    }
+
     try {
       const newMemberId = await generateMemberID(
         formData.currentMembershipType

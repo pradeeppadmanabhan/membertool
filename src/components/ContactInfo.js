@@ -55,7 +55,6 @@ const ContactInfo = ({ formData, errors, handleChange }) => {
         type="email"
         name="email"
         value={formData.email}
-        readOnly
         onChange={handleChange}
       />
       {errors.email && <span className="error">{errors.email}</span>}
