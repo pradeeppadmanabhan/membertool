@@ -27,6 +27,8 @@ import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 const auth = getAuth(app);
 export { auth };
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: "select_account" });
+
 const db = getDatabase(app);
 
 export const AuthContext = createContext();
@@ -157,7 +159,9 @@ export const AuthProvider = ({ children }) => {
 
           // Ensure the `uid` field is set in the `users` node
           const userRef = ref(db, `users/${memberID}`);
+          //console.log("Ensuring UID is set for userRef:", userRef.toString());
           const userSnapshot = await get(userRef);
+          //console.log("User snapshot for UID check:", userSnapshot.val());
           if (userSnapshot.exists() && !userSnapshot.val().uid) {
             await update(userRef, { uid: signedInUser.uid });
           }

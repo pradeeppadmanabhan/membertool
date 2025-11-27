@@ -415,6 +415,12 @@ const MembershipApplicationForm = () => {
           payments: [],
         };
 
+        //console.log("Final User Data to be submitted:", userData);
+        if (!userData.uid) {
+          userData.uid = user.uid;
+          console.warn("UID was missing, set from AuthContext:", user.uid);
+        }
+
         let targetPage = ``;
 
         if (userData.currentMembershipType === "Honorary") {
@@ -436,6 +442,7 @@ const MembershipApplicationForm = () => {
         }
 
         //console.log("Submitting to id:", newMemberId);
+        //console.log("User Data to be submitted:", userData);
 
         const userRef = ref(database, `users/${newMemberId}`);
         await set(userRef, userData);
