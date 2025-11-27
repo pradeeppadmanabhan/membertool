@@ -13,7 +13,7 @@ const ApplicationsList = () => {
   const [filterType, setFilterType] = useState("all"); // Filter by type
   const [startDate, setStartDate] = useState(""); // State for start date
   const [endDate, setEndDate] = useState(""); // State for end date
-
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const [sortConfig, setSortConfig] = useState({
     key: "dateOfSubmission",
     direction: "descending",
@@ -74,7 +74,16 @@ const ApplicationsList = () => {
     // Now apply the type filter
     const matchesType =
       filterType === "all" || application.currentMembershipType === filterType;
-    return matchesType;
+
+    // Filter by search query (name, mobile, email)
+    const matchesSearchQuery =
+      application.memberName
+        ?.toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      application.mobile?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      application.email?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return matchesType && matchesSearchQuery;
   });
 
   const sortedApplications = [...filteredApplications]
@@ -201,7 +210,7 @@ const ApplicationsList = () => {
 
   return (
     <div className="mt-5">
-      <h2>List of Applications</h2>
+      <h2>Member Directory</h2>
 
       {/* Filter Controls */}
 
@@ -246,6 +255,18 @@ const ApplicationsList = () => {
             />
           </div>
         </div>
+      </div>
+
+      {/* Search Filter */}
+      <div className="search-container">
+        <label htmlFor="searchQuery">Search by Name, Mobile, or Email:</label>
+        <input
+          type="text"
+          id="searchQuery"
+          placeholder="Enter name, mobile, or email"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="download-container">

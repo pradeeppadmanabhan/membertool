@@ -142,22 +142,23 @@ function App() {
               </Link>
             )}
             <Link to="/admin/applications">
-              <button>Applications</button>
+              <button>Member Directory</button>
             </Link>
             <Link to="/admin/invite-member">
               <button>Invite Member</button>
             </Link>
             <Link to="/admin/renewals-due">
-              <button>Renewals Due</button>
+              <button>Renewals & Upgrades</button>
             </Link>
             {/* <Link to="/admin/whatsapp-group-management">
               <button>Manage WhatsApp</button>
             </Link>
             Note: Functionality moved out of Admin Dashboard. Feature not used by KMA.
              */}
-            <Link to="/search">
+            {/* <Link to="/search">
               <button>Search Members</button>
             </Link>
+            Note: Integrated member search with directory search */}
             <Link to="/admin/dashboard">
               <button>Dashboard</button>
             </Link>
