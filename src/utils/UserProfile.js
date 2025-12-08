@@ -15,6 +15,7 @@ import {
   fetchMemberData,
 } from "../utils/PaymentUtils";
 import { useNavigate } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
 import { isEligibleForLifeMembership } from "./EligibilityUtils";
@@ -24,6 +25,7 @@ const UserProfile = ({ memberID }) => {
   const { isAdmin } = useContext(AuthContext);
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [errors, setErrors] = useState({}); // State to hold validation errors
@@ -52,11 +54,30 @@ const UserProfile = ({ memberID }) => {
     loadData();
   }, [memberID, formData?.imageURL]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      console.log("handleBeforeUnload triggered");
+      console.log("isSubmitting:", isSubmitting);
+      if (isSubmitting) {
+        e.preventDefault();
+        e.returnValue =
+          "Your payment is being processed. Are you sure you want to leave?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isSubmitting]);
+
   if (!formData || Object.keys(formData).length === 0) {
     return <div>Loading user details...</div>;
   }
 
   const handleAddPayment = async () => {
+    setIsSubmitting(true);
+    setStatusMessage("Processing Add payment...");
+
     if (
       !newPayment.dateOfPayment ||
       !newPayment.paymentMode ||
@@ -139,6 +160,7 @@ const UserProfile = ({ memberID }) => {
       console.error("Error adding payment:", error);
       setStatusMessage("Error adding payment. Please try again.");
     }
+    setIsSubmitting(false);
   };
 
   //Handle form Validation
@@ -260,23 +282,45 @@ const UserProfile = ({ memberID }) => {
   const isLifeMember = formData.currentMembershipType === "Life";
 
   const handleRenewal = () => {
-    handleRazorpayPayment(
+    setIsSubmitting(true);
+    setStatusMessage("Processing renewal...");
+    toast.info(
+      "Processing payment... Please do not refresh, navigate away or close the window."
+    );
+    console.log("isSubmitting before Renewal:", isSubmitting);
+    const paymentResult = handleRazorpayPayment(
       formData.id,
       ANNUAL_MEMBERSHIP_FEE,
       formData.currentMembershipType,
       navigate,
       setStatusMessage
     );
+    console.log("Payment Result:", paymentResult);
+
+    setStatusMessage(paymentResult.message);
+
+    setIsSubmitting(false);
+    console.log("isSubmitting after renewal:", isSubmitting);
   };
 
   const handleUpgradeToLife = () => {
-    handleRazorpayPayment(
+    setIsSubmitting(true);
+    setStatusMessage("Processing upgrade...");
+    toast.info(
+      "Processing payment... Please do not refresh, navigate away or close the window."
+    );
+    console.log("isSubmitting before Upgrade:", isSubmitting);
+    const paymentResult = handleRazorpayPayment(
       formData.id,
       LIFE_MEMBERSHIP_FEE,
       "Life",
       navigate,
       setStatusMessage
     );
+    console.log("Payment Result:", paymentResult);
+    setStatusMessage(paymentResult.message);
+    setIsSubmitting(false);
+    console.log("isSubmitting after upgrade:", isSubmitting);
   };
 
   const handlePaymentFieldChange = (field, value) => {
@@ -832,6 +876,7 @@ const UserProfile = ({ memberID }) => {
           </tr>
         </tbody>
       </table>
+      <ToastContainer />
 
       {/* ✅ Edit & Save Buttons */}
       <div className="button-container">

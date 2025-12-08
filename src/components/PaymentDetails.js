@@ -12,6 +12,7 @@ import {
   ANNUAL_MEMBERSHIP_FEE,
   LIFE_MEMBERSHIP_FEE,
 } from "../utils/PaymentUtils";
+import { toast, ToastContainer } from "react-toastify";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
@@ -40,6 +41,20 @@ const PaymentDetails = () => {
     }
   }, [memberID]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isSubmitting) {
+        e.preventDefault();
+        e.returnValue =
+          "Your payment is being processed. Are you sure you want to leave?";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isSubmitting]);
+
   if (isLoading) {
     return <p>Loading member data...</p>;
   }
@@ -64,6 +79,9 @@ const PaymentDetails = () => {
   const handleRazorpay = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing payment...");
+    toast.info(
+      "Processing payment... Please do not refresh, navigate away or close the window."
+    );
     const paymentResult = await handleRazorpayPayment(
       memberID,
       paymentAmount,
@@ -122,6 +140,7 @@ const PaymentDetails = () => {
           <strong>{statusMessage}</strong>
         </p>
       )}
+      <ToastContainer />
     </div>
   );
 };

@@ -5,8 +5,8 @@ import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";
 import sendEmail from "./utils/SendEmail";
 
-const BCC_KMA_EMAILS = "coffeecup.developers@gmail.com";
-const KMA_EMAILS = "receipts@kmaindia.org";
+/* const BCC_KMA_EMAILS = "coffeecup.developers@gmail.com";
+const KMA_EMAILS = "receipts@kmaindia.org"; */
 
 const ThankYouPage = () => {
   const { receiptNumber, memberID } = useParams();
@@ -148,8 +148,8 @@ const ThankYouPage = () => {
     return {
       to_name: userData.memberName || "Member",
       to_email: userData.email,
-      cc_email: KMA_EMAILS,
-      bcc_email: BCC_KMA_EMAILS,
+      /* cc_email: KMA_EMAILS,
+      bcc_email: BCC_KMA_EMAILS, */
       subject: isRenewal
         ? `KMA Membership Renewal - ${userData.memberName} (ID: ${userData.id})`
         : `KMA New Membership Application - ${userData.memberName} (ID: ${userData.id})`,
