@@ -45,8 +45,7 @@ const PaymentDetails = () => {
     const handleBeforeUnload = (e) => {
       if (isSubmitting) {
         e.preventDefault();
-        e.returnValue =
-          "Your payment is being processed. Are you sure you want to leave?";
+        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -80,18 +79,26 @@ const PaymentDetails = () => {
     setIsSubmitting(true);
     setStatusMessage("Processing payment...");
     toast.info(
-      "Processing payment... Please do not refresh, navigate away or close the window."
+      "Processing payment... Please do not refresh, navigate away or close the window.",
+      { autoClose: false }
     );
-    const paymentResult = await handleRazorpayPayment(
-      memberID,
-      paymentAmount,
-      membershipType,
-      navigate,
-      setStatusMessage
-    );
-    console.log("Payment Result:", paymentResult);
-
-    setStatusMessage(paymentResult.message);
+    try {
+      const paymentResult = await handleRazorpayPayment(
+        memberID,
+        paymentAmount,
+        membershipType,
+        navigate,
+        setStatusMessage
+      );
+      console.log("Payment Result:", paymentResult);
+      setStatusMessage(paymentResult.message);
+    } catch (error) {
+      console.error("Payment Error:", error);
+      setStatusMessage("Error processing payment. Please try again.");
+    } finally {
+      toast.dismiss();
+      setIsSubmitting(false);
+    }
 
     setIsSubmitting(false);
   };
@@ -105,6 +112,14 @@ const PaymentDetails = () => {
       <p>Membership Type: {membershipType}</p>
       <p>
         <strong>Rs. {paymentAmount}</strong> Membership Fee
+      </p>
+      <p>
+        {" "}
+        <strong>
+          {" "}
+          Please do NOT refresh, navigate away or close the window. <br />
+          Wait for the payment to finish and get your receipt by email.{" "}
+        </strong>
       </p>
 
       {paymentMode === "razorpay" ? (

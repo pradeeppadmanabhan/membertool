@@ -60,8 +60,7 @@ const UserProfile = ({ memberID }) => {
       console.log("isSubmitting:", isSubmitting);
       if (isSubmitting) {
         e.preventDefault();
-        e.returnValue =
-          "Your payment is being processed. Are you sure you want to leave?";
+        e.returnValue = "";
       }
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -281,46 +280,62 @@ const UserProfile = ({ memberID }) => {
 
   const isLifeMember = formData.currentMembershipType === "Life";
 
-  const handleRenewal = () => {
+  const handleRenewal = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing renewal...");
     toast.info(
-      "Processing payment... Please do not refresh, navigate away or close the window."
+      "Processing payment... Please do not refresh, navigate away or close the window.",
+      { autoClose: false }
     );
     console.log("isSubmitting before Renewal:", isSubmitting);
-    const paymentResult = handleRazorpayPayment(
-      formData.id,
-      ANNUAL_MEMBERSHIP_FEE,
-      formData.currentMembershipType,
-      navigate,
-      setStatusMessage
-    );
-    console.log("Payment Result:", paymentResult);
 
-    setStatusMessage(paymentResult.message);
+    try {
+      const paymentResult = await handleRazorpayPayment(
+        formData.id,
+        ANNUAL_MEMBERSHIP_FEE,
+        formData.currentMembershipType,
+        navigate,
+        setStatusMessage
+      );
+      console.log("Payment Result:", paymentResult);
 
-    setIsSubmitting(false);
-    console.log("isSubmitting after renewal:", isSubmitting);
+      setStatusMessage(paymentResult.message);
+    } catch (error) {
+      console.error("Error during renewal payment:", error);
+      setStatusMessage("Error processing renewal payment. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+      toast.dismiss();
+      console.log("isSubmitting after Renewal:", isSubmitting);
+    }
   };
 
-  const handleUpgradeToLife = () => {
+  const handleUpgradeToLife = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing upgrade...");
     toast.info(
-      "Processing payment... Please do not refresh, navigate away or close the window."
+      "Processing payment... Please do not refresh, navigate away or close the window.",
+      { autoClose: false }
     );
     console.log("isSubmitting before Upgrade:", isSubmitting);
-    const paymentResult = handleRazorpayPayment(
-      formData.id,
-      LIFE_MEMBERSHIP_FEE,
-      "Life",
-      navigate,
-      setStatusMessage
-    );
-    console.log("Payment Result:", paymentResult);
-    setStatusMessage(paymentResult.message);
-    setIsSubmitting(false);
-    console.log("isSubmitting after upgrade:", isSubmitting);
+    try {
+      const paymentResult = await handleRazorpayPayment(
+        formData.id,
+        LIFE_MEMBERSHIP_FEE,
+        "Life",
+        navigate,
+        setStatusMessage
+      );
+      console.log("Payment Result:", paymentResult);
+      setStatusMessage(paymentResult.message);
+    } catch (error) {
+      console.error("Error during upgrade payment:", error);
+      setStatusMessage("Error processing upgrade payment. Please try again.");
+    } finally {
+      toast.dismiss();
+      setIsSubmitting(false);
+      console.log("isSubmitting after upgrade:", isSubmitting);
+    }
   };
 
   const handlePaymentFieldChange = (field, value) => {
