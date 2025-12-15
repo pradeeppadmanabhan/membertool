@@ -113,7 +113,7 @@ const PaymentDetails = () => {
       <p>
         <strong>Rs. {paymentAmount}</strong> Membership Fee
       </p>
-      <p>
+      <p style={{ color: "red", fontWeight: "bold" }}>
         {" "}
         <strong>
           {" "}

@@ -364,6 +364,22 @@ const MembershipApplicationForm = () => {
     }
 
     try {
+      console.log(
+        "Generating Member ID... for user:",
+        user.uid,
+        "email:",
+        user.email,
+        "membership type:",
+        formData.currentMembershipType
+      );
+      if (initialMembershipType !== formData.currentMembershipType) {
+        console.error(
+          "Membership type changed from initial value:",
+          initialMembershipType,
+          "to",
+          formData.currentMembershipType
+        );
+      }
       const newMemberId = await generateMemberID(
         formData.currentMembershipType
       ); // Function to generate a unique member ID
