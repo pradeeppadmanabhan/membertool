@@ -38,11 +38,17 @@ const WelcomePage = () => {
           <a href="mailto:info@kmaindia.org">info@kmaindia.org</a>.
         </p>
         <p>
-          © {new Date().getFullYear()} Karnataka Mountaineering Association. All
-          rights reserved.
+          © {new Date().getFullYear()} Karnataka Mountaineering Association.
+          All rights reserved.
         </p>
         <p>
-          <a href="https://kmaindia.org">Visit our website</a>
+          <a
+            href="https://kmaindia.org"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Visit our website
+          </a>
         </p>
       </div>
     </div>
