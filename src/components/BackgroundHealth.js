@@ -55,7 +55,7 @@ const BackgroundHealth = ({ formData, errors, handleChange }) => {
         <span className="error">{errors.generalHealth}</span>
       )}
       <br />
-      <label>Blood Group*:</label>
+      <label>Blood Group*:(e.g., A+, O-)</label>
       <input
         type="text"
         name="bloodGroup"

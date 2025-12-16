@@ -259,8 +259,11 @@ const MembershipApplicationForm = () => {
     if (!formData.email) formErrors.email = "Email is required.";
     if (formData.email && !/\S+@\S+\.\S+/.test(formData.email))
       formErrors.email = "Email format is invalid.";
-    if (!formData.bloodGroup)
+    if (!formData.bloodGroup) {
       formErrors.bloodGroup = "Blood Group is required.";
+    } else if (!/^(A|B|AB|O)[+-]$/.test(formData.bloodGroup)) {
+      formErrors.bloodGroup = "Must be a valid blood group (e.g., A+, O-).";
+    }
     if (!formData.illnessHistory)
       formErrors.illnessHistory = "History of serious illness is required.";
     if (!formData.generalHealth)
@@ -307,7 +310,7 @@ const MembershipApplicationForm = () => {
       // Image size validation (example: maximum 1MB)
       const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
       if (selectedImage.size > maxSizeInBytes) {
-        imageErrors[fieldName] = "Image size must be less than 2MB.";
+        imageErrors[fieldName] = "Image size must be less than 1MB.";
       }
     }
 
