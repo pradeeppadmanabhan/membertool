@@ -3,26 +3,27 @@ import {
   Routes,
   Route,
   Link,
-  Navigate,
+  //Navigate,
   useNavigate,
   useLocation,
 } from "react-router-dom";
-import ApplicationsList from "./admin/ApplicationsList.js"; // Update the path if needed
+import { useContext, useEffect } from "react";
+import AuthContext from "./AuthContext.js";
+/* import ApplicationsList from "./admin/ApplicationsList.js"; // Update the path if needed
 import ApplicationDetails from "./admin/ApplicationDetails.js"; // Update the path if needed
 import DataDisplay from "./DataDisplay.js";
 import MembershipApplicationForm from "./MembershipApplicationForm.js";
 import RenewalDueList from "./admin/RenewalDueList";
 import MemberInvite from "./admin/MemberInvite.js";
 import ProtectedRoute from "./ProtectedRoute.js";
-import { useContext, useEffect } from "react";
-import AuthContext from "./AuthContext.js";
 import LoginPage from "./LoginPage.js";
 import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
 import ThankYouPage from "./ThankYouPage.js";
 import AdminDashboard from "./admin/AdminDashboard.js";
 import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
-import ProfilePage from "./ProfilePage.js";
+import ProfilePage from "./ProfilePage.js"; */
+import MaintenancePage from "./MaintenancePage.js";
 
 function App() {
   const { user, isAdmin, logout, isLoading, authError, isNewUser, userData } =
@@ -167,7 +168,8 @@ function App() {
       </div>
 
       <Routes>
-        <Route path="/" element={<WelcomePage />} />
+        <Route path="*" element={<MaintenancePage />} />
+        {/* <Route path="/" element={<WelcomePage />} />
         <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/profile" element={<ProfilePage />} />
@@ -181,10 +183,10 @@ function App() {
           element={<MembershipApplicationForm />}
         />
 
-        <Route path="/login" element={<LoginPage />} />
+        <Route path="/login" element={<LoginPage />} /> */}
 
         {/* Protected Admin Routes */}
-        <Route
+        {/* <Route
           path="/admin/applications"
           element={
             <ProtectedRoute requiredRoles={authorizedAdminEmails}>
@@ -241,9 +243,9 @@ function App() {
               <AdminDashboard />
             </ProtectedRoute>
           }
-        />
+        /> */}
         {/* Redirect to Profile if route not found */}
-        <Route path="*" element={<Navigate to="/profile" />} />
+        {/* <Route path="*" element={<Navigate to="/profile" />} /> */}
       </Routes>
     </div>
   );
