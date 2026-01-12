@@ -12,6 +12,7 @@
 
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
+const dotenv = require("dotenv");
 
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
@@ -19,10 +20,12 @@ const express = require("express");
 const cors = require("cors");
 const Razorpay = require("razorpay");
 
-// console.log("ENV:", process.env.NODE_ENV);
-if (process.env.NODE_ENV !== "production") {
-  require("dotenv").config();
-}
+// Load the appropriate .env file based on NODE_ENV
+const envFile =
+  process.env.NODE_ENV === "production"
+    ? ".env.production"
+    : ".env.development";
+dotenv.config({ path: envFile });
 
 const REACT_APP_DATABASE_URL = process.env.REACT_APP_DATABASE_URL;
 
@@ -32,6 +35,9 @@ if (admin.apps.length === 0) {
     databaseURL: REACT_APP_DATABASE_URL,
   });
 }
+
+console.log("Environment:", process.env.NODE_ENV);
+console.log("Database URL:", process.env.REACT_APP_DATABASE_URL);
 
 const db = admin.database();
 const app = express();
@@ -44,6 +50,7 @@ const corsOptions = {
       "http://localhost:3000", // local development
       "http://192.168.1.28:3000", //local development on network
       "https://kmaindia.org", // production domain
+      "https://members.kmaindia.org", //subdomain for members
     ];
 
     //Allow wildcard subdomains for vercel.app
