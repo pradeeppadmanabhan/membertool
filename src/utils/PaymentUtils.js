@@ -2,6 +2,8 @@
 import { ref, get, update, runTransaction } from "firebase/database";
 import { database } from "../firebase";
 import { auth } from "../AuthContext";
+import { prepareEmailData } from "./EmailUtils";
+import sendEmail from "./SendEmail";
 
 export const ANNUAL_MEMBERSHIP_FEE = 250;
 export const LIFE_MEMBERSHIP_FEE = 2000;
@@ -47,6 +49,17 @@ export const fetchPaymentHistory = async (memberID, depth = 5) => {
   }
 };
 
+const generateReceiptNumberWithRetry = async (retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await generateReceiptNumber();
+    } catch (error) {
+      console.error("Receipt generation failed, retrying...", error);
+      if (i === retries - 1) throw error;
+    }
+  }
+};
+
 /** Handles Razorpay payment and navigates upon success */
 export const handleRazorpayPayment = async (
   memberID,
@@ -70,12 +83,7 @@ export const handleRazorpayPayment = async (
     if (!user) throw new Error("User not authenticated");
 
     const API_BASE = process.env.REACT_APP_API_BASE;
-    /* const API_BASE =
-      "https://us-central1-kma-membership-tool.cloudfunctions.net"; */
-    console.log("Payment Utils API_BASE: ", API_BASE);
-
-    //const response = await fetch(`${API_BASE}/api/generateMemberID`, {
-
+    //console.log("Payment Utils API_BASE: ", API_BASE);
     const idToken = await user.getIdToken();
     const response = await fetch(`${API_BASE}/api/createRazorpayOrder`, {
       method: "POST",
@@ -100,17 +108,23 @@ export const handleRazorpayPayment = async (
 
     const order = await response.json();
 
-    // ✅ Ensure Razorpay script is loaded before creating the instance
-    if (!window.Razorpay) {
-      const script = document.createElement("script");
-      script.src = "https://checkout.razorpay.com/v1/checkout.js";
-      script.async = true;
-      document.body.appendChild(script);
+    try {
+      // ✅ Ensure Razorpay script is loaded before creating the instance
+      if (!window.Razorpay) {
+        const script = document.createElement("script");
+        script.src = "https://checkout.razorpay.com/v1/checkout.js";
+        script.async = true;
+        document.body.appendChild(script);
 
-      await new Promise((resolve) => {
-        script.onload = resolve;
-      });
-      console.log("Razorpay script loaded successfully");
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = () =>
+            reject(new Error("Failed to load Razorpay script"));
+        });
+        //console.log("Razorpay script loaded successfully");
+      }
+    } catch (error) {
+      console.error("Error loading Razorpay script:", error);
     }
 
     const paymentPromise = await new Promise((resolve, reject) => {
@@ -122,9 +136,16 @@ export const handleRazorpayPayment = async (
         description: `Payment for ${membershipType} Membership`,
         order_id: order.id,
         handler: async (response) => {
-          console.log("Razorpay payment successful:", response);
+          //console.log("Razorpay payment response:", response);
           try {
-            const receiptNumber = await generateReceiptNumber();
+            const receiptNumber = await generateReceiptNumberWithRetry();
+            //console.log("Receipt Number:", receiptNumber);
+
+            if (!response.razorpay_payment_id || !response.razorpay_order_id) {
+              console.error("Invalid Razorpay response:", response);
+              throw new Error("Invalid Razorpay response");
+            }
+
             const paymentRecord = {
               paymentMode: "Razorpay",
               paymentID: response.razorpay_payment_id,
@@ -146,6 +167,13 @@ export const handleRazorpayPayment = async (
               ...(memberData.payments || []),
               paymentRecord,
             ];
+
+            if (!updatedPayments || typeof updatedPayments !== "object") {
+              console.error("Invalid payment data:", updatedPayments);
+              throw new Error("Invalid payment data");
+            }
+            //console.log("Updated Payments:", updatedPayments);
+
             // ✅ Convert array to an object before updating Firebase
             const paymentsObject = updatedPayments.reduce(
               (acc, item, index) => {
@@ -185,12 +213,33 @@ export const handleRazorpayPayment = async (
             });
 
             //console.log("Updated Member Data", updatedMemberData);
-            resolve({
-              success: true,
-              message: "Thankyou, Payment successful!",
-            });
+
+            // ✅ Re-fetch the updated member data
+            const refreshedMemberData = await fetchMemberData(memberID);
+            //console.log("Refetched Member Data:", refreshedMemberData);
+
+            // Send payment confirmation email
+            const isRenewal = (refreshedMemberData.payments || []).length > 1;
+            const emailData = prepareEmailData(
+              refreshedMemberData,
+              receiptNumber,
+              isRenewal
+            );
+
+            const emailResponse = await sendEmail(emailData);
+            if (!emailResponse) {
+              console.error("Failed to send payment email");
+            }
             // Navigate to thank-you page -
-            navigate(`/thank-you/${receiptNumber}/${memberID}`);
+            try {
+              navigate(`/thank-you/${receiptNumber}/${memberID}`);
+              resolve({
+                success: true,
+                message: "Thankyou, Payment successful!",
+              });
+            } catch (error) {
+              console.error("Navigation error:", error);
+            }
           } catch (error) {
             console.error("Error during payment processing:", error);
             reject({
@@ -216,7 +265,7 @@ export const handleRazorpayPayment = async (
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-      //console.log("Razorpay instance opened:", result);
+      //console.log("Razorpay instance opened:", razorpay);
     });
     return paymentPromise;
   } catch (error) {
@@ -260,7 +309,7 @@ export const handleCashPayment = async (
 
     await update(paymentRef, paymentsObject);
 
-    console.log("Cash payment recorded successfully");
+    //console.log("Cash payment recorded successfully");
 
     // Navigate to thank-you page
     navigate(`/thank-you/${receiptNumber}/${memberID}`);
