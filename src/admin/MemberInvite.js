@@ -47,12 +47,8 @@ const MemberInvite = () => {
   };
 
   // 1. Construct the invitation link
-  //const invitationLink = `https://members.kmaindia.org/new-application?initialMembershipType=${membershipType}`;
-  const invitationLink = `https://membertool.vercel.app/new-application?initialMembershipType=${membershipType}`;
-  /*
-  19/11/2025 - Changed the link to point to membertool.vercel.app for short term rolling out. Subdomain to members.kmaindia.org is having issues.
-  Once verified, change it back to members.kmaindia.org
-  */
+  //Local Testing Only //const invitationLink = `http://localhost:3000/new-application?initialMembershipType=${membershipType}`;
+  const invitationLink = `https://members.kmaindia.org/new-application?initialMembershipType=${membershipType}`;
 
   const honoraryMemberInvite = `<!DOCTYPE html>
   <html>
