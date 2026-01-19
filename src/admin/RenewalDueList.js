@@ -183,8 +183,17 @@ const RenewalDueList = () => {
     }
 
     try {
+      try {
+        // Update isUpgradeAllowed flag in the database
+        const userRef = ref(database, `users/${user.id}`);
+        await update(userRef, { isUpgradeAllowed: true });
+      } catch (err) {
+        console.error("Error updating isUpgradeAllowed flag:", err);
+      }
+
       // 1. Construct the payment link [TODO: Update Payment Gateway link]
-      const profileLink = `https://members.kmaindia.org`; // Replace with your actual payment gateway URL
+      //const profileLink = `http://localhost:3000`; //TODO: For testing only
+      const profileLink = `https://members.kmaindia.org`;
 
       // 2. Prepare email content
       const subjectLine = "Invitation to Upgrade to KMA Life Membership";

@@ -18,11 +18,11 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
-//import { isEligibleForLifeMembership } from "./EligibilityUtils";
 import PhoneNumberInput from "../utils/PhoneNumberInput";
 
 const UserProfile = ({ memberID }) => {
-  const { isAdmin } = useContext(AuthContext);
+  const { isAdmin, generateMemberID } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({});
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -372,6 +372,22 @@ const UserProfile = ({ memberID }) => {
       );
       console.log("Payment Result:", paymentResult);
       setStatusMessage(paymentResult.message);
+      if (paymentResult.success) {
+        // Update isUpgradeAllowed flag in the database
+        const userRef = ref(database, `users/${formData.id}`);
+        //await update(userRef, { isUpgradeAllowed: false });
+        const lifeMemberID = await generateMemberID("Life"); // Function to generate a unique member ID
+        //console.log("Newly Generated Life Member ID:", lifeMemberID);
+        // Update DB with Life Member ID
+        await update(userRef, {
+          lifeMemberID, // Assign the new Life Member ID
+          isUpgradeAllowed: false, // Reset upgrade permission
+          currentMembershipType: "Life", // Update membership type
+        });
+
+        setStatusMessage("Upgrade to Life Membership successful!");
+        toast.success("Upgrade to Life Membership successful!");
+      }
     } catch (error) {
       console.error("Error during upgrade payment:", error);
       setStatusMessage("Error processing upgrade payment. Please try again.");
@@ -381,6 +397,50 @@ const UserProfile = ({ memberID }) => {
       console.log("isSubmitting after upgrade:", isSubmitting);
     }
   }; */
+
+  const handleUpgradeToLife = async () => {
+    setIsSubmitting(true);
+    setStatusMessage("Processing upgrade...");
+    toast.info(
+      "Processing payment... Please do not refresh, navigate away or close the window.",
+      { autoClose: false }
+    );
+    console.log("isSubmitting before Upgrade:", isSubmitting);
+    try {
+      const paymentResult = await handleRazorpayPayment(
+        formData.id,
+        LIFE_MEMBERSHIP_FEE,
+        "Life",
+        navigate,
+        setStatusMessage
+      );
+      console.log("Payment Result:", paymentResult);
+      setStatusMessage(paymentResult.message);
+      if (paymentResult.success) {
+        // Update isUpgradeAllowed flag in the database
+        const userRef = ref(database, `users/${formData.id}`);
+        //await update(userRef, { isUpgradeAllowed: false });
+        const lifeMemberID = await generateMemberID("Life"); // Function to generate a unique member ID
+        //console.log("Newly Generated Life Member ID:", lifeMemberID);
+        // Update DB with Life Member ID
+        await update(userRef, {
+          lifeMemberID, // Assign the new Life Member ID
+          isUpgradeAllowed: false, // Reset upgrade permission
+          currentMembershipType: "Life", // Update membership type
+        });
+
+        setStatusMessage("Upgrade to Life Membership successful!");
+        toast.success("Upgrade to Life Membership successful!");
+      }
+    } catch (error) {
+      console.error("Error during upgrade payment:", error);
+      setStatusMessage("Error processing upgrade payment. Please try again.");
+    } finally {
+      toast.dismiss();
+      setIsSubmitting(false);
+      console.log("isSubmitting after upgrade:", isSubmitting);
+    }
+  };
 
   const handlePaymentFieldChange = (field, value) => {
     setNewPayment((prevPayment) => ({
@@ -397,15 +457,7 @@ const UserProfile = ({ memberID }) => {
     }));
   };
 
-  /* // Calculate if user is eligible for upgrade
-  const submissionDate =
-    formData.dateOfSubmission &&
-    !isNaN(new Date(formData.dateOfSubmission).getTime())
-      ? new Date(formData.dateOfSubmission)
-      : null;
-
-  const canUpgradeToLife =
-    !isLifeMember && isEligibleForLifeMembership(submissionDate); */
+  const canUpgradeToLife = !isLifeMember && formData.isUpgradeAllowed;
 
   const handlePrintApplication = () => {
     if (formData) {
@@ -466,7 +518,9 @@ const UserProfile = ({ memberID }) => {
               <strong>Membership ID:</strong>
             </td>
             <td>
-              {formData.id}{" "}
+              {formData.currentMembershipType === "Life"
+                ? formData.lifeMemberID
+                : formData.id}
               {formData.applicationStatus === "Submitted"
                 ? "(Pending: Please fill details and make payment to complete profile)"
                 : ""}
@@ -491,14 +545,14 @@ const UserProfile = ({ memberID }) => {
                   !isNaN(new Date(formData.renewalDueOn).getTime())
                     ? new Date(formData.renewalDueOn).toLocaleDateString()
                     : "N/A"}
-                  {/* {canUpgradeToLife && (
+                  {canUpgradeToLife && (
                     <button
                       className="upgrade-button"
                       onClick={handleUpgradeToLife}
                     >
                       {`Upgrade to Life - ₹${LIFE_MEMBERSHIP_FEE}`}
                     </button>
-                  )} */}
+                  )}
                   {isRenewalDue && (
                     <button className="renew-button" onClick={handleRenewal}>
                       {`Annual Renewal - ₹${ANNUAL_MEMBERSHIP_FEE}`}
