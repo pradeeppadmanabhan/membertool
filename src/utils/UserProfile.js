@@ -18,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
-import { isEligibleForLifeMembership } from "./EligibilityUtils";
+//import { isEligibleForLifeMembership } from "./EligibilityUtils";
 import PhoneNumberInput from "../utils/PhoneNumberInput";
 
 const UserProfile = ({ memberID }) => {
@@ -317,7 +317,7 @@ const UserProfile = ({ memberID }) => {
     }
   };
 
-  const handleUpgradeToLife = async () => {
+  /* const handleUpgradeToLife = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing upgrade...");
     toast.info(
@@ -343,7 +343,7 @@ const UserProfile = ({ memberID }) => {
       setIsSubmitting(false);
       console.log("isSubmitting after upgrade:", isSubmitting);
     }
-  };
+  }; */
 
   const handlePaymentFieldChange = (field, value) => {
     setNewPayment((prevPayment) => ({
@@ -360,7 +360,7 @@ const UserProfile = ({ memberID }) => {
     }));
   };
 
-  // Calculate if user is eligible for upgrade
+  /* // Calculate if user is eligible for upgrade
   const submissionDate =
     formData.dateOfSubmission &&
     !isNaN(new Date(formData.dateOfSubmission).getTime())
@@ -368,7 +368,7 @@ const UserProfile = ({ memberID }) => {
       : null;
 
   const canUpgradeToLife =
-    !isLifeMember && isEligibleForLifeMembership(submissionDate);
+    !isLifeMember && isEligibleForLifeMembership(submissionDate); */
 
   const handlePrintApplication = () => {
     if (formData) {
@@ -457,14 +457,14 @@ const UserProfile = ({ memberID }) => {
                   !isNaN(new Date(formData.renewalDueOn).getTime())
                     ? new Date(formData.renewalDueOn).toLocaleDateString()
                     : "N/A"}
-                  {canUpgradeToLife && (
+                  {/* {canUpgradeToLife && (
                     <button
                       className="upgrade-button"
                       onClick={handleUpgradeToLife}
                     >
                       {`Upgrade to Life - ₹${LIFE_MEMBERSHIP_FEE}`}
                     </button>
-                  )}
+                  )} */}
                   {isRenewalDue && (
                     <button className="renew-button" onClick={handleRenewal}>
                       {`Annual Renewal - ₹${ANNUAL_MEMBERSHIP_FEE}`}
