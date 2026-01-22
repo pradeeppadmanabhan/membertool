@@ -280,6 +280,13 @@ const UserProfile = ({ memberID }) => {
 
   const isLifeMember = formData.currentMembershipType === "Life";
 
+  // Check if renewal is due
+  const isRenewalDue =
+    !isLifeMember &&
+    formData.renewalDueOn &&
+    !isNaN(new Date(formData.renewalDueOn).getTime()) &&
+    new Date(formData.renewalDueOn) <= new Date();
+
   const handleRenewal = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing renewal...");
@@ -458,7 +465,7 @@ const UserProfile = ({ memberID }) => {
                       {`Upgrade to Life - ₹${LIFE_MEMBERSHIP_FEE}`}
                     </button>
                   )}
-                  {formData.applicationStatus === "Due" && (
+                  {isRenewalDue && (
                     <button className="renew-button" onClick={handleRenewal}>
                       {`Annual Renewal - ₹${ANNUAL_MEMBERSHIP_FEE}`}
                     </button>
