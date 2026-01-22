@@ -898,6 +898,28 @@ const UserProfile = ({ memberID }) => {
           </tr>
         </tbody>
       </table>
+
+      {/*Show the User Signature for declaration*/}
+      {isEditing ? (
+        <>
+          <label>Upload Signature Pic</label>
+          <ImageUploader
+            onImageSelect={setSelectedImage}
+            selectedImage={selectedImage}
+          />
+        </>
+      ) : formData?.signatureURL ? (
+        <img
+          className="signature-image"
+          src={formData.signatureURL}
+          alt="Signature"
+        />
+      ) : (
+        <div className="signature-image placeholder)">
+          Edit to add your Signature Pic
+        </div>
+      )}
+
       <ToastContainer />
 
       {/* ✅ Edit & Save Buttons */}

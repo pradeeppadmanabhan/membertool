@@ -534,6 +534,29 @@ date-range-picker {
   background-color: #f9f9f9;
 }
 
+/* Signature Image - Landscape Mode */
+.signature-image {
+  display: block;
+  width: 200px; /* Landscape width */
+  height: 100px; /* Landscape height */
+  border-radius: 10px; /* Slightly rounded corners */
+  margin: 10px auto;
+  object-fit: cover; /* Ensure the image fits within the dimensions */
+  border: 3px solid #ddd; /* Add a border for consistency */
+}
+
+.signature-image.placeholder {
+  width: 200px; /* Landscape width */
+  height: 100px; /* Landscape height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed #ccc; /* Dashed border to indicate image box */
+  color: #888;
+  font-size: 14px;
+  background-color: #f9f9f9;
+}
+
 /* Profile Table */
 .profile-table {
   width: 100%;
