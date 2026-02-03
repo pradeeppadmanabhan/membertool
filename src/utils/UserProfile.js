@@ -28,6 +28,7 @@ const UserProfile = ({ memberID }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
+  const [selectedSignature, setSelectedSignature] = useState(null);
   const [errors, setErrors] = useState({}); // State to hold validation errors
   const navigate = useNavigate();
   const [newPayment, setNewPayment] = useState({
@@ -260,18 +261,54 @@ const UserProfile = ({ memberID }) => {
     try {
       const userRef = ref(database, `users/${formData.id}`);
       let updatedImageUrl = formData.imageURL;
+      let updatedSignatureUrl = formData.signatureURL;
 
       if (selectedImage) {
         const imagePath = `images/${formData.id}/${selectedImage.name}`;
         const storageReference = storageRef(storage, imagePath);
-        const snapshot = await uploadBytes(storageReference, selectedImage);
+        const metadata = { contentType: selectedImage.type };
+        //console.log("Uploading image with metadata:", metadata);
+        const snapshot = await uploadBytes(
+          storageReference,
+          selectedImage,
+          metadata
+        );
         updatedImageUrl = await getDownloadURL(snapshot.ref);
+        //console.log("Updated Profile Image URL:", updatedImageUrl);
+
+        await update(userRef, { ...formData, imageURL: updatedImageUrl });
+        //console.log("Firebase user record updated with new imageURL.", formData.imageURL);
+        setFormData((prevData) => ({ ...prevData, imageURL: updatedImageUrl }));
+      }
+      if (selectedSignature) {
+        const signaturePath = `signatures/${formData.id}/${selectedSignature.name}`;
+        const storageReference = storageRef(storage, signaturePath);
+        const metadata = { contentType: selectedSignature.type };
+        //console.log("Uploading signature with metadata:", metadata);
+        const snapshot = await uploadBytes(
+          storageReference,
+          selectedSignature,
+          metadata
+        );
+        updatedSignatureUrl = await getDownloadURL(snapshot.ref);
+        //console.log("Updated Signature Image URL:", updatedSignatureUrl);
+        await update(userRef, {
+          ...formData,
+          signatureURL: updatedSignatureUrl,
+        });
+        /* console.log(
+          "Firebase user record updated with new signatureURL.",
+          formData.signatureURL
+        ); */
+        setFormData((prevData) => ({
+          ...prevData,
+          signatureURL: updatedSignatureUrl,
+        }));
       }
 
-      await update(userRef, { ...formData, imageURL: updatedImageUrl });
-      setFormData((prevData) => ({ ...prevData, imageURL: updatedImageUrl }));
       setIsEditing(false);
       setStatusMessage("Profile updated successfully!");
+      console.log("Profile updated successfully!", formData);
     } catch (error) {
       console.error("Error updating profile:", error);
       setStatusMessage("Error updating profile. Please try again.", error);
@@ -383,10 +420,7 @@ const UserProfile = ({ memberID }) => {
       {isEditing ? (
         <>
           <label>Upload Profile Pic</label>
-          <ImageUploader
-            onImageSelect={setSelectedImage}
-            selectedImage={selectedImage}
-          />
+          <ImageUploader onImageSelect={setSelectedImage} />
         </>
       ) : formData?.imageURL ? (
         <img className="profile-image" src={formData.imageURL} alt="Profile" />
@@ -900,13 +934,11 @@ const UserProfile = ({ memberID }) => {
       </table>
 
       {/*Show the User Signature for declaration*/}
+
       {isEditing ? (
         <>
           <label>Upload Signature Pic</label>
-          <ImageUploader
-            onImageSelect={setSelectedImage}
-            selectedImage={selectedImage}
-          />
+          <ImageUploader onImageSelect={setSelectedSignature} />
         </>
       ) : formData?.signatureURL ? (
         <img
@@ -974,27 +1006,6 @@ const UserProfile = ({ memberID }) => {
                 <td>{payment.membershipType}</td>
                 <td>{payment.paymentMode}</td>
                 <td>{payment.receiptNumber}</td>
-                {/*{isAdmin && (
-                  <td>
-                    <button
-                      className="edit-button"
-                      onClick={() => {
-                        console.log("Edit payment:", payment);
-                      }}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="delete-button"
-                      onClick={() => {
-                        console.log("Delete payment:", payment);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </td>
-                )}{" "}
-                 Admin-only actions */}
               </tr>
             ))}
           </tbody>

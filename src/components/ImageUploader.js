@@ -1,34 +1,37 @@
 import React, { useState, useRef, useEffect } from "react";
 import "../global.css";
 
-const ImageUploader = ({ onImageSelect, selectedImage }) => {
+const ImageUploader = ({ onImageSelect }) => {
   const [fileName, setFileName] = useState(""); // Store the file name for display
+  const [previewURL, setPreviewURL] = useState(null); // Store the preview URL
   const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    if (selectedImage) {
-      setFileName(selectedImage.name);
-    } else {
-      setFileName("");
-    }
-  }, [selectedImage]);
 
   const handleImageChange = (e) => {
     if (e.target.files[0]) {
-      onImageSelect(e.target.files[0]);
-      setFileName(e.target.files[0].name); // Store the selected file name
+      const file = e.target.files[0];
+      setFileName(file.name);
+      const url = URL.createObjectURL(file);
+      setPreviewURL(url);
+
+      if (onImageSelect) {
+        onImageSelect(file);
+      } else {
+        console.warn("onImageSelect prop is not provided.");
+      }
+    } else {
+      setFileName("");
+      setPreviewURL(null);
     }
   };
 
-  /* const resetUploader = () => {
-    // New function to reset the uploader
-    setFileName(""); // Clear the filename
-    if (fileInputRef.current) {
-      // Check if ref is attached
-      fileInputRef.current.value = ""; // Clear the file input value
-    }
-    onImageSelect(null); // Reset selected image in parent
-  }; */
+  useEffect(() => {
+    // Clean up the object URL when the component unmounts or the image changes
+    return () => {
+      if (previewURL) {
+        URL.revokeObjectURL(previewURL);
+      }
+    };
+  }, [previewURL]);
 
   return (
     <div className="image-uploader">
@@ -50,15 +53,17 @@ const ImageUploader = ({ onImageSelect, selectedImage }) => {
         >
           Choose File
         </button>
-        {/* Display selected file name */}
-        {/* Placeholder for file-name */}
         <span className="file-name">
           {fileName ? fileName : "No file selected"}
         </span>
-        {/* <button type="button" onClick={resetUploader} className="reset-btn">
-          Clear Image
-        </button> */}
       </div>
+
+      {/* Image Preview */}
+      {previewURL && (
+        <div className="image-preview">
+          <img src={previewURL} alt="Preview" className="preview-image" />
+        </div>
+      )}
     </div>
   );
 };

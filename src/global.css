@@ -557,6 +557,20 @@ date-range-picker {
   background-color: #f9f9f9;
 }
 
+/* Image Preview */
+.image-preview {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 200px;
+  border: 2px solid #ddd;
+  border-radius: 10px;
+  object-fit: contain; /* Ensure the image fits within the dimensions */
+}
+
 /* Profile Table */
 .profile-table {
   width: 100%;
