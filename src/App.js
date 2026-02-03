@@ -117,6 +117,14 @@ function App() {
             to +91-988-058-8172. 🚧
           </p>
         </div>
+        <br />
+        <br />
+        <div className="ribbon-banner">
+          <p>
+            🚧 Please note we have a scheduled shutdown on Thursday, Feb 5, 2026
+            between 5 & 8 PM IST. 🚧
+          </p>
+        </div>
         {/* Authentication Controls */}
         <div className="welcome-container">
           {user ? (
