@@ -119,12 +119,12 @@ function App() {
         </div>
         <br />
         <br />
-        <div className="ribbon-banner">
+        {/* <div className="ribbon-banner">
           <p>
             🚧 Please note we have a scheduled shutdown on Thursday, Feb 5, 2026
             between 5 & 8 PM IST. 🚧
           </p>
-        </div>
+        </div> */}
         {/* Authentication Controls */}
         <div className="welcome-container">
           {user ? (
