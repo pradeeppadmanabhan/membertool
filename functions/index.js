@@ -186,5 +186,21 @@ app.post("/generateMemberID", authenticateUser, async (req, res) => {
   }
 });
 
+// ✅ Route: Log to Cloud (Protected)
+app.post("/logToCloud", async (req, res) => {
+  try {
+    const { logData } = req.body;
+    if (!logData) {
+      return res.status(400).json({ error: "logData is required" });
+    }
+    console.log("Received log data:", logData);
+
+    res.status(200).json({ message: "Log received successfully", logData });
+  } catch (error) {
+    console.error("Error logging to cloud:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 // ✅ Export Unified Express App as Firebase Function
 exports.api = functions.https.onRequest(app);
