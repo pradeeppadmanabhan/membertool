@@ -23,6 +23,7 @@ import {
 import { app } from "./firebase";
 import { useNavigate } from "react-router-dom";
 import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
+import { logToCloud } from "./utils/CloudLogUtils";
 
 const auth = getAuth(app);
 export { auth };
@@ -95,6 +96,12 @@ export const AuthProvider = ({ children }) => {
       const result = await signInWithPopup(auth, googleProvider);
       const signedInUser = result.user;
       //console.log("Signed in user:", signedInUser);
+      logToCloud(
+        "User signed in with Google: " +
+          signedInUser.displayName +
+          ", email: " +
+          signedInUser.email
+      );
 
       //Restore the membershipType after login
       if (initialMembershipType) {
@@ -226,6 +233,9 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       console.log("Logging out user:", user?.email);
+      logToCloud(
+        "User logged out: " + user?.displayName + ", email: " + user?.email
+      );
       await signOut(auth);
       setUser(null);
       setIsAdmin(false);

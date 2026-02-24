@@ -4,6 +4,7 @@ import { database } from "../firebase";
 import { auth } from "../AuthContext";
 import { prepareEmailData } from "./EmailUtils";
 import sendEmail from "./SendEmail";
+import { logToCloud } from "./CloudLogUtils";
 
 export const ANNUAL_MEMBERSHIP_FEE = 250;
 export const LIFE_MEMBERSHIP_FEE = 2000;
@@ -27,10 +28,14 @@ export const generateReceiptNumber = async () => {
     const result = await runTransaction(receiptCounterRef, (currentCount) =>
       currentCount === null ? 1 : currentCount + 1
     );
+    logToCloud(
+      "Generated Receipt Number: " + result.snapshot.val() + result.committed
+    );
     return result.committed
       ? "D" + String(result.snapshot.val()).padStart(5, "0")
       : null;
   } catch (error) {
+    logToCloud("Error generating receipt number: " + error.message);
     console.error("Transaction failed:", error);
     throw error;
   }
@@ -54,6 +59,12 @@ const generateReceiptNumberWithRetry = async (retries = 3) => {
     try {
       return await generateReceiptNumber();
     } catch (error) {
+      logToCloud(
+        "Receipt generation failed, retrying... Attempt:",
+        i + 1,
+        "Error:",
+        error
+      );
       console.error("Receipt generation failed, retrying...", error);
       if (i === retries - 1) throw error;
     }
@@ -78,6 +89,15 @@ export const handleRazorpayPayment = async (
       membershipType
     ); */
 
+    logToCloud(
+      "Initiating Razorpay payment: MemberID:",
+      memberID,
+      "amount:",
+      amount,
+      "Membership Type:",
+      membershipType
+    );
+
     let mobileNumber;
     const user = auth.currentUser;
     if (!user) throw new Error("User not authenticated");
@@ -100,7 +120,9 @@ export const handleRazorpayPayment = async (
       console.error(
         `Failed to create Razorpay order. Status: ${response.status}`
       );
-      onError(`Failed to create Razorpay order. Status: ${response.status}`);
+      logToCloud("Failed to create Razorpay order. Status: " + response.status);
+      if (onError)
+        onError(`Failed to create Razorpay order. Status: ${response.status}`);
       throw new Error(
         `Failed to create Razorpay order. Status: ${response.status} `
       );
@@ -125,6 +147,7 @@ export const handleRazorpayPayment = async (
       }
     } catch (error) {
       console.error("Error loading Razorpay script:", error);
+      logToCloud("Error loading Razorpay script: " + error.message);
     }
 
     const paymentPromise = await new Promise((resolve, reject) => {
@@ -137,12 +160,17 @@ export const handleRazorpayPayment = async (
         order_id: order.id,
         handler: async (response) => {
           //console.log("Razorpay payment response:", response);
+          logToCloud("Razorpay payment response: " + JSON.stringify(response));
           try {
             const receiptNumber = await generateReceiptNumberWithRetry();
             //console.log("Receipt Number:", receiptNumber);
+            logToCloud("Receipt Number: " + receiptNumber);
 
             if (!response.razorpay_payment_id || !response.razorpay_order_id) {
               console.error("Invalid Razorpay response:", response);
+              logToCloud(
+                "Invalid Razorpay response: " + JSON.stringify(response)
+              );
               throw new Error("Invalid Razorpay response");
             }
 
@@ -157,6 +185,10 @@ export const handleRazorpayPayment = async (
               applicationStatus: "Paid",
             };
 
+            logToCloud(
+              "Payment Record to be saved: " + JSON.stringify(paymentRecord)
+            );
+
             const paymentRef = ref(database, `users/${memberID}/payments/`);
             const memberRef = ref(database, `users/${memberID}`);
             const memberData = await fetchMemberData(memberID);
@@ -170,6 +202,9 @@ export const handleRazorpayPayment = async (
 
             if (!updatedPayments || typeof updatedPayments !== "object") {
               console.error("Invalid payment data:", updatedPayments);
+              logToCloud(
+                "Invalid payment data: " + JSON.stringify(updatedPayments)
+              );
               throw new Error("Invalid payment data");
             }
             //console.log("Updated Payments:", updatedPayments);
@@ -226,9 +261,13 @@ export const handleRazorpayPayment = async (
               isRenewal
             );
 
+            logToCloud("Prepared email data: " + JSON.stringify(emailData));
             const emailResponse = await sendEmail(emailData);
             if (!emailResponse) {
               console.error("Failed to send payment email");
+              logToCloud(
+                "Failed to send payment email for MemberID: " + memberID
+              );
             }
             // Navigate to thank-you page -
             try {
@@ -242,6 +281,10 @@ export const handleRazorpayPayment = async (
             }
           } catch (error) {
             console.error("Error during payment processing:", error);
+            logToCloud(
+              "Error during payment processing: " + JSON.stringify(error)
+            );
+
             reject({
               success: false,
               message: "Error during payment processing!, Please try again.",
