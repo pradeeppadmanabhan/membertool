@@ -19,6 +19,7 @@ import ImageUploader from "./components/ImageUploader";
 import AuthContext from "./AuthContext";
 import { getUidRef, getEmailRef } from "./utils/firebaseUtils";
 import { validatePhoneNumber } from "./utils/PhoneNumberInput";
+import { logToCloud } from "./utils/CloudLogUtils";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
 
@@ -375,12 +376,26 @@ const MembershipApplicationForm = () => {
         "membership type:",
         formData.currentMembershipType
       );
+      logToCloud(
+        "Generating Member ID... for user: " +
+          user.uid +
+          " email: " +
+          user.email +
+          " membership type: " +
+          formData.currentMembershipType
+      );
       if (initialMembershipType !== formData.currentMembershipType) {
         console.error(
           "Membership type changed from initial value:",
           initialMembershipType,
           "to",
           formData.currentMembershipType
+        );
+        logToCloud(
+          "Membership type changed from initial value: " +
+            initialMembershipType +
+            " to " +
+            formData.currentMembershipType
         );
       }
       const newMemberId = await generateMemberID(
@@ -414,6 +429,7 @@ const MembershipApplicationForm = () => {
         }
       } else {
         console.error("Member ID is not generated yet.");
+        logToCloud("Member ID is not generated yet.");
         setStatusMessage("Member ID is not generated yet.");
         setIsSubmitting(false); // Reset submitting state if ID generation fails
         return;
@@ -456,8 +472,17 @@ const MembershipApplicationForm = () => {
           userData.payments.push(paymentRecord);
           userData.applicationStatus = "Paid";
           targetPage = `/thank-you/honorary/${newMemberId}`;
+          logToCloud(
+            "Honorary membership application submitted for Member ID: " +
+              newMemberId
+          );
         } else {
           targetPage = `/payment-details?memberID=${newMemberId}&membershipType=${formData.currentMembershipType}`;
+          logToCloud(
+            formData.currentMembershipType +
+              " membership application submitted for Member ID: " +
+              newMemberId
+          );
         }
 
         //console.log("Submitting to id:", newMemberId);
@@ -528,6 +553,7 @@ const MembershipApplicationForm = () => {
     } catch (error) {
       // ... (Error handling for generateMemberId)
       console.error("Error generating member ID:", error);
+      logToCloud("Error generating member ID: " + error);
     } finally {
       setIsSubmitting(false); // Reset submitting state after all operations
     }

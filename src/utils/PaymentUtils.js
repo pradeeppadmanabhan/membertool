@@ -29,7 +29,10 @@ export const generateReceiptNumber = async () => {
       currentCount === null ? 1 : currentCount + 1
     );
     logToCloud(
-      "Generated Receipt Number: " + result.snapshot.val() + result.committed
+      "Generated Receipt Number: " +
+        result.snapshot.val() +
+        " Committed: " +
+        result.committed
     );
     return result.committed
       ? "D" + String(result.snapshot.val()).padStart(5, "0")
@@ -90,12 +93,12 @@ export const handleRazorpayPayment = async (
     ); */
 
     logToCloud(
-      "Initiating Razorpay payment: MemberID:",
-      memberID,
-      "amount:",
-      amount,
-      "Membership Type:",
-      membershipType
+      "Initiating Razorpay payment: MemberID: " +
+        memberID +
+        "amount:" +
+        amount +
+        "Membership Type:" +
+        membershipType
     );
 
     let mobileNumber;
@@ -261,7 +264,14 @@ export const handleRazorpayPayment = async (
               isRenewal
             );
 
-            logToCloud("Prepared email data: " + JSON.stringify(emailData));
+            logToCloud(
+              "Prepared email data: " +
+                JSON.stringify(
+                  emailData.to_email,
+                  emailData.subject,
+                  isRenewal ? "Renewal" : "New Membership"
+                )
+            );
             const emailResponse = await sendEmail(emailData);
             if (!emailResponse) {
               console.error("Failed to send payment email");

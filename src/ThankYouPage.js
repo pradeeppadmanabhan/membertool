@@ -3,16 +3,18 @@ import "./global.css";
 import { useParams, useNavigate } from "react-router-dom";
 import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";
+import { logToCloud } from "./utils/CloudLogUtils";
 
 const ThankYouPage = () => {
   const { receiptNumber, memberID } = useParams();
-  const [emailStatus, setEmailStatus] = useState("");
+  //const [emailStatus, setEmailStatus] = useState("");
   const [isRenewal, setIsRenewal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMemberData = async () => {
       try {
+        logToCloud("ThankYouPage: Fetching member data for ID: " + memberID);
         const database = getDatabase();
         const memberRef = ref(database, `users/${memberID}`);
         const snapshot = await get(memberRef);
@@ -23,10 +25,14 @@ const ThankYouPage = () => {
           setIsRenewal(renewalStatus);
         } else {
           console.error("Member data not found for ID:", memberID);
+          logToCloud("Member data not found for ID: " + memberID);
         }
       } catch (error) {
-        console.error("Error fetching member data or sending email:", error);
-        setEmailStatus("Error sending email, please try again later", error);
+        console.error("Error fetching member data:", error);
+        logToCloud(
+          "Error fetching member data for ID: " + memberID + " Error: " + error
+        );
+        //setEmailStatus("Error sending email, please try again later", error);
       } finally {
       }
     };
@@ -55,9 +61,9 @@ const ThankYouPage = () => {
             ? "We appreciate your continued support as a valued member."
             : "We will review your submission and get back to you shortly via email. Welcome to the Karnataka Mountaineering Association!"}
         </p>
-        <p>
+        {/* <p>
           <strong>{emailStatus}</strong>
-        </p>
+        </p> */}
 
         {/* ✅ Button to navigate back to Profile Page */}
         <button
