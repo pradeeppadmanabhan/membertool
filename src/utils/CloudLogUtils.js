@@ -7,7 +7,7 @@ export const logToCloud = async (logData) => {
     const idToken = await user.getIdToken();
 
     const API_BASE = process.env.REACT_APP_API_BASE;
-    console.log("logData: ", logData);
+    //console.log("logData: ", logData);
 
     const response = await fetch(`${API_BASE}/api/logToCloud`, {
       method: "POST",

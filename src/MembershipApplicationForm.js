@@ -89,21 +89,21 @@ const MembershipApplicationForm = () => {
       console.error("User is Unauthenticated, redirecting to Login Page");
       navigate("/login");
     } else if (user && formData.id != null) {
-      console.log(
+      /* console.log(
         "User is authenticated, checking form submission status..., user ID:",
         user.uid,
         "formData ID:",
         formData.id
-      );
+      ); */
       // Check if form is incomplete
       const savedFormData = localStorage.getItem("formData");
       const parsedFormData = savedFormData ? JSON.parse(savedFormData) : null;
 
       if (parsedFormData && !parsedFormData.dateOfSubmission) {
-        console.log("Form is incomplete, staying on the form page.");
+        //console.log("Form is incomplete, staying on the form page.");
         setFormData(parsedFormData); // Load saved form data
       } else {
-        console.log("Form is submitted, redirecting to profile page.");
+        //console.log("Form is submitted, redirecting to profile page.");
         navigate(`/profile/${formData.id}`);
       }
     }
@@ -131,11 +131,11 @@ const MembershipApplicationForm = () => {
   // This effect listens for back navigation and logs out the user
   useEffect(() => {
     const handlePopState = () => {
-      console.log("Back navigation detected.");
+      //console.log("Back navigation detected.");
       const confirmationMessage =
         "Navigating back might cause all unsaved data to be lost and you will be logged out. Are you sure you want to proceed?";
       if (window.confirm(confirmationMessage)) {
-        console.log("User confirmed back navigation. Logging out...");
+        //console.log("User confirmed back navigation. Logging out...");
         logout(); // Ensure `logout` is defined in AuthContext
         navigate("/login");
       } else {
@@ -368,18 +368,16 @@ const MembershipApplicationForm = () => {
     }
 
     try {
-      console.log(
+      /* console.log(
         "Generating Member ID... for user:",
         user.uid,
         "email:",
         user.email,
         "membership type:",
         formData.currentMembershipType
-      );
+      ); */
       logToCloud(
         "Generating Member ID... for user: " +
-          user.uid +
-          " email: " +
           user.email +
           " membership type: " +
           formData.currentMembershipType
@@ -401,7 +399,7 @@ const MembershipApplicationForm = () => {
       const newMemberId = await generateMemberID(
         formData.currentMembershipType
       ); // Function to generate a unique member ID
-      console.log("Newly Generated Member ID:", newMemberId);
+      //console.log("Newly Generated Member ID:", newMemberId);
       let uploadedImageUrl = null;
       let uploadedSignatureUrl = null;
 
@@ -491,7 +489,7 @@ const MembershipApplicationForm = () => {
         const userRef = ref(database, `users/${newMemberId}`);
         await set(userRef, userData);
 
-        console.log("Data submitted successfully!");
+        //console.log("Data submitted successfully!");
         setStatusMessage(
           "Application submitted successfully!, moving to payment page in about 2 seconds.."
         );
@@ -523,7 +521,10 @@ const MembershipApplicationForm = () => {
           return; // Abort transaction if mapping already exists
         });
 
-        console.log("Mappings updated successfully!");
+        //console.log("Mappings updated successfully!");
+        logToCloud(
+          "Mappings updated successfully for Member ID: " + newMemberId
+        );
 
         // Delay clearing the form
         setTimeout(() => {

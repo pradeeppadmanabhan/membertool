@@ -95,9 +95,9 @@ export const handleRazorpayPayment = async (
     logToCloud(
       "Initiating Razorpay payment: MemberID: " +
         memberID +
-        "amount:" +
+        " amount:" +
         amount +
-        "Membership Type:" +
+        " Membership Type:" +
         membershipType
     );
 
