@@ -19,6 +19,7 @@ import { toast, ToastContainer } from "react-toastify";
 import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
 import PhoneNumberInput from "../utils/PhoneNumberInput";
+import { logToCloud } from "./CloudLogUtils";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin, generateMemberID } = useContext(AuthContext);
@@ -43,7 +44,7 @@ const UserProfile = ({ memberID }) => {
 
   useEffect(() => {
     const loadData = async () => {
-      console.log("memberID:", memberID);
+      //console.log("memberID:", memberID);
       if (memberID) {
         const freshData = await fetchMemberData(memberID);
         setFormData(freshData);
@@ -57,8 +58,8 @@ const UserProfile = ({ memberID }) => {
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      console.log("handleBeforeUnload triggered");
-      console.log("isSubmitting:", isSubmitting);
+      //console.log("handleBeforeUnload triggered");
+      //console.log("isSubmitting:", isSubmitting);
       if (isSubmitting) {
         e.preventDefault();
         e.returnValue = "";
@@ -308,7 +309,7 @@ const UserProfile = ({ memberID }) => {
 
       setIsEditing(false);
       setStatusMessage("Profile updated successfully!");
-      console.log("Profile updated successfully!", formData);
+      //console.log("Profile updated successfully!", formData);
     } catch (error) {
       console.error("Error updating profile:", error);
       setStatusMessage("Error updating profile. Please try again.", error);
@@ -331,7 +332,7 @@ const UserProfile = ({ memberID }) => {
       "Processing payment... Please do not refresh, navigate away or close the window.",
       { autoClose: false }
     );
-    console.log("isSubmitting before Renewal:", isSubmitting);
+    //console.log("isSubmitting before Renewal:", isSubmitting);
 
     try {
       const paymentResult = await handleRazorpayPayment(
@@ -341,7 +342,7 @@ const UserProfile = ({ memberID }) => {
         navigate,
         setStatusMessage
       );
-      console.log("Payment Result:", paymentResult);
+      //console.log("Payment Result:", paymentResult);
 
       setStatusMessage(paymentResult.message);
     } catch (error) {
@@ -350,7 +351,7 @@ const UserProfile = ({ memberID }) => {
     } finally {
       setIsSubmitting(false);
       toast.dismiss();
-      console.log("isSubmitting after Renewal:", isSubmitting);
+      //console.log("isSubmitting after Renewal:", isSubmitting);
     }
   };
 
@@ -405,7 +406,11 @@ const UserProfile = ({ memberID }) => {
       "Processing payment... Please do not refresh, navigate away or close the window.",
       { autoClose: false }
     );
-    console.log("isSubmitting before Upgrade:", isSubmitting);
+    logToCloud("Upgrade to Life Membership initiated", {
+      memberID: formData.id,
+      email: formData.email,
+    });
+    //console.log("isSubmitting before Upgrade:", isSubmitting);
     try {
       const paymentResult = await handleRazorpayPayment(
         formData.id,
@@ -414,7 +419,7 @@ const UserProfile = ({ memberID }) => {
         navigate,
         setStatusMessage
       );
-      console.log("Payment Result:", paymentResult);
+      //console.log("Payment Result:", paymentResult);
       setStatusMessage(paymentResult.message);
       if (paymentResult.success) {
         // Update isUpgradeAllowed flag in the database
@@ -438,7 +443,7 @@ const UserProfile = ({ memberID }) => {
     } finally {
       toast.dismiss();
       setIsSubmitting(false);
-      console.log("isSubmitting after upgrade:", isSubmitting);
+      //console.log("isSubmitting after upgrade:", isSubmitting);
     }
   };
 

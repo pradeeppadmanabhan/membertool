@@ -4,11 +4,17 @@ import { useParams, useNavigate } from "react-router-dom";
 import logo from "./KMALogo.png";
 import { getDatabase, ref, get } from "firebase/database";
 import { logToCloud } from "./utils/CloudLogUtils";
+import {
+  LIFE_MEMBERSHIP_FEE,
+  ANNUAL_MEMBERSHIP_FEE,
+} from "./utils/PaymentUtils";
 
 const ThankYouPage = () => {
   const { receiptNumber, memberID } = useParams();
   //const [emailStatus, setEmailStatus] = useState("");
   const [isRenewal, setIsRenewal] = useState(false);
+  const [isUpgrade, setIsUpgrade] = useState(false);
+  const [lifeMemberID, setLifeMemberID] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,8 +27,31 @@ const ThankYouPage = () => {
         if (snapshot.exists()) {
           const data = snapshot.val();
 
-          const renewalStatus = (data.payments || []).length > 1;
-          setIsRenewal(renewalStatus);
+          const lastPayment = (data.payments || []).slice(-1)[0];
+          const paymentAmount = lastPayment ? lastPayment.amount : 0;
+          //console.log("Payment Amount:", paymentAmount);
+          logToCloud(
+            "Last payment amount for ID " + memberID + ": " + paymentAmount
+          );
+          //console.log("Data: ", data);
+
+          if (paymentAmount === LIFE_MEMBERSHIP_FEE) {
+            setIsUpgrade(true);
+            setLifeMemberID(data.lifeMemberID);
+            //console.log("Life Member ID:", data.lifeMemberID);
+            logToCloud(
+              "Membership upgrade detected for ID: " +
+                memberID +
+                " Life Member ID: " +
+                data.lifeMemberID
+            );
+          } else if (paymentAmount === ANNUAL_MEMBERSHIP_FEE) {
+            setIsRenewal(true);
+            logToCloud("Renewal detected for ID: " + memberID);
+          } else {
+            console.error("Unknown payment amount:", paymentAmount);
+            logToCloud("Unknown payment amount: " + paymentAmount);
+          }
         } else {
           console.error("Member data not found for ID:", memberID);
           logToCloud("Member data not found for ID: " + memberID);
@@ -47,11 +76,17 @@ const ThankYouPage = () => {
         <p>
           {isRenewal
             ? "Your payment has been successfully recorded. Your membership ID remains active."
-            : "Your application and payment have been successfully recorded. Your Provisional Member ID is provided below."}
+            : isUpgrade
+              ? "Your payment has been successfully recorded. Your membership is upgraded to Life Membership."
+              : "Your application and payment have been successfully recorded. Your Provisional Member ID is provided below."}
         </p>
         <p>
           <strong>Membership ID:</strong>{" "}
-          {isRenewal ? memberID : `${memberID} (Provisional)`}
+          {isRenewal
+            ? memberID
+            : isUpgrade
+              ? lifeMemberID
+              : `${memberID} (Provisional)`}
         </p>
         <p>
           <strong>Receipt Number:</strong> {receiptNumber}
