@@ -2,8 +2,6 @@
 import { ref, get, update, runTransaction } from "firebase/database";
 import { database } from "../firebase";
 import { auth } from "../AuthContext";
-import { prepareEmailData } from "./EmailUtils";
-import sendEmail from "./SendEmail";
 import { logToCloud } from "./CloudLogUtils";
 
 export const ANNUAL_MEMBERSHIP_FEE = 250;
@@ -14,9 +12,16 @@ export const fetchMemberData = async (memberID) => {
   try {
     const memberRef = ref(database, `users/${memberID}`);
     const snapshot = await get(memberRef);
+    //console.log("Fetched member data for ID:", memberID, snapshot.val());
     return snapshot.exists() ? snapshot.val() : null;
   } catch (error) {
     console.error("Error fetching member data:", error);
+    logToCloud(
+      "Error fetching member data for ID: " +
+        memberID +
+        " Error: " +
+        error.message
+    );
     throw error;
   }
 };
@@ -79,7 +84,6 @@ export const handleRazorpayPayment = async (
   memberID,
   amount,
   membershipType,
-  navigate,
   onError
 ) => {
   try {
@@ -192,103 +196,12 @@ export const handleRazorpayPayment = async (
               "Payment Record to be saved: " + JSON.stringify(paymentRecord)
             );
 
-            const paymentRef = ref(database, `users/${memberID}/payments/`);
-            const memberRef = ref(database, `users/${memberID}`);
-            const memberData = await fetchMemberData(memberID);
-            //console.log("Memberdata:", memberData);
-            //console.log("PaymentRecord:", paymentRecord);
-            mobileNumber = memberData.mobile;
-            const updatedPayments = [
-              ...(memberData.payments || []),
+            resolve({
+              success: true,
               paymentRecord,
-            ];
-
-            if (!updatedPayments || typeof updatedPayments !== "object") {
-              console.error("Invalid payment data:", updatedPayments);
-              logToCloud(
-                "Invalid payment data: " + JSON.stringify(updatedPayments)
-              );
-              throw new Error("Invalid payment data");
-            }
-            //console.log("Updated Payments:", updatedPayments);
-
-            // ✅ Convert array to an object before updating Firebase
-            const paymentsObject = updatedPayments.reduce(
-              (acc, item, index) => {
-                acc[index] = item;
-                return acc;
-              },
-              {}
-            );
-            //console.log("PaymentsObject:", paymentsObject);
-            // ✅ Update
-            await update(paymentRef, paymentsObject);
-
-            //console.log("Payment saved successfully", paymentsObject);
-
-            // ✅ Extend renewal or upgrade membership
-            const updatedMemberData = { ...memberData };
-
-            if (membershipType === "Life") {
-              updatedMemberData.renewalDueOn = null;
-              updatedMemberData.currentMembershipType = "Life";
-            } else if (membershipType === "Annual") {
-              const now = new Date();
-              const nextYear = memberData.renewalDueOn
-                ? new Date(memberData.renewalDueOn)
-                : now;
-              nextYear.setFullYear(nextYear.getFullYear() + 1);
-              updatedMemberData.renewalDueOn = nextYear.toISOString();
-              updatedMemberData.currentMembershipType = "Annual";
-            }
-
-            updatedMemberData.applicationStatus = "Paid";
-
-            await update(memberRef, {
-              renewalDueOn: updatedMemberData.renewalDueOn,
-              currentMembershipType: updatedMemberData.currentMembershipType,
-              applicationStatus: updatedMemberData.applicationStatus,
-            });
-
-            //console.log("Updated Member Data", updatedMemberData);
-
-            // ✅ Re-fetch the updated member data
-            const refreshedMemberData = await fetchMemberData(memberID);
-            //console.log("Refetched Member Data:", refreshedMemberData);
-
-            // Send payment confirmation email
-            const isRenewal = (refreshedMemberData.payments || []).length > 1;
-            const emailData = prepareEmailData(
-              refreshedMemberData,
               receiptNumber,
-              isRenewal
-            );
-
-            logToCloud(
-              "Prepared email data: " +
-                JSON.stringify(
-                  emailData.to_email,
-                  emailData.subject,
-                  isRenewal ? "Renewal" : "New Membership"
-                )
-            );
-            const emailResponse = await sendEmail(emailData);
-            if (!emailResponse) {
-              console.error("Failed to send payment email");
-              logToCloud(
-                "Failed to send payment email for MemberID: " + memberID
-              );
-            }
-            // Navigate to thank-you page -
-            try {
-              navigate(`/thank-you/${receiptNumber}/${memberID}`);
-              resolve({
-                success: true,
-                message: "Thankyou, Payment successful!",
-              });
-            } catch (error) {
-              console.error("Navigation error:", error);
-            }
+              message: "Payment successful!",
+            });
           } catch (error) {
             console.error("Error during payment processing:", error);
             logToCloud(
@@ -308,6 +221,10 @@ export const handleRazorpayPayment = async (
           ondismiss: () => {
             console.error("Payment Unsuccessful!, Please try again.");
             // if (onError) onError("Payment Unsuccessful!, Please try again.");
+            logToCloud(
+              "Razorpay Payment Unsuccessful!, Please try again. " +
+                JSON.stringify({ memberID, membershipType })
+            );
             reject({
               success: false,
               message: "Payment Unsuccessful!, Please try again.",
@@ -318,11 +235,11 @@ export const handleRazorpayPayment = async (
 
       const razorpay = new window.Razorpay(options);
       razorpay.open();
-      //console.log("Razorpay instance opened:", razorpay);
     });
     return paymentPromise;
   } catch (error) {
     console.error("Error during payment:", error);
+    logToCloud("Error during payment: " + JSON.stringify(error));
     if (onError) onError(error.message);
     // Return failure response
     return {
@@ -368,5 +285,45 @@ export const handleCashPayment = async (
     navigate(`/thank-you/${receiptNumber}/${memberID}`);
   } catch (error) {
     console.error("Error saving cash payment:", error);
+  }
+};
+
+export const updatePaymentRecord = async (memberID, paymentRecord) => {
+  try {
+    /* console.log(
+      "Updating payment record for memberID:",
+      memberID + " with record: ",
+      paymentRecord
+    ); */
+    const memberRef = ref(database, `users/${memberID}`);
+    const snapshot = await get(memberRef);
+
+    if (!snapshot.exists()) {
+      logToCloud("Member data not found for ID: " + memberID);
+      throw new Error(`Member data not found for ID: ${memberID}`);
+    }
+
+    const memberData = snapshot.val();
+    const updatedPayments = [...(memberData.payments || []), paymentRecord];
+
+    // Convert array to object for Firebase
+    const paymentsObject = updatedPayments.reduce((acc, item, index) => {
+      acc[index] = item;
+      return acc;
+    }, {});
+    //console.log("Payments Object:", paymentsObject);
+
+    // Update the payments in Firebase
+    const paymentRef = ref(database, `users/${memberID}/payments`);
+    await update(paymentRef, paymentsObject);
+
+    //console.log("Payment record updated successfully:", paymentRecord);
+    logToCloud(
+      "Payment record updated successfully: " + JSON.stringify(paymentRecord)
+    );
+    return true;
+  } catch (error) {
+    console.error("Error updating payment record:", error);
+    throw error;
   }
 };

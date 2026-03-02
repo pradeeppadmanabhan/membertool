@@ -7,12 +7,16 @@ import {
   fetchMemberData,
   handleRazorpayPayment,
   handleCashPayment,
-} from "../utils/PaymentUtils";
-import {
   ANNUAL_MEMBERSHIP_FEE,
   LIFE_MEMBERSHIP_FEE,
+  updatePaymentRecord,
 } from "../utils/PaymentUtils";
 import { toast, ToastContainer } from "react-toastify";
+import { logToCloud } from "../utils/CloudLogUtils";
+import { prepareEmailData } from "../utils/EmailUtils";
+import sendEmail from "../utils/SendEmail";
+import { ref, update } from "firebase/database";
+import { database } from "../firebase";
 
 const PaymentDetails = () => {
   // Access data passed from MembershipApplicationForm
@@ -87,13 +91,82 @@ const PaymentDetails = () => {
         memberID,
         paymentAmount,
         membershipType,
-        navigate,
         setStatusMessage
       );
-      console.log("Payment Result:", paymentResult);
+      //console.log("Payment Result:", paymentResult);
       setStatusMessage(paymentResult.message);
+
+      if (paymentResult.success) {
+        // Update the renewal date in the database
+        const userRef = ref(database, `users/${memberID}`);
+        const now = new Date();
+        const nextYear = memberData.renewalDueOn
+          ? new Date(memberData.renewalDueOn)
+          : now;
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+        await update(userRef, {
+          renewalDueOn: nextYear.toISOString(),
+          currentMembershipType: "Annual",
+          applicationStatus: "Paid",
+        });
+
+        await updatePaymentRecord(memberID, paymentResult.paymentRecord);
+
+        // Send receipt email
+        const emailData = await prepareEmailData(
+          memberID,
+          paymentResult.receiptNumber,
+          false,
+          false
+        );
+        //console.log("Prepared email data:", emailData);
+        const emailResponse = await sendEmail(emailData);
+        logToCloud("Receipt email sent", +JSON.stringify(emailResponse));
+
+        if (!emailResponse) {
+          console.error("Failed to send receipt email");
+          logToCloud("Failed to send receipt email for MemberID: " + memberID);
+        }
+
+        setStatusMessage("Payment successful! Redirecting to receipt...");
+        toast.success("Payment successful! Redirecting to receipt...");
+        logToCloud(
+          "Membership Payment successful",
+          +JSON.stringify({
+            memberID,
+            membershipType,
+            paymentMode: "Razorpay",
+          })
+        );
+
+        navigate(`/thank-you/${paymentResult.receiptNumber}/${memberID}`);
+      } else {
+        setStatusMessage(
+          paymentResult.message || "Payment failed. Please try again."
+        );
+        toast.error(
+          paymentResult.message || "Payment failed. Please try again."
+        );
+        logToCloud(
+          paymentResult.message || "Membership Payment failed",
+          +JSON.stringify({
+            memberID,
+            membershipType,
+            paymentMode: "Razorpay",
+          })
+        );
+      }
     } catch (error) {
       console.error("Payment Error:", error);
+      logToCloud(
+        "Error processing payment",
+        +JSON.stringify({
+          memberID,
+          membershipType,
+          paymentMode: "Razorpay",
+        })
+      );
       setStatusMessage("Error processing payment. Please try again.");
     } finally {
       toast.dismiss();

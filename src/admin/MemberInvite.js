@@ -58,7 +58,7 @@ const MemberInvite = () => {
   <body>
     <p>Dear ${name},</p>
   
-    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Honorary Member.</p>
+    <p>We are pleased to invite you to join The Karnataka Mountaineering Association (KMA) as an Honorary Member.</p>
   
     <p>This prestigious membership is extended to individuals who have made significant contributions to mountaineering, adventure sports, or related fields.</p>
   
@@ -97,7 +97,7 @@ const MemberInvite = () => {
   <body>
     <p>Dear ${name},</p>
   
-    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as a Life Member.</p>
+    <p>We are pleased to invite you to join The Karnataka Mountaineering Association (KMA) as a Life Member.</p>
   
     <p>This membership offers lifetime access to our events and activities. As a Life Member, you will enjoy various benefits, including:</p>
   
@@ -132,7 +132,7 @@ const MemberInvite = () => {
   <body>
     <p>Dear ${name},</p>
 
-    <p>We are pleased to invite you to join the Karnataka Mountaineering Association (KMA) as an Annual Member. This membership offers annual access to our events and activities. As an Annual Member, you will enjoy various benefits, including:</p>
+    <p>We are pleased to invite you to join The Karnataka Mountaineering Association (KMA) as an Annual Member. This membership offers annual access to our events and activities. As an Annual Member, you will enjoy various benefits, including:</p>
 
     <ul>
       <li>Recognition as a member of the KMA community</li>

@@ -13,6 +13,7 @@ import {
   LIFE_MEMBERSHIP_FEE,
   handleRazorpayPayment,
   fetchMemberData,
+  updatePaymentRecord,
 } from "../utils/PaymentUtils";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
@@ -20,6 +21,8 @@ import "../global.css"; // ✅ Ensures consistent styling
 import AuthContext from "../AuthContext";
 import PhoneNumberInput from "../utils/PhoneNumberInput";
 import { logToCloud } from "./CloudLogUtils";
+import { prepareEmailData } from "./EmailUtils";
+import sendEmail from "./SendEmail";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin, generateMemberID } = useContext(AuthContext);
@@ -332,6 +335,13 @@ const UserProfile = ({ memberID }) => {
       "Processing payment... Please do not refresh, navigate away or close the window.",
       { autoClose: false }
     );
+    logToCloud(
+      "Membership renewal initiated",
+      +JSON.stringify({
+        memberID: formData.id,
+        email: formData.email,
+      })
+    );
     //console.log("isSubmitting before Renewal:", isSubmitting);
 
     try {
@@ -339,14 +349,69 @@ const UserProfile = ({ memberID }) => {
         formData.id,
         ANNUAL_MEMBERSHIP_FEE,
         formData.currentMembershipType,
-        navigate,
         setStatusMessage
       );
       //console.log("Payment Result:", paymentResult);
 
-      setStatusMessage(paymentResult.message);
+      //setStatusMessage(paymentResult.message);
+      if (paymentResult.success) {
+        // Update the renewal date in the database
+        const userRef = ref(database, `users/${formData.id}`);
+        const now = new Date();
+        const nextYear = formData.renewalDueOn
+          ? new Date(formData.renewalDueOn)
+          : now;
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+        await update(userRef, {
+          renewalDueOn: nextYear.toISOString(),
+          currentMembershipType: "Annual",
+          applicationStatus: "Paid",
+        });
+
+        await updatePaymentRecord(formData.id, paymentResult.paymentRecord);
+
+        // Send receipt email
+        const emailData = await prepareEmailData(
+          formData.id,
+          paymentResult.receiptNumber,
+          true,
+          false
+        );
+        const emailResponse = await sendEmail(emailData);
+        logToCloud("Receipt email sent", +JSON.stringify(emailResponse));
+
+        if (!emailResponse) {
+          console.error("Failed to send receipt email");
+          logToCloud(
+            "Failed to send receipt email for MemberID: " + formData.id
+          );
+        }
+
+        setStatusMessage("Renewal successful!");
+        toast.success("Renewal successful!");
+
+        logToCloud(
+          "Membership renewal successful",
+          +JSON.stringify({
+            memberID: formData.id,
+            paymentRecord: paymentResult.paymentRecord,
+          })
+        );
+        // Navigate to ThankYouPage after all updates
+        navigate(`/thank-you/${paymentResult.receiptNumber}/${formData.id}`);
+      } else {
+        setStatusMessage(paymentResult.message);
+      }
     } catch (error) {
       console.error("Error during renewal payment:", error);
+      logToCloud(
+        "Error during renewal payment",
+        +JSON.stringify({
+          memberID: formData.id,
+          error: error.message,
+        })
+      );
       setStatusMessage("Error processing renewal payment. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -355,50 +420,6 @@ const UserProfile = ({ memberID }) => {
     }
   };
 
-  /* const handleUpgradeToLife = async () => {
-    setIsSubmitting(true);
-    setStatusMessage("Processing upgrade...");
-    toast.info(
-      "Processing payment... Please do not refresh, navigate away or close the window.",
-      { autoClose: false }
-    );
-    console.log("isSubmitting before Upgrade:", isSubmitting);
-    try {
-      const paymentResult = await handleRazorpayPayment(
-        formData.id,
-        LIFE_MEMBERSHIP_FEE,
-        "Life",
-        navigate,
-        setStatusMessage
-      );
-      console.log("Payment Result:", paymentResult);
-      setStatusMessage(paymentResult.message);
-      if (paymentResult.success) {
-        // Update isUpgradeAllowed flag in the database
-        const userRef = ref(database, `users/${formData.id}`);
-        //await update(userRef, { isUpgradeAllowed: false });
-        const lifeMemberID = await generateMemberID("Life"); // Function to generate a unique member ID
-        //console.log("Newly Generated Life Member ID:", lifeMemberID);
-        // Update DB with Life Member ID
-        await update(userRef, {
-          lifeMemberID, // Assign the new Life Member ID
-          isUpgradeAllowed: false, // Reset upgrade permission
-          currentMembershipType: "Life", // Update membership type
-        });
-
-        setStatusMessage("Upgrade to Life Membership successful!");
-        toast.success("Upgrade to Life Membership successful!");
-      }
-    } catch (error) {
-      console.error("Error during upgrade payment:", error);
-      setStatusMessage("Error processing upgrade payment. Please try again.");
-    } finally {
-      toast.dismiss();
-      setIsSubmitting(false);
-      console.log("isSubmitting after upgrade:", isSubmitting);
-    }
-  }; */
-
   const handleUpgradeToLife = async () => {
     setIsSubmitting(true);
     setStatusMessage("Processing upgrade...");
@@ -406,17 +427,19 @@ const UserProfile = ({ memberID }) => {
       "Processing payment... Please do not refresh, navigate away or close the window.",
       { autoClose: false }
     );
-    logToCloud("Upgrade to Life Membership initiated", {
-      memberID: formData.id,
-      email: formData.email,
-    });
+    logToCloud(
+      "Upgrade to Life Membership initiated",
+      +JSON.stringify({
+        memberID: formData.id,
+        email: formData.email,
+      })
+    );
     //console.log("isSubmitting before Upgrade:", isSubmitting);
     try {
       const paymentResult = await handleRazorpayPayment(
         formData.id,
         LIFE_MEMBERSHIP_FEE,
         "Life",
-        navigate,
         setStatusMessage
       );
       //console.log("Payment Result:", paymentResult);
@@ -432,10 +455,48 @@ const UserProfile = ({ memberID }) => {
           lifeMemberID, // Assign the new Life Member ID
           isUpgradeAllowed: false, // Reset upgrade permission
           currentMembershipType: "Life", // Update membership type
+          renewalDueOn: null,
+          applicationStatus: "Paid",
         });
+
+        logToCloud(
+          "Life Member ID generated and updated",
+          +JSON.stringify({
+            memberID: formData.id,
+            lifeMemberID,
+          })
+        );
+
+        await updatePaymentRecord(formData.id, paymentResult.paymentRecord);
+
+        //Send receipt email
+        const emailData = await prepareEmailData(
+          formData.id,
+          paymentResult.receiptNumber,
+          false,
+          true
+        );
+        const emailResponse = await sendEmail(emailData);
+        logToCloud("Receipt email sent", +JSON.stringify(emailResponse));
+        if (!emailResponse) {
+          console.error("Failed to send receipt email");
+          logToCloud(
+            "Failed to send receipt email for MemberID: " + formData.id
+          );
+        }
 
         setStatusMessage("Upgrade to Life Membership successful!");
         toast.success("Upgrade to Life Membership successful!");
+        logToCloud(
+          "Upgrade to Life Membership successful",
+          +JSON.stringify({
+            memberID: formData.id,
+          })
+        );
+        // Navigate to ThankYouPage after all updates
+        navigate(`/thank-you/${paymentResult.receiptNumber}/${formData.id}`);
+      } else {
+        setStatusMessage(paymentResult.message);
       }
     } catch (error) {
       console.error("Error during upgrade payment:", error);

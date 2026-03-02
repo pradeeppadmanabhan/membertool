@@ -1,10 +1,20 @@
-export const prepareEmailData = (userData, receiptNumber, isRenewal) => {
-  const payments = userData.payments || [];
-  const latestPayment = payments[payments.length - 1];
-  //console.log("userData:", userData);
-  //console.log("Latest Payment:", latestPayment);
+import { fetchMemberData } from "./PaymentUtils";
 
-  const paymentTableRows = `
+export const prepareEmailData = async (
+  memberID,
+  receiptNumber,
+  isRenewal,
+  isUpgrade
+) => {
+  try {
+    const userData = await fetchMemberData(memberID);
+
+    const payments = userData.payments || [];
+    const latestPayment = payments[payments.length - 1];
+    //console.log("userData:", userData);
+    //console.log("Latest Payment:", latestPayment);
+
+    const paymentTableRows = `
      <tr><td>Amount</td><td>₹${latestPayment.amount}</td></tr>
       <tr><td>Date of Payment</td><td>${new Date(
         latestPayment.dateOfPayment
@@ -14,12 +24,19 @@ export const prepareEmailData = (userData, receiptNumber, isRenewal) => {
       <tr><td>Payment ID</td><td>${latestPayment.paymentID || "N/A"}</td></tr>
     `;
 
-  const memberTableRows = isRenewal
-    ? `
+    const memberTableRows = isRenewal
+      ? `
         <tr><td>Member ID</td><td>${userData.id}</td></tr>
         <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
+        <tr><td></td></tr>
         `
-    : `
+      : isUpgrade
+        ? `<tr><td>Life Member ID</td><td>${userData.lifeMemberID}</td></tr>
+        <tr><td>Original Member ID</td><td>${userData.id}</td></tr>
+        <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
+        <tr><td></td></tr>        
+        `
+        : `
         <tr><td>Member ID</td><td>${userData.id}</td></tr>
         <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
         
@@ -76,31 +93,38 @@ export const prepareEmailData = (userData, receiptNumber, isRenewal) => {
         <tr><td>Date of Submission</td><td>${new Date(
           userData.dateOfSubmission
         ).toLocaleDateString()}</td></tr>
+        <tr><td></td></tr>
         
         `;
 
-  const emailBody = `
+    const emailBody = `
       <p>Dear ${userData.memberName},</p>
       <br />
-      <p>${isRenewal ? "Membership Renewal" : "New Membership"} Details:</p>
+      <p>${isRenewal ? "Membership Renewal" : isUpgrade ? "Membership Upgrade" : "New Membership"} Details:</p>
       <table border="1" cellpadding="5" cellspacing="0">
         <thead>
           <tr><th>Description</th><th>Value</th></tr>
         </thead>
         <tbody>
-          ${isRenewal ? paymentTableRows : memberTableRows + paymentTableRows}
+          ${memberTableRows + paymentTableRows}
         </tbody>
       </table>
       <p>We look forward to having you as part of The Karnataka Mountaineering Association.</p>
     `;
 
-  return {
-    to_name: userData.memberName || "Member",
-    to_email: userData.email,
-    subject: isRenewal
-      ? `KMA Membership Renewal - ${userData.memberName} (ID: ${userData.id}) (Receipt Number: ${receiptNumber})`
-      : `KMA New Membership Application - ${userData.memberName} (ID: ${userData.id}) (Receipt Number: ${receiptNumber})`,
-    message: emailBody,
-    contentType: "text/html",
-  };
+    return {
+      to_name: userData.memberName || "Member",
+      to_email: userData.email,
+      subject: isRenewal
+        ? `KMA Membership Renewal - ${userData.memberName} (ID: ${userData.id}) (Receipt Number: ${receiptNumber})`
+        : isUpgrade
+          ? `KMA Membership Upgrade - ${userData.memberName} (ID: ${userData.lifeMemberID}) (Receipt Number: ${receiptNumber})`
+          : `KMA New Membership Application - ${userData.memberName} (ID: ${userData.id}) (Receipt Number: ${receiptNumber})`,
+      message: emailBody,
+      contentType: "text/html",
+    };
+  } catch (error) {
+    console.error("Error preparing email data:", error);
+    return null;
+  }
 };

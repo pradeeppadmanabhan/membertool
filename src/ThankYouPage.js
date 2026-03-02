@@ -46,8 +46,13 @@ const ThankYouPage = () => {
                 data.lifeMemberID
             );
           } else if (paymentAmount === ANNUAL_MEMBERSHIP_FEE) {
-            setIsRenewal(true);
-            logToCloud("Renewal detected for ID: " + memberID);
+            if (data.payments.length > 1) {
+              setIsRenewal(true);
+              logToCloud("Renewal detected for ID: " + memberID);
+            } else {
+              setIsRenewal(false);
+              logToCloud("New annual membership detected for ID: " + memberID);
+            }
           } else {
             console.error("Unknown payment amount:", paymentAmount);
             logToCloud("Unknown payment amount: " + paymentAmount);
@@ -94,7 +99,9 @@ const ThankYouPage = () => {
         <p>
           {isRenewal
             ? "We appreciate your continued support as a valued member."
-            : "We will review your submission and get back to you shortly via email. Welcome to the Karnataka Mountaineering Association!"}
+            : isUpgrade
+              ? "Congratulations on becoming a Life Member of The Karnataka Mountaineering Association!"
+              : "We will review your submission and get back to you shortly via email. Welcome to The Karnataka Mountaineering Association!"}
         </p>
         {/* <p>
           <strong>{emailStatus}</strong>
