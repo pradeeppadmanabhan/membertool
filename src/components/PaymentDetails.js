@@ -97,19 +97,32 @@ const PaymentDetails = () => {
       setStatusMessage(paymentResult.message);
 
       if (paymentResult.success) {
-        // Update the renewal date in the database
+        // Update the user record depending on membership type
         const userRef = ref(database, `users/${memberID}`);
-        const now = new Date();
-        const nextYear = memberData.renewalDueOn
-          ? new Date(memberData.renewalDueOn)
-          : now;
-        nextYear.setFullYear(nextYear.getFullYear() + 1);
 
-        await update(userRef, {
-          renewalDueOn: nextYear.toISOString(),
-          currentMembershipType: "Annual",
-          applicationStatus: "Paid",
-        });
+        if (membershipType === "Life") {
+          // Direct life membership: assign life ID, lock upgrades and mark paid
+          await update(userRef, {
+            lifeMemberID: memberID,
+            isUpgradeAllowed: false,
+            currentMembershipType: "Life",
+            renewalDueOn: null,
+            applicationStatus: "Paid",
+          });
+        } else {
+          // Annual payment update
+          const now = new Date();
+          const nextYear = memberData.renewalDueOn
+            ? new Date(memberData.renewalDueOn)
+            : now;
+          nextYear.setFullYear(nextYear.getFullYear() + 1);
+
+          await update(userRef, {
+            renewalDueOn: nextYear.toISOString(),
+            currentMembershipType: "Annual",
+            applicationStatus: "Paid",
+          });
+        }
 
         await updatePaymentRecord(memberID, paymentResult.paymentRecord);
 

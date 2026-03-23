@@ -448,6 +448,15 @@ const MembershipApplicationForm = () => {
           payments: [],
         };
 
+        // If the applicant is applying for a life membership directly,
+        // allocate the lifeMemberID now and disable future upgrades.
+        if (userData.currentMembershipType === "Life") {
+          userData.lifeMemberID = newMemberId;
+          userData.isUpgradeAllowed = false;
+          // life members don't have renewal dates
+          userData.renewalDueOn = null;
+        }
+
         //console.log("Final User Data to be submitted:", userData);
         if (!userData.uid) {
           userData.uid = user.uid;
