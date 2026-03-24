@@ -93,7 +93,7 @@ export const addDeclarationToPDF = (doc, yPos = 50, imagePath = null) => {
     const imageY = yPos + 160; // Position above the text
     doc.addImage(
       encodedImageUrl,
-      "JPEG",
+      "WEBP",
       imageX,
       imageY,
       imageWidth,

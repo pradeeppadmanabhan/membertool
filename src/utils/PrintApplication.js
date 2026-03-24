@@ -33,7 +33,7 @@ const PrintApplication = (applicationData) => {
     const encodedImageUrl = encodeURI(imageUrl); // Encode the URL
     doc.addImage(
       encodedImageUrl,
-      "JPEG",
+      "WEBP",
       imageX,
       imageY,
       imageWidth,

@@ -272,7 +272,7 @@ const MembershipApplicationForm = () => {
     if (!formData.emergencyContactName)
       formErrors.emergencyContactName = "Emergency contact name is required.";
     const emergencyContactPhoneError = validatePhoneNumber(
-      formData.emergencyContactPhone
+      formData.emergencyContactPhone,
     );
     if (emergencyContactPhoneError) {
       formErrors.emergencyContactPhone = emergencyContactPhoneError;
@@ -302,15 +302,9 @@ const MembershipApplicationForm = () => {
         fieldName === "imageURL" ? "passport size photo" : "specimen signature"
       }.`;
     } else {
-      // Image type validation (example: allow only JPEG and PNG)
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-      if (!allowedTypes.includes(selectedImage.type)) {
-        imageErrors[fieldName] = "Only JPEG/JPG and PNG images are allowed.";
-      }
-
-      // Image size validation (example: maximum 1MB)
+      // Image size validation (maximum 1MB after compression)
       const maxSizeInBytes = 1 * 1024 * 1024; // 1MB
-      if (selectedImage.size > maxSizeInBytes) {
+      if (image.size > maxSizeInBytes) {
         imageErrors[fieldName] = "Image size must be less than 1MB.";
       }
     }
@@ -348,7 +342,7 @@ const MembershipApplicationForm = () => {
               <br />
             </React.Fragment>
           ))}
-        </React.Fragment>
+        </React.Fragment>,
       );
       setIsSubmitting(false);
       return;
@@ -357,7 +351,7 @@ const MembershipApplicationForm = () => {
     // Notify the user about the email difference
     if (formData.email !== user.email) {
       const confirmProceed = window.confirm(
-        `The email you entered (${formData.email}) is different from your login email (${user.email}). Do you want to proceed?`
+        `The email you entered (${formData.email}) is different from your login email (${user.email}). Do you want to proceed?`,
       );
 
       if (!confirmProceed) {
@@ -380,24 +374,24 @@ const MembershipApplicationForm = () => {
         "Generating Member ID... for user: " +
           user.email +
           " membership type: " +
-          formData.currentMembershipType
+          formData.currentMembershipType,
       );
       if (initialMembershipType !== formData.currentMembershipType) {
         console.error(
           "Membership type changed from initial value:",
           initialMembershipType,
           "to",
-          formData.currentMembershipType
+          formData.currentMembershipType,
         );
         logToCloud(
           "Membership type changed from initial value: " +
             initialMembershipType +
             " to " +
-            formData.currentMembershipType
+            formData.currentMembershipType,
         );
       }
       const newMemberId = await generateMemberID(
-        formData.currentMembershipType
+        formData.currentMembershipType,
       ); // Function to generate a unique member ID
       //console.log("Newly Generated Member ID:", newMemberId);
       let uploadedImageUrl = null;
@@ -421,7 +415,7 @@ const MembershipApplicationForm = () => {
           const storageReference = storageRef(storage, signaturePath);
           const snapshot = await uploadBytes(
             storageReference,
-            selectedSignature
+            selectedSignature,
           );
           uploadedSignatureUrl = await getDownloadURL(snapshot.ref);
         }
@@ -481,14 +475,14 @@ const MembershipApplicationForm = () => {
           targetPage = `/thank-you/honorary/${newMemberId}`;
           logToCloud(
             "Honorary membership application submitted for Member ID: " +
-              newMemberId
+              newMemberId,
           );
         } else {
           targetPage = `/payment-details?memberID=${newMemberId}&membershipType=${formData.currentMembershipType}`;
           logToCloud(
             formData.currentMembershipType +
               " membership application submitted for Member ID: " +
-              newMemberId
+              newMemberId,
           );
         }
 
@@ -500,7 +494,7 @@ const MembershipApplicationForm = () => {
 
         //console.log("Data submitted successfully!");
         setStatusMessage(
-          "Application submitted successfully!, moving to payment page in about 2 seconds.."
+          "Application submitted successfully!, moving to payment page in about 2 seconds..",
         );
 
         updateUserData(userData); // Update user data in AuthContext
@@ -532,7 +526,7 @@ const MembershipApplicationForm = () => {
 
         //console.log("Mappings updated successfully!");
         logToCloud(
-          "Mappings updated successfully for Member ID: " + newMemberId
+          "Mappings updated successfully for Member ID: " + newMemberId,
         );
 
         // Delay clearing the form
@@ -580,7 +574,10 @@ const MembershipApplicationForm = () => {
         setStatusMessage={setStatusMessage}
       />
       <br />
-      <label>Upload your specimen signature photo to record consent*</label>
+      <label>
+        Upload your specimen signature photo to record consent* (Accepted
+        formats: JPG/JPEG/PNG/WebP)
+      </label>
       <ImageUploader
         onImageSelect={(image) => {
           setSelectedSignature(image);
@@ -629,7 +626,9 @@ const MembershipApplicationForm = () => {
       />
       <br />
       {/* Image Uploader */}
-      <label>Upload Profile Picture*</label>
+      <label>
+        Upload Profile Picture* (Accepted formats: JPG/JPEG/PNG/WebP)
+      </label>
       <ImageUploader
         onImageSelect={(image) => {
           setSelectedImage(image);

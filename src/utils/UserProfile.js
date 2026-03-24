@@ -543,7 +543,7 @@ const UserProfile = ({ memberID }) => {
       ) : formData?.imageURL ? (
         <img className="profile-image" src={formData.imageURL} alt="Profile" />
       ) : (
-        <div className="profile-image placeholder)">
+        <div className="profile-image placeholder">
           Edit to add your Profile Pic
         </div>
       )}
@@ -1067,7 +1067,7 @@ const UserProfile = ({ memberID }) => {
           alt="Signature"
         />
       ) : (
-        <div className="signature-image placeholder)">
+        <div className="signature-image placeholder">
           Edit to add your Signature Pic
         </div>
       )}
