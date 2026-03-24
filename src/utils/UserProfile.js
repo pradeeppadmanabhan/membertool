@@ -57,7 +57,7 @@ const UserProfile = ({ memberID }) => {
       }
     };
     loadData();
-  }, [memberID, formData?.imageURL]);
+  }, [memberID]); // Remove formData.imageURL dependency to avoid reloading and overwriting local edit state
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
@@ -230,6 +230,11 @@ const UserProfile = ({ memberID }) => {
   const handleChange = (e) => {
     const { name, value, error } = e.target;
 
+    // Clear status on first edit action
+    if (statusMessage) {
+      setStatusMessage("");
+    }
+
     // Validate the field
     //const error = validateField(name, value);
     if (error) {
@@ -275,15 +280,12 @@ const UserProfile = ({ memberID }) => {
         const snapshot = await uploadBytes(
           storageReference,
           selectedImage,
-          metadata
+          metadata,
         );
         updatedImageUrl = await getDownloadURL(snapshot.ref);
         //console.log("Updated Profile Image URL:", updatedImageUrl);
-
-        await update(userRef, { ...formData, imageURL: updatedImageUrl });
-        //console.log("Firebase user record updated with new imageURL.", formData.imageURL);
-        setFormData((prevData) => ({ ...prevData, imageURL: updatedImageUrl }));
       }
+
       if (selectedSignature) {
         const signaturePath = `signatures/${formData.id}/${selectedSignature.name}`;
         const storageReference = storageRef(storage, signaturePath);
@@ -292,30 +294,27 @@ const UserProfile = ({ memberID }) => {
         const snapshot = await uploadBytes(
           storageReference,
           selectedSignature,
-          metadata
+          metadata,
         );
         updatedSignatureUrl = await getDownloadURL(snapshot.ref);
         //console.log("Updated Signature Image URL:", updatedSignatureUrl);
-        await update(userRef, {
-          ...formData,
-          signatureURL: updatedSignatureUrl,
-        });
-        /* console.log(
-          "Firebase user record updated with new signatureURL.",
-          formData.signatureURL
-        ); */
-        setFormData((prevData) => ({
-          ...prevData,
-          signatureURL: updatedSignatureUrl,
-        }));
       }
 
+      const updatedFormData = {
+        ...formData,
+        imageURL: updatedImageUrl,
+        signatureURL: updatedSignatureUrl,
+      };
+
+      await update(userRef, updatedFormData);
+      setFormData(updatedFormData);
+      setSelectedImage(null);
+      setSelectedSignature(null);
       setIsEditing(false);
       setStatusMessage("Profile updated successfully!");
-      //console.log("Profile updated successfully!", formData);
     } catch (error) {
       console.error("Error updating profile:", error);
-      setStatusMessage("Error updating profile. Please try again.", error);
+      setStatusMessage("Error updating profile. Please try again.");
     }
   };
 
@@ -333,14 +332,14 @@ const UserProfile = ({ memberID }) => {
     setStatusMessage("Processing renewal...");
     toast.info(
       "Processing payment... Please do not refresh, navigate away or close the window.",
-      { autoClose: false }
+      { autoClose: false },
     );
     logToCloud(
       "Membership renewal initiated",
       +JSON.stringify({
         memberID: formData.id,
         email: formData.email,
-      })
+      }),
     );
     //console.log("isSubmitting before Renewal:", isSubmitting);
 
@@ -349,7 +348,7 @@ const UserProfile = ({ memberID }) => {
         formData.id,
         ANNUAL_MEMBERSHIP_FEE,
         formData.currentMembershipType,
-        setStatusMessage
+        setStatusMessage,
       );
       //console.log("Payment Result:", paymentResult);
 
@@ -376,7 +375,7 @@ const UserProfile = ({ memberID }) => {
           formData.id,
           paymentResult.receiptNumber,
           true,
-          false
+          false,
         );
         const emailResponse = await sendEmail(emailData);
         logToCloud("Receipt email sent", +JSON.stringify(emailResponse));
@@ -384,7 +383,7 @@ const UserProfile = ({ memberID }) => {
         if (!emailResponse) {
           console.error("Failed to send receipt email");
           logToCloud(
-            "Failed to send receipt email for MemberID: " + formData.id
+            "Failed to send receipt email for MemberID: " + formData.id,
           );
         }
 
@@ -396,7 +395,7 @@ const UserProfile = ({ memberID }) => {
           +JSON.stringify({
             memberID: formData.id,
             paymentRecord: paymentResult.paymentRecord,
-          })
+          }),
         );
         // Navigate to ThankYouPage after all updates
         navigate(`/thank-you/${paymentResult.receiptNumber}/${formData.id}`);
@@ -410,7 +409,7 @@ const UserProfile = ({ memberID }) => {
         +JSON.stringify({
           memberID: formData.id,
           error: error.message,
-        })
+        }),
       );
       setStatusMessage("Error processing renewal payment. Please try again.");
     } finally {
@@ -425,14 +424,14 @@ const UserProfile = ({ memberID }) => {
     setStatusMessage("Processing upgrade...");
     toast.info(
       "Processing payment... Please do not refresh, navigate away or close the window.",
-      { autoClose: false }
+      { autoClose: false },
     );
     logToCloud(
       "Upgrade to Life Membership initiated",
       +JSON.stringify({
         memberID: formData.id,
         email: formData.email,
-      })
+      }),
     );
     //console.log("isSubmitting before Upgrade:", isSubmitting);
     try {
@@ -440,7 +439,7 @@ const UserProfile = ({ memberID }) => {
         formData.id,
         LIFE_MEMBERSHIP_FEE,
         "Life",
-        setStatusMessage
+        setStatusMessage,
       );
       //console.log("Payment Result:", paymentResult);
       setStatusMessage(paymentResult.message);
@@ -464,7 +463,7 @@ const UserProfile = ({ memberID }) => {
           +JSON.stringify({
             memberID: formData.id,
             lifeMemberID,
-          })
+          }),
         );
 
         await updatePaymentRecord(formData.id, paymentResult.paymentRecord);
@@ -474,14 +473,14 @@ const UserProfile = ({ memberID }) => {
           formData.id,
           paymentResult.receiptNumber,
           false,
-          true
+          true,
         );
         const emailResponse = await sendEmail(emailData);
         logToCloud("Receipt email sent", +JSON.stringify(emailResponse));
         if (!emailResponse) {
           console.error("Failed to send receipt email");
           logToCloud(
-            "Failed to send receipt email for MemberID: " + formData.id
+            "Failed to send receipt email for MemberID: " + formData.id,
           );
         }
 
@@ -491,7 +490,7 @@ const UserProfile = ({ memberID }) => {
           "Upgrade to Life Membership successful",
           +JSON.stringify({
             memberID: formData.id,
-          })
+          }),
         );
         // Navigate to ThankYouPage after all updates
         navigate(`/thank-you/${paymentResult.receiptNumber}/${formData.id}`);
@@ -1083,13 +1082,22 @@ const UserProfile = ({ memberID }) => {
             </button>
             <button
               className="cancel-button"
-              onClick={() => setIsEditing(false)}
+              onClick={() => {
+                setIsEditing(false);
+                setStatusMessage("");
+              }}
             >
               Cancel
             </button>
           </>
         ) : (
-          <button className="edit-button" onClick={() => setIsEditing(true)}>
+          <button
+            className="edit-button"
+            onClick={() => {
+              setIsEditing(true);
+              setStatusMessage("");
+            }}
+          >
             Edit Profile
           </button>
         )}
