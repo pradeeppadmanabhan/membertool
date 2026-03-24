@@ -6,6 +6,9 @@ import { addHeaderToPDF } from "./PDFHeader";
 import { addCenteredText, addDeclarationToPDF } from "./PDFDeclaration";
 
 const PrintApplication = (applicationData) => {
+  const FONTSIZE = 7; // Set a default font size for the PDF
+  const CELL_PADDING = 2; // Set a default cell padding for the tables
+
   const doc = new jsPDF();
   autoTable(doc, {
     /* options */
@@ -37,14 +40,22 @@ const PrintApplication = (applicationData) => {
       imageX,
       imageY,
       imageWidth,
-      imageHeight
+      imageHeight,
     );
   } else {
     console.error("Image URL is not available in applicationData.");
   }
 
   // 3. Table Creation (same as before)
-  const tableColumnWidths = [50, 100];
+  //const pageWidth = doc.internal.pageSize.getWidth();
+  const margin = 15; // Margin on both sides
+  const availableWidth = pageWidth - margin * 2; // Total width available for table
+
+  // Calculate proportional column widths (50:100 ratio = 1:2)
+  const totalColumnRatio = 3; // 1 + 2
+  const column0Width = (availableWidth / totalColumnRatio) * 1; // 1/3 of available width
+  const column1Width = (availableWidth / totalColumnRatio) * 2; // 2/3 of available width
+
   const memberTableRows = [
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
@@ -84,32 +95,6 @@ const PrintApplication = (applicationData) => {
       new Date(applicationData.dateOfSubmission).toLocaleDateString() || "N/A",
     ],
     // ... add other fields in the same format ...
-  ];
-
-  const memberTableStartY = imageY + imageHeight + 10; // Start the table below the header
-
-  // Add the table to the PDF
-  doc.autoTable({
-    head: [],
-    body: memberTableRows,
-    startX: 20, // Start the table from the left margin
-    startY: memberTableStartY, // Start the table below the header
-    columnStyles: {
-      0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
-      1: { cellWidth: tableColumnWidths[1] },
-    },
-    styles: {
-      fontSize: 9,
-      cellPadding: 3,
-    },
-  });
-
-  // Add Emergency Contact Info.
-  doc.addPage(); // Add a new page for the emergency contact details
-
-  const emergencyContactTableRows = [
-    ["ID:", applicationData.id || "N/A"],
-    ["Applicant's Full Name:", applicationData.memberName || "N/A"],
     ["Emergency Contact Name:", applicationData.emergencyContactName || "N/A"],
     [
       "Emergency Contact Phone:",
@@ -125,19 +110,22 @@ const PrintApplication = (applicationData) => {
     ],
   ];
 
-  addCenteredText(doc, "EMERGENCY CONTACT DETAILS", headerHeight, 12);
+  const memberTableStartY = imageY + imageHeight + 10; // Start the table below the header
 
+  // Add the table to the PDF
   doc.autoTable({
     head: [],
-    body: emergencyContactTableRows,
-    startY: headerHeight + 10, // Start the table below the header
+    body: memberTableRows,
+    startX: margin, // Start from the left margin
+    startY: memberTableStartY, // Start the table below the header
+    tableWidth: availableWidth, // Use the full available width
     columnStyles: {
-      0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
-      1: { cellWidth: tableColumnWidths[1] },
+      0: { cellWidth: column0Width, fontStyle: "bold" },
+      1: { cellWidth: column1Width },
     },
     styles: {
-      fontSize: 9,
-      cellPadding: 3,
+      fontSize: FONTSIZE,
+      cellPadding: CELL_PADDING,
     },
   });
 
@@ -172,14 +160,16 @@ const PrintApplication = (applicationData) => {
   doc.autoTable({
     head: [],
     body: paymentTableRows,
+    startX: margin, // Use same margin as member table
     startY: headerHeight + 10, // Start the table below the header
+    tableWidth: availableWidth, // Use the full available width
     columnStyles: {
-      0: { cellWidth: tableColumnWidths[0], fontStyle: "bold" },
-      1: { cellWidth: tableColumnWidths[1] },
+      0: { cellWidth: column0Width, fontStyle: "bold" },
+      1: { cellWidth: column1Width },
     },
     styles: {
-      fontSize: 9,
-      cellPadding: 3,
+      fontSize: FONTSIZE,
+      cellPadding: CELL_PADDING,
     },
   });
 
