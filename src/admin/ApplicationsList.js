@@ -17,6 +17,7 @@ const ApplicationsList = () => {
   const [emailStatus, setEmailStatus] = useState(null); // State to track email status
   const [sentInvites, setSentInvites] = useState([]); // Array to track sent invites
   const [filterType, setFilterType] = useState("all"); // Filter by type
+  const [renewalFilter, setRenewalFilter] = useState("all"); // Filter by renewal status
 
   const formatDateSafe = (dateValue) => {
     if (!dateValue) return "N/A";
@@ -314,6 +315,10 @@ The KMA Team`;
     const matchesType =
       filterType === "all" || application.currentMembershipType === filterType;
 
+    // Apply renewal status filter
+    const matchesRenewalStatus =
+      renewalFilter === "all" || application.renewalStatus === renewalFilter;
+
     // Filter by search query (name, mobile, email)
     const matchesSearchQuery =
       application.memberName
@@ -322,7 +327,7 @@ The KMA Team`;
       application.mobile?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       application.email?.toLowerCase().includes(searchQuery.toLowerCase());
 
-    return matchesType && matchesSearchQuery;
+    return matchesType && matchesRenewalStatus && matchesSearchQuery;
   });
 
   const sortedApplications = [...filteredApplications]
@@ -395,7 +400,8 @@ The KMA Team`;
     try {
       // Generate file name with local timestamp
       const timestamp = format(new Date(), "yyyyMMdd'T'HHmmss"); // Local time
-      const fileName = `MembersList_${timestamp}.xlsx`;
+      const renewalSuffix = renewalFilter !== "all" ? `_${renewalFilter}` : "";
+      const fileName = `MembersList${renewalSuffix}_${timestamp}.xlsx`;
 
       // Convert sorted data to worksheet
       const worksheetData = sortedApplications.map((application) => ({
@@ -460,47 +466,71 @@ The KMA Team`;
       <h2>Member Directory</h2>
 
       {/* Filter Controls */}
+      <div className="filters-container">
+        <div className="filter-container">
+          <label htmlFor="typeFilter">Filter by Membership Type:</label>
+          <select
+            id="typeFilter"
+            className="filter-select"
+            value={filterType}
+            onChange={(e) => {
+              const selectedType = e.target.value;
+              setFilterType(selectedType);
+              if (selectedType !== "Annual") {
+                setRenewalFilter("all");
+              }
+            }}
+          >
+            <option value="all">All</option>
+            <option value="Annual">Annual</option>
+            <option value="Life">Life</option>
+            <option value="Honorary">Honorary</option>
+          </select>
+        </div>
 
-      <div className="filter-container">
-        <label htmlFor="typeFilter">Filter by Membership Type:</label>
-        <select
-          id="typeFilter"
-          className="filter-select"
-          value={filterType}
-          onChange={(e) => setFilterType(e.target.value)}
-        >
-          <option value="all">All</option>
-          <option value="Annual">Annual</option>
-          <option value="Life">Life</option>
-          <option value="Honorary">Honorary</option>
-        </select>
-      </div>
+        <div className="filter-container">
+          <label htmlFor="renewalFilter">Filter by Renewal Status:</label>
+          <select
+            id="renewalFilter"
+            className="filter-select"
+            value={renewalFilter}
+            onChange={(e) => setRenewalFilter(e.target.value)}
+            disabled={filterType !== "Annual"}
+          >
+            <option value="all">All</option>
+            <option value="Due">Due</option>
+            <option value="Active">Active</option>
+            <option value="N/A">N/A</option>
+          </select>
+        </div>
 
-      {/* Date Range Picker */}
-      <div className="date-range-picker">
-        <br />
-
-        <div className="date-range-container">
-          <label htmlFor="dateFilter">Filter by Date:</label>
-          <div className="date-group">
-            <label htmlFor="startDate">Start Date:</label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+        <div className="date-full-row">
+          <div className="date-range-container">
+            <label htmlFor="dateFilter">Filter by Date:</label>
+            <div className="date-group">
+              <label htmlFor="startDate">Start Date:</label>
+              <input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+            <div className="date-group">
+              <label htmlFor="endDate">End Date:</label>
+              <input
+                type="date"
+                id="endDate"
+                value={endDate}
+                min={startDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="date-group">
-            <label htmlFor="endDate">End Date:</label>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate}
-              min={startDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          </div>
+        </div>
+
+        <div className="filter-result-count">
+          Showing {sortedApplications.length} result{sortedApplications.length === 1 ? "" : "s"}.
         </div>
       </div>
 
