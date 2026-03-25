@@ -11,9 +11,7 @@ import { useContext, useEffect } from "react";
 import AuthContext from "./AuthContext.js";
 import ApplicationsList from "./admin/ApplicationsList.js"; // Update the path if needed
 import ApplicationDetails from "./admin/ApplicationDetails.js"; // Update the path if needed
-import DataDisplay from "./DataDisplay.js";
 import MembershipApplicationForm from "./MembershipApplicationForm.js";
-import RenewalDueList from "./admin/RenewalDueList";
 import MemberInvite from "./admin/MemberInvite.js";
 import ProtectedRoute from "./ProtectedRoute.js";
 import LoginPage from "./LoginPage.js";
@@ -21,7 +19,6 @@ import PaymentDetails from "./components/PaymentDetails.js";
 import WelcomePage from "./WelcomePage.js";
 import ThankYouPage from "./ThankYouPage.js";
 import AdminDashboard from "./admin/AdminDashboard.js";
-import WhatsappGroupManagement from "./admin/WhatsappGroupManagement.js";
 import ProfilePage from "./ProfilePage.js";
 import MaintenancePage from "./MaintenancePage.js";
 
@@ -87,7 +84,7 @@ function App() {
     if (authError) {
       if (!isNewUser && !userData) {
         console.error(
-          "User is not new and userData is missing, displaying error."
+          "User is not new and userData is missing, displaying error.",
         );
         return (
           <div className="center-text" style={{ marginTop: "20px" }}>
@@ -156,18 +153,7 @@ function App() {
             <Link to="/admin/invite-member">
               <button>Invite Member</button>
             </Link>
-            <Link to="/admin/renewals-due">
-              <button>Renewals & Upgrades</button>
-            </Link>
-            {/* <Link to="/admin/whatsapp-group-management">
-              <button>Manage WhatsApp</button>
-            </Link>
-            Note: Functionality moved out of Admin Dashboard. Feature not used by KMA.
-             */}
-            {/* <Link to="/search">
-              <button>Search Members</button>
-            </Link>
-            Note: Integrated member search with directory search */}
+
             <Link to="/admin/dashboard">
               <button>Dashboard</button>
             </Link>
@@ -210,34 +196,10 @@ function App() {
           }
         />
         <Route
-          path="/admin/renewals-due"
-          element={
-            <ProtectedRoute requiredRoles={authorizedAdminEmails}>
-              <RenewalDueList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/whatsapp-group-management"
-          element={
-            <ProtectedRoute requiredRoles={authorizedAdminEmails}>
-              <WhatsappGroupManagement />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/admin/application/:applicationId"
           element={
             <ProtectedRoute requiredRoles={authorizedAdminEmails}>
               <ApplicationDetails />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/search"
-          element={
-            <ProtectedRoute requiredRoles={authorizedAdminEmails}>
-              <DataDisplay />
             </ProtectedRoute>
           }
         />
