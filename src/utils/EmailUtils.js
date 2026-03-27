@@ -1,5 +1,69 @@
 import { fetchMemberData } from "./PaymentUtils";
 
+export const prepareRenewalReminderEmail = (user, daysDiff) => {
+  const dueDate = new Date(user.renewalDueOn);
+  const formattedDueDate = dueDate.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  let subjectLine = "";
+  let message = "";
+
+  if (daysDiff > 0) {
+    subjectLine = `KMA Membership Renewal Reminder - ${daysDiff} days left`;
+    message = `<p>Dear ${user.memberName},</p>
+<p>This is a friendly reminder that your KMA membership is due for renewal in ${daysDiff} days, on ${formattedDueDate}.</p>
+<p>Please take a moment to renew your membership to continue enjoying the benefits of being a KMA member.</p>
+<p>To renew your membership, please visit your profile at: <a href="https://members.kmaindia.org">https://members.kmaindia.org</a></p>
+<p>If you have any questions or need assistance, feel free to reach out to us.</p>
+<p>We appreciate your continued support and look forward to having you as a valued member of KMA!</p>
+<p>Sincerely,<br>The KMA Team</p>`;
+  } else if (daysDiff === 0) {
+    subjectLine = `KMA Membership Renewal Due Today`;
+    message = `<p>Dear ${user.memberName},</p>
+<p>This is a reminder that your KMA membership is due for renewal today, ${formattedDueDate}.</p>
+<p>Please take a moment to renew your membership to continue enjoying the benefits of being a KMA member.</p>
+<p>To renew your membership, please visit your profile at: <a href="https://members.kmaindia.org">https://members.kmaindia.org</a></p>
+<p>If you have any questions or need assistance, feel free to reach out to us.</p>
+<p>We appreciate your continued support and look forward to having you as a valued member of KMA!</p>
+<p>Sincerely,<br>The KMA Team</p>`;
+  } else {
+    subjectLine = `KMA Membership Renewal - ${Math.abs(daysDiff)} days overdue`;
+    message = `<p>Dear ${user.memberName},</p>
+<p>This is a reminder that your KMA membership was due for renewal ${Math.abs(daysDiff)} days ago, on ${formattedDueDate}.</p>
+<p>Please take a moment to renew your membership to continue enjoying the benefits of being a KMA member.</p>
+<p>To renew your membership, please visit your profile at: <a href="https://members.kmaindia.org">https://members.kmaindia.org</a></p>
+<p>If you have any questions or need assistance, feel free to reach out to us.</p>
+<p>We appreciate your continued support and look forward to having you as a valued member of KMA!</p>
+<p>Sincerely,<br>The KMA Team</p>`;
+  }
+
+  return { subject: subjectLine, message };
+};
+
+export const prepareLifeMembershipInvitationEmail = (user) => {
+  const profileLink = `https://members.kmaindia.org`;
+
+  const subjectLine = "Invitation to Upgrade to KMA Life Membership";
+  const message = `<p>Dear ${user.memberName},</p>
+<p>We are pleased to offer you an exclusive opportunity to upgrade your KMA membership to a Life Membership!</p>
+<p>As a valued member, we recognize your continued support and dedication to our association. Upgrading to a Life Membership offers numerous benefits, including:</p>
+<ul>
+<li>Lifetime access to KMA events and activities</li>
+<li>Exemption from annual renewal fees</li>
+<li>... And a host of other benefits</li>
+</ul>
+<p>To upgrade your membership, simply click on the following link, which will direct you to your profile from where you can upgrade to Life Membership:</p>
+<p><a href="${profileLink}">${profileLink}</a></p>
+<p>We encourage you to seize this opportunity and join our esteemed community of Life Members.</p>
+<p>If you have any questions or require further assistance, please do not hesitate to contact us.</p>
+<p>Sincerely,<br>The KMA Team</p>`;
+
+  return { subject: subjectLine, message };
+};
+
 export const prepareEmailData = async (
   memberID,
   receiptNumber,

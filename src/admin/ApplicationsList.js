@@ -9,6 +9,10 @@ import "react-toastify/dist/ReactToastify.css";
 import { format } from "date-fns";
 import sendEmail from "../utils/SendEmail";
 import { isEligibleForLifeMembership } from "../utils/EligibilityUtils";
+import {
+  prepareRenewalReminderEmail,
+  prepareLifeMembershipInvitationEmail,
+} from "../utils/EmailUtils";
 
 const ApplicationsList = () => {
   const TOAST_DISPLAY_DURATION = 2000; // Duration to display toast messages (in milliseconds)
@@ -99,50 +103,15 @@ const ApplicationsList = () => {
       const timeDiff = dueDate.getTime() - today.getTime();
       const daysDiff = Math.round(timeDiff / (1000 * 3600 * 24));
 
-      // Format the renewalDueOn date to a human-readable format
-      const formattedDueDate = dueDate.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-
-      let subjectLine = "";
-      let message = "";
-
-      if (daysDiff > 0) {
-        subjectLine = `KMA Membership Renewal Reminder - ${daysDiff} days left`;
-        message = `Dear ${user.memberName},\n\nThis is a friendly reminder that your KMA membership is due for renewal in ${daysDiff} days, on ${formattedDueDate}.
-        \n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
-        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
-
-        \n\nSincerely,\nThe KMA Team`;
-      } else if (daysDiff === 0) {
-        subjectLine = `KMA Membership Renewal Due Today`;
-        message = `Dear ${user.memberName},\n\nThis is a reminder that your KMA membership is due for renewal today, ${formattedDueDate}.
-        \n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
-        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
-
-        \n\nSincerely,\nThe KMA Team`;
-      } else {
-        subjectLine = `KMA Membership Renewal - ${Math.abs(
-          daysDiff,
-        )} days overdue`;
-        message = `Dear ${
-          user.memberName
-        },\n\nThis is a reminder that your KMA membership was due for renewal ${Math.abs(
-          daysDiff,
-        )} days ago, on ${formattedDueDate}.\n\nPlease take a moment to renew your membership to continue enjoying the benefits of being a KMA member.
-        \n\nTo renew your membership, please visit your profile at: https://members.kmaindia.org\n\nIf you have any questions or need assistance, feel free to reach out to us.\n\nWe appreciate your continued support and look forward to having you as a valued member of KMA!
-
-        \n\nSincerely,\nThe KMA Team`;
-      }
+      const { subject, message } = prepareRenewalReminderEmail(user, daysDiff);
 
       // Prepare email data
       const emailData = {
         to_name: user.memberName,
         to_email: user.email,
-        subject: subjectLine,
+        subject: subject,
         message: message,
+        contentType: "text/html",
       };
 
       const success = await sendEmail(emailData);
@@ -212,41 +181,19 @@ const ApplicationsList = () => {
         console.error("Error updating isUpgradeAllowed flag:", err);
       }
 
-      // 1. Construct the payment link
-      const profileLink = `https://members.kmaindia.org`;
+      // 1. Prepare email content
+      const { subject, message } = prepareLifeMembershipInvitationEmail(user);
 
-      // 2. Prepare email content
-      const subjectLine = "Invitation to Upgrade to KMA Life Membership";
-      const message = `Dear ${user.memberName},
-
-We are pleased to offer you an exclusive opportunity to upgrade your KMA membership to a Life Membership!
-
-As a valued member, we recognize your continued support and dedication to our association. Upgrading to a Life Membership offers numerous benefits, including:
-
-* Lifetime access to KMA events and activities
-* Exemption from annual renewal fees
-* ... And a host of other benefits
-
-To upgrade your membership, simply click on the following link, which will direct you to your profile from where you can upgrade to Life Membership: 
-
-${profileLink}
-
-We encourage you to seize this opportunity and join our esteemed community of Life Members.
-
-If you have any questions or require further assistance, please do not hesitate to contact us.
-
-Sincerely,
-The KMA Team`;
-
-      // 3. Prepare email data
+      // 2. Prepare email metadata
       const emailData = {
         to_name: user.memberName,
         to_email: user.email,
-        subject: subjectLine,
+        subject: subject,
         message: message,
+        contentType: "text/html",
       };
 
-      // 4. Send the email
+      // 3. Send the email
       const success = await sendEmail(emailData);
 
       if (success) {
@@ -530,7 +477,8 @@ The KMA Team`;
         </div>
 
         <div className="filter-result-count">
-          Showing {sortedApplications.length} result{sortedApplications.length === 1 ? "" : "s"}.
+          Showing {sortedApplications.length} result
+          {sortedApplications.length === 1 ? "" : "s"}.
         </div>
       </div>
 
