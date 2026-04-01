@@ -28,8 +28,8 @@ const PrintApplication = (applicationData) => {
 
   addCenteredText(doc, "APPLICATION FOR MEMBERSHIP", headerHeight, 12); // Add title above the table
 
-  const imageWidth = 40; // Adjust image width as needed
-  const imageHeight = 50; // Adjust image height as needed
+  const imageWidth = 30; // Adjust image width as needed
+  const imageHeight = 40; // Adjust image height as needed
   const imageX = (pageWidth - imageWidth) / 2; // 10 for margin from right edge
   const imageY = headerHeight + 10; // Position above the table
 
