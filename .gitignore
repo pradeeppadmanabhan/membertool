@@ -24,6 +24,8 @@
 .env.development
 .env.test
 .env.production
+AccessRules.txt
+SampleFormat.json
 
 
 
