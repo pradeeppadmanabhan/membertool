@@ -7,6 +7,7 @@ import * as XLSX from "xlsx";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { format } from "date-fns";
+import { formatDate } from "../utils/DateUtils";
 import sendEmail from "../utils/SendEmail";
 import { isEligibleForLifeMembership } from "../utils/EligibilityUtils";
 import {
@@ -24,10 +25,7 @@ const ApplicationsList = () => {
   const [renewalFilter, setRenewalFilter] = useState("all"); // Filter by renewal status
 
   const formatDateSafe = (dateValue) => {
-    if (!dateValue) return "N/A";
-    const parsedDate = new Date(dateValue);
-    if (Number.isNaN(parsedDate.getTime())) return "N/A";
-    return parsedDate.toLocaleDateString();
+    return formatDate(dateValue);
   };
   const [startDate, setStartDate] = useState(""); // State for start date
   const [endDate, setEndDate] = useState(""); // State for end date
@@ -358,15 +356,14 @@ const ApplicationsList = () => {
         Mobile: application.mobile,
         "Membership Type": application.currentMembershipType,
         "Date of Submission": application.dateOfSubmission
-          ? new Date(application.dateOfSubmission).toLocaleDateString()
+          ? formatDate(application.dateOfSubmission)
           : "--/--/----",
         "Date of Last Payment":
           application.payments && application.payments.length > 0
-            ? new Date(
-                application.payments[
-                  application.payments.length - 1
-                ].dateOfPayment,
-              ).toLocaleDateString()
+            ? formatDate(
+                application.payments[application.payments.length - 1]
+                  .dateOfPayment,
+              )
             : "--/--/----",
         "Receipt Number":
           application.payments && application.payments.length > 0
@@ -566,16 +563,15 @@ const ApplicationsList = () => {
               <td>
                 {application.dateOfSubmission &&
                 application.dateOfSubmission !== "No Data" // Check for "No Data"
-                  ? new Date(application.dateOfSubmission).toLocaleDateString()
+                  ? formatDate(application.dateOfSubmission)
                   : "--/--/----"}
               </td>
               <td>
                 {application.payments && application.payments.length > 0
-                  ? new Date(
-                      application.payments[
-                        application.payments.length - 1
-                      ].dateOfPayment,
-                    ).toLocaleDateString()
+                  ? formatDate(
+                      application.payments[application.payments.length - 1]
+                        .dateOfPayment,
+                    )
                   : "--/--/----"}
               </td>
               {/* Format date */}

@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import "../global.css";
 import { addHeaderToPDF } from "./PDFHeader";
 import { addCenteredText, addDeclarationToPDF } from "./PDFDeclaration";
+import { formatDate } from "./DateUtils";
 
 const PrintApplication = (applicationData) => {
   const FONTSIZE = 7; // Set a default font size for the PDF
@@ -60,10 +61,7 @@ const PrintApplication = (applicationData) => {
     // ... (Your table data) ...
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
-    [
-      "Date of Birth:",
-      new Date(applicationData.dob).toLocaleDateString() || "N/A",
-    ],
+    ["Date of Birth:", formatDate(applicationData.dob) || "N/A"],
     ["Age:", applicationData.age || "N/A"],
     ["Gender:", applicationData.gender || "N/A"],
     [
@@ -92,7 +90,7 @@ const PrintApplication = (applicationData) => {
 
     [
       "Date of Application Submission:",
-      new Date(applicationData.dateOfSubmission).toLocaleDateString() || "N/A",
+      formatDate(applicationData.dateOfSubmission) || "N/A",
     ],
     // ... add other fields in the same format ...
     ["Emergency Contact Name:", applicationData.emergencyContactName || "N/A"],
@@ -140,18 +138,12 @@ const PrintApplication = (applicationData) => {
     ["ID:", applicationData.id || "N/A"],
     ["Applicant's Full Name:", applicationData.memberName || "N/A"],
     ["Amount:", "Rs." + latestPayment.amount || "N/A"],
-    [
-      "Date of Payment:",
-      new Date(latestPayment.dateOfPayment).toLocaleDateString(),
-    ],
+    ["Date of Payment:", formatDate(latestPayment.dateOfPayment)],
     ["Payment Mode:", latestPayment.paymentMode || "N/A"],
     ["Receipt Number:", latestPayment.receiptNumber || "N/A"],
     ["Payment ID:", latestPayment.paymentID || "N/A"],
     ["Membership Type:", applicationData.currentMembershipType || "N/A"],
-    [
-      "Renewal Due on:",
-      new Date(applicationData.renewalDueOn).toLocaleDateString() || "N/A",
-    ],
+    ["Renewal Due on:", formatDate(applicationData.renewalDueOn) || "N/A"],
   ];
 
   addCenteredText(doc, "PAYMENT DETAILS", headerHeight, 12); // Add title above the table

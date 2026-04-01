@@ -1,12 +1,8 @@
 import { fetchMemberData } from "./PaymentUtils";
+import { formatDate } from "./DateUtils";
 
 export const prepareRenewalReminderEmail = (user, daysDiff) => {
-  const dueDate = new Date(user.renewalDueOn);
-  const formattedDueDate = dueDate.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const formattedDueDate = formatDate(user.renewalDueOn);
 
   let subjectLine = "";
   let message = "";
@@ -68,7 +64,7 @@ export const prepareEmailData = async (
   memberID,
   receiptNumber,
   isRenewal,
-  isUpgrade
+  isUpgrade,
 ) => {
   try {
     const userData = await fetchMemberData(memberID);
@@ -80,9 +76,7 @@ export const prepareEmailData = async (
 
     const paymentTableRows = `
      <tr><td>Amount</td><td>₹${latestPayment.amount}</td></tr>
-      <tr><td>Date of Payment</td><td>${new Date(
-        latestPayment.dateOfPayment
-      ).toLocaleDateString()}</td></tr>
+      <tr><td>Date of Payment</td><td>${formatDate(latestPayment.dateOfPayment)}</td></tr>
       <tr><td>Payment Mode</td><td>${latestPayment.paymentMode}</td></tr>
       <tr><td>Receipt Number</td><td>${receiptNumber}</td></tr>
       <tr><td>Payment ID</td><td>${latestPayment.paymentID || "N/A"}</td></tr>
@@ -105,9 +99,7 @@ export const prepareEmailData = async (
         <tr><td>Member Name</td><td>${userData.memberName}</td></tr>
         
         <tr><td>Age</td><td>${userData.age}</td></tr>
-        <tr><td>Date of Birth</td><td>${new Date(
-          userData.dob
-        ).toLocaleDateString()}</td></tr>
+        <tr><td>Date of Birth</td><td>${formatDate(userData.dob)}</td></tr>
         <tr><td>Gender</td><td>${userData.gender}</td></tr>
         <tr><td>Father/Guardian Name</td><td>${
           userData.fatherGuardianName
@@ -151,12 +143,8 @@ export const prepareEmailData = async (
           userData.currentMembershipType
         }</td></tr>        
         
-        <tr><td>Renewal Due On</td><td>${new Date(
-          userData.renewalDueOn
-        ).toLocaleDateString()}</td></tr>
-        <tr><td>Date of Submission</td><td>${new Date(
-          userData.dateOfSubmission
-        ).toLocaleDateString()}</td></tr>
+        <tr><td>Renewal Due On</td><td>${formatDate(userData.renewalDueOn)}</td></tr>
+        <tr><td>Date of Submission</td><td>${formatDate(userData.dateOfSubmission)}</td></tr>
         <tr><td></td></tr>
         
         `;

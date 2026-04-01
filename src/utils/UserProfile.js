@@ -23,6 +23,7 @@ import PhoneNumberInput from "../utils/PhoneNumberInput";
 import { logToCloud } from "./CloudLogUtils";
 import { prepareEmailData } from "./EmailUtils";
 import sendEmail from "./SendEmail";
+import { formatDate } from "./DateUtils";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin, generateMemberID } = useContext(AuthContext);
@@ -608,7 +609,7 @@ const UserProfile = ({ memberID }) => {
                 <>
                   {formData.renewalDueOn &&
                   !isNaN(new Date(formData.renewalDueOn).getTime())
-                    ? new Date(formData.renewalDueOn).toLocaleDateString()
+                    ? formatDate(formData.renewalDueOn)
                     : "N/A"}
                   {canUpgradeToLife && (
                     <button
@@ -756,7 +757,7 @@ const UserProfile = ({ memberID }) => {
                     )}
                   </>
                 ) : formData.dob && !isNaN(new Date(formData.dob).getTime()) ? (
-                  new Date(formData.dob).toLocaleDateString()
+                  formatDate(formData.dob)
                 ) : (
                   "dd/mm/yyyy"
                 ) // Placeholder for empty date
@@ -1128,7 +1129,7 @@ const UserProfile = ({ memberID }) => {
                 <td>
                   {payment.dateOfPayment &&
                   !isNaN(new Date(payment.dateOfPayment).getTime())
-                    ? new Date(payment.dateOfPayment).toLocaleDateString()
+                    ? formatDate(payment.dateOfPayment)
                     : "N/A"}
                 </td>
                 <td>{payment.membershipType}</td>
