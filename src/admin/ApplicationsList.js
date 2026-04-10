@@ -38,7 +38,7 @@ const ApplicationsList = () => {
   useEffect(() => {
     const applicationsRef = ref(database, "users");
 
-    onValue(
+    const unsubscribe = onValue(
       applicationsRef,
       (snapshot) => {
         const data = snapshot.val();
@@ -79,6 +79,11 @@ const ApplicationsList = () => {
         console.error("Error fetching data:", error);
       },
     );
+
+    // Cleanup function to unsubscribe the listener
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const handleSendReminder = async (user) => {
