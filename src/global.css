@@ -432,6 +432,80 @@ button:active {
   margin-right: 10px;
 }
 
+/* Admin Dashboard Styles */
+.stat-card-container {
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  text-align: center;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  transition: box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-title {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.stat-card-count {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.year-selector {
+  margin-bottom: 30px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.year-select {
+  padding: 8px 12px;
+  min-width: 120px;
+}
+
+.dashboard-row {
+  margin-bottom: 30px;
+}
+
+.section-header-overall {
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.section-header-annual {
+  border-bottom: 2px solid #28a745;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.section-header-life {
+  border-bottom: 2px solid #ffc107;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.section-header-honorary {
+  border-bottom: 2px solid #dc3545;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.section-header-yearly {
+  border-bottom: 2px solid #6c757d;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
 /* 5. Utilities */
 .center-text {
   text-align: center;

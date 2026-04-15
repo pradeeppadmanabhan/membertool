@@ -14,6 +14,7 @@ import {
   prepareRenewalReminderEmail,
   prepareLifeMembershipInvitationEmail,
 } from "../utils/EmailUtils";
+import { normalizeUsers } from "../utils/MemberStatsUtils";
 
 const ApplicationsList = () => {
   const TOAST_DISPLAY_DURATION = 2000; // Duration to display toast messages (in milliseconds)
@@ -44,19 +45,23 @@ const ApplicationsList = () => {
         const data = snapshot.val();
         if (data) {
           const today = new Date();
-          const applicationsArray = Object.entries(data).map(([key, value]) => {
+          const rawApplicationsArray = Object.entries(data).map(
+            ([key, value]) => ({
+              id: key,
+              ...value,
+            }),
+          );
+          const normalizedApplications = normalizeUsers(rawApplicationsArray);
+          const applicationsArray = normalizedApplications.map((app) => {
             // Calculate renewal status for Annual members
             let renewalStatus = "N/A";
-            if (
-              value.currentMembershipType === "Annual" &&
-              value.renewalDueOn
-            ) {
-              const renewalDate = new Date(value.renewalDueOn);
+            if (app.currentMembershipType === "Annual" && app.renewalDueOn) {
+              const renewalDate = new Date(app.renewalDueOn);
               renewalStatus = renewalDate <= today ? "Due" : "Active";
 
               // Update Firebase applicationStatus to "Due" if renewal is due
               if (renewalStatus === "Due") {
-                const userRef = ref(database, `users/${key}`);
+                const userRef = ref(database, `users/${app.id}`);
                 update(userRef, { applicationStatus: "Due" }).catch((err) =>
                   console.error("Error updating applicationStatus:", err),
                 );
@@ -64,8 +69,7 @@ const ApplicationsList = () => {
             }
 
             return {
-              id: key,
-              ...value,
+              ...app,
               renewalStatus,
             };
           });
@@ -247,14 +251,15 @@ const ApplicationsList = () => {
   const filteredApplications = applications.filter((application) => {
     if (startDate && endDate) {
       // Check if dates are selected
-      //console.log(startDate, endDate);
-      const submissionDate = new Date(application.dateOfSubmission);
+      // Use last payment date if available, otherwise use submission date
+      const paymentDate =
+        application.lastPaymentDate || application.firstSubmissionDate;
       const filterStartDate = new Date(startDate);
       const filterEndDate = new Date(endDate);
       filterEndDate.setHours(23, 59, 59, 999);
 
       const matchesDateRange =
-        submissionDate >= filterStartDate && submissionDate <= filterEndDate;
+        paymentDate >= filterStartDate && paymentDate <= filterEndDate;
 
       if (!matchesDateRange) {
         return false; // Exclude if outside the date range
