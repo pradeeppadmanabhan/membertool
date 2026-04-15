@@ -506,6 +506,144 @@ button:active {
   margin-bottom: 15px;
 }
 
+/* Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content-custom {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 900px;
+  max-height: 80vh;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header-custom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.modal-header-custom h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close-btn:hover {
+  color: #333;
+}
+
+.modal-body-custom {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.results-table thead {
+  background-color: #f2f2f2;
+  position: sticky;
+  top: 0;
+}
+
+.results-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: bold;
+  border-bottom: 2px solid #ddd;
+  font-size: 0.9rem;
+}
+
+.results-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  font-size: 0.85rem;
+}
+
+.results-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.modal-footer-custom {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 20px;
+  border-top: 1px solid #eee;
+  background-color: #f9f9f9;
+}
+
+.btn-export,
+.btn-close-modal {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-export {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-export:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-export:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.btn-close-modal {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-close-modal:hover {
+  background-color: #5a6268;
+}
+
 /* 5. Utilities */
 .center-text {
   text-align: center;

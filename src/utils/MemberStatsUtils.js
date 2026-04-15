@@ -10,9 +10,10 @@
  */
 export function normalizeUsers(users) {
   return users.map((user) => {
-    const lastPaymentDate = user.payments && user.payments.length > 0
-      ? new Date(user.payments[user.payments.length - 1].dateOfPayment)
-      : null;
+    const lastPaymentDate =
+      user.payments && user.payments.length > 0
+        ? new Date(user.payments[user.payments.length - 1].dateOfPayment)
+        : null;
     const firstSubmissionDate = user.dateOfSubmission
       ? new Date(user.dateOfSubmission)
       : null;
@@ -33,7 +34,7 @@ export function normalizeUsers(users) {
  * @returns {boolean} True if date is in the year or year is "All".
  */
 function isInYear(date, year) {
-  if (!date || year === 'All') return true;
+  if (!date || year === "All") return true;
   return date.getFullYear() === parseInt(year, 10);
 }
 
@@ -43,96 +44,135 @@ function isInYear(date, year) {
  * @param {Date} date2 - Second date.
  * @returns {boolean} True if both represent the same calendar day.
  */
-function isSameDay(date1, date2) {
+/* function isSameDay(date1, date2) {
   if (!date1 || !date2) return false;
   return date1.toDateString() === date2.toDateString();
+} */
+
+/**
+ * Check if two dates are in the same year.
+ * @param {Date} date1 - First date.
+ * @param {Date} date2 - Second date.
+ * @returns {boolean} True if both dates are in the same year.
+ */
+function isSameYear(date1, date2) {
+  if (!date1 || !date2) return false;
+  return date1.getFullYear() === date2.getFullYear();
 }
 
 /**
- * Computes detailed membership statistics for the dashboard.
+ * Unified function that categorizes users and provides both stats counts and filtered lists.
  * @param {Array} users - Normalized user array.
  * @param {string} selectedYear - Year to filter by, or "All".
- * @returns {Object} Detailed stats object.
+ * @returns {Object} Object with 'stats' (counts) and 'lists' (filtered user arrays) properties.
  */
-export function computeDashboardStats(users, selectedYear = 'All') {
-  const stats = {
-    // Row 1
-    totalMembers: users.length,
-
-    // Row 2 - Annual Members
-    annualNewMembers: 0,
-    annualRenewals: 0,
-    annualUnpaid: 0,
-    annualTotal: 0,
-
-    // Row 3 - Life Members
-    lifeNewMembers: 0,
-    lifeUpgraded: 0,
-    lifeTotal: 0,
-
-    // Row 4 - Honorary
-    honoraryMembers: 0,
+export function categorizeUsers(users, selectedYear = "All") {
+  const categories = {
+    totalMembers: [],
+    annualNewMembers: [],
+    annualRenewals: [],
+    annualUnpaid: [],
+    annualTotal: [],
+    lifeNewMembers: [],
+    lifeUpgraded: [],
+    lifeTotal: [],
+    honoraryMembers: [],
   };
 
   users.forEach((user) => {
-    if (user.currentMembershipType === 'Annual') {
-      // New Members: submission and last payment same day, within year
+    // Always add to total members
+    categories.totalMembers.push(user);
+
+    if (user.currentMembershipType === "Annual") {
       if (
         user.lastPaymentDate &&
-        isSameDay(user.firstSubmissionDate, user.lastPaymentDate) &&
+        isSameYear(user.firstSubmissionDate, user.lastPaymentDate) &&
         isInYear(user.firstSubmissionDate, selectedYear)
       ) {
-        stats.annualNewMembers++;
-        stats.annualTotal++;
-      }
-      // Renewals: submission in past, last payment in year
-      else if (
+        // New Members
+        categories.annualNewMembers.push(user);
+        categories.annualTotal.push(user);
+      } else if (
         user.lastPaymentDate &&
         user.firstSubmissionDate &&
         user.firstSubmissionDate < user.lastPaymentDate &&
         isInYear(user.lastPaymentDate, selectedYear)
       ) {
-        stats.annualRenewals++;
-        stats.annualTotal++;
-      }
-      // Unpaid: submission in year, no payment
-      else if (
+        // Renewals
+        categories.annualRenewals.push(user);
+        categories.annualTotal.push(user);
+      } else if (
         !user.hasPayments &&
         isInYear(user.firstSubmissionDate, selectedYear)
       ) {
-        stats.annualUnpaid++;
-        stats.annualTotal++;
+        // Unpaid
+        categories.annualUnpaid.push(user);
+        categories.annualTotal.push(user);
       }
-    } else if (user.currentMembershipType === 'Life') {
-      // New Members: submission and last payment same day, within year
+    } else if (user.currentMembershipType === "Life") {
       if (
         user.lastPaymentDate &&
-        isSameDay(user.firstSubmissionDate, user.lastPaymentDate) &&
+        isSameYear(user.firstSubmissionDate, user.lastPaymentDate) &&
         isInYear(user.firstSubmissionDate, selectedYear)
       ) {
-        stats.lifeNewMembers++;
-        stats.lifeTotal++;
-      }
-      // Upgraded: submission in past, last payment in year
-      else if (
+        // New Members
+        categories.lifeNewMembers.push(user);
+        categories.lifeTotal.push(user);
+      } else if (
         user.lastPaymentDate &&
         user.firstSubmissionDate &&
         user.firstSubmissionDate < user.lastPaymentDate &&
         isInYear(user.lastPaymentDate, selectedYear)
       ) {
-        stats.lifeUpgraded++;
-        stats.lifeTotal++;
+        // Upgraded
+        categories.lifeUpgraded.push(user);
+        categories.lifeTotal.push(user);
       }
-    } else if (user.currentMembershipType === 'Honorary') {
-      // Honorary: submission in year
-      if (isInYear(user.firstSubmissionDate, selectedYear)) {
-        stats.honoraryMembers++;
-      }
+    } else if (
+      user.currentMembershipType === "Honorary" &&
+      isInYear(user.firstSubmissionDate, selectedYear)
+    ) {
+      categories.honoraryMembers.push(user);
     }
   });
 
-  // Calculate yearly total members
-  stats.yearlyTotalMembers = stats.annualTotal + stats.lifeTotal + stats.honoraryMembers;
+  return {
+    lists: categories,
+    stats: {
+      totalMembers: categories.totalMembers.length,
+      annualNewMembers: categories.annualNewMembers.length,
+      annualRenewals: categories.annualRenewals.length,
+      annualUnpaid: categories.annualUnpaid.length,
+      annualTotal: categories.annualTotal.length,
+      lifeNewMembers: categories.lifeNewMembers.length,
+      lifeUpgraded: categories.lifeUpgraded.length,
+      lifeTotal: categories.lifeTotal.length,
+      honoraryMembers: categories.honoraryMembers.length,
+      yearlyTotalMembers:
+        categories.annualTotal.length +
+        categories.lifeTotal.length +
+        categories.honoraryMembers.length,
+    },
+  };
+}
 
-  return stats;
+/**
+ * Legacy function for backward compatibility - computes stats only.
+ * @param {Array} users - Normalized user array.
+ * @param {string} selectedYear - Year to filter by, or "All".
+ * @returns {Object} Stats object.
+ */
+export function computeDashboardStats(users, selectedYear = "All") {
+  return categorizeUsers(users, selectedYear).stats;
+}
+
+/**
+ * Legacy function for backward compatibility - filters users by category.
+ * @param {Array} users - Normalized user array.
+ * @param {string} category - Category identifier.
+ * @param {string} selectedYear - Year to filter by, or "All".
+ * @returns {Array} Filtered user array.
+ */
+export function getUsersByCategory(users, category, selectedYear = "All") {
+  return categorizeUsers(users, selectedYear).lists[category] || [];
 }
