@@ -84,14 +84,14 @@ const PaymentDetails = () => {
     setStatusMessage("Processing payment...");
     toast.info(
       "Processing payment... Please do not refresh, navigate away or close the window.",
-      { autoClose: false }
+      { autoClose: false },
     );
     try {
       const paymentResult = await handleRazorpayPayment(
         memberID,
         paymentAmount,
         membershipType,
-        setStatusMessage
+        setStatusMessage,
       );
       //console.log("Payment Result:", paymentResult);
       setStatusMessage(paymentResult.message);
@@ -112,9 +112,7 @@ const PaymentDetails = () => {
         } else {
           // Annual payment update
           const now = new Date();
-          const nextYear = memberData.renewalDueOn
-            ? new Date(memberData.renewalDueOn)
-            : now;
+          const nextYear = new Date(now);
           nextYear.setFullYear(nextYear.getFullYear() + 1);
 
           await update(userRef, {
@@ -131,7 +129,7 @@ const PaymentDetails = () => {
           memberID,
           paymentResult.receiptNumber,
           false,
-          false
+          false,
         );
         //console.log("Prepared email data:", emailData);
         const emailResponse = await sendEmail(emailData);
@@ -150,16 +148,16 @@ const PaymentDetails = () => {
             memberID,
             membershipType,
             paymentMode: "Razorpay",
-          })
+          }),
         );
 
         navigate(`/thank-you/${paymentResult.receiptNumber}/${memberID}`);
       } else {
         setStatusMessage(
-          paymentResult.message || "Payment failed. Please try again."
+          paymentResult.message || "Payment failed. Please try again.",
         );
         toast.error(
-          paymentResult.message || "Payment failed. Please try again."
+          paymentResult.message || "Payment failed. Please try again.",
         );
         logToCloud(
           paymentResult.message || "Membership Payment failed",
@@ -167,7 +165,7 @@ const PaymentDetails = () => {
             memberID,
             membershipType,
             paymentMode: "Razorpay",
-          })
+          }),
         );
       }
     } catch (error) {
@@ -178,7 +176,7 @@ const PaymentDetails = () => {
           memberID,
           membershipType,
           paymentMode: "Razorpay",
-        })
+        }),
       );
       setStatusMessage("Error processing payment. Please try again.");
     } finally {
@@ -225,7 +223,7 @@ const PaymentDetails = () => {
               memberID,
               paymentAmount,
               "Treasurer Receipt",
-              navigate
+              navigate,
             );
           }}
           disabled={isSubmitting}

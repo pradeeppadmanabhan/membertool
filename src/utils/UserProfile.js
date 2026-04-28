@@ -130,10 +130,8 @@ const UserProfile = ({ memberID }) => {
         updatedMemberData.renewalDueOn = null;
         updatedMemberData.currentMembershipType = "Life";
       } else if (newPayment.membershipType === "Annual") {
-        const now = new Date();
-        const nextYear = memberData.renewalDueOn
-          ? new Date(memberData.renewalDueOn)
-          : now;
+        const paymentDate = new Date(newPayment.dateOfPayment);
+        const nextYear = new Date(paymentDate);
         nextYear.setFullYear(nextYear.getFullYear() + 1);
         updatedMemberData.renewalDueOn = nextYear.toISOString();
         updatedMemberData.currentMembershipType = "Annual";
@@ -358,9 +356,7 @@ const UserProfile = ({ memberID }) => {
         // Update the renewal date in the database
         const userRef = ref(database, `users/${formData.id}`);
         const now = new Date();
-        const nextYear = formData.renewalDueOn
-          ? new Date(formData.renewalDueOn)
-          : now;
+        const nextYear = new Date(now);
         nextYear.setFullYear(nextYear.getFullYear() + 1);
 
         await update(userRef, {
