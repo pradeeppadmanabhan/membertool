@@ -24,6 +24,7 @@ import { logToCloud } from "./CloudLogUtils";
 import { prepareEmailData } from "./EmailUtils";
 import sendEmail from "./SendEmail";
 import { formatDate } from "./DateUtils";
+import { isValidPhoneNumber } from "react-phone-number-input";
 
 const UserProfile = ({ memberID }) => {
   const { isAdmin, generateMemberID } = useContext(AuthContext);
@@ -176,6 +177,16 @@ const UserProfile = ({ memberID }) => {
         }
         break;
 
+      case "mobile":
+      case "emergencyContactPhone":
+        if (!value) {
+          return "Phone number is required.";
+        }
+        if (!isValidPhoneNumber(value)) {
+          return "Invalid phone number.";
+        }
+        break;
+
       case "addressLine1":
       case "addressLine2":
       case "addressLine3":
@@ -183,19 +194,19 @@ const UserProfile = ({ memberID }) => {
       case "recommendedByName":
       case "emergencyContactName":
       case "emergencyContactRelationship":
-        if (value.length > 50) {
+        if (value && value.length > 50) {
           return "Must not exceed 50 characters.";
         }
         break;
 
       case "bloodGroup":
-        if (!/^(A|B|AB|O)[+-]$/.test(value)) {
+        if (value && !/^(A|B|AB|O)[+-]$/.test(value)) {
           return "Must be a valid blood group (e.g., A+, O-).";
         }
         break;
 
       case "gender":
-        if (!["Male", "Female", "Other"].includes(value)) {
+        if (value && !["Male", "Female", "Other"].includes(value)) {
           return "Must be Male, Female, or Other.";
         }
         break;
@@ -227,7 +238,7 @@ const UserProfile = ({ memberID }) => {
 
   // ✅ Handle form input changes
   const handleChange = (e) => {
-    const { name, value, error } = e.target;
+    const { name, value, error: targetError } = e.target;
 
     // Clear status on first edit action
     if (statusMessage) {
@@ -235,7 +246,7 @@ const UserProfile = ({ memberID }) => {
     }
 
     // Validate the field
-    //const error = validateField(name, value);
+    const error = targetError || validateField(name, value);
     if (error) {
       setErrors((prevErrors) => ({ ...prevErrors, [name]: error }));
     } else {
@@ -250,19 +261,58 @@ const UserProfile = ({ memberID }) => {
   };
 
   // ✅ Save updates to Firebase
-  const handleSave = async () => {
-    // Validate all fields before saving
-    const newErrors = {};
-    Object.keys(formData).forEach((key) => {
-      const error = validateField(key, formData[key]);
-      if (error) {
-        newErrors[key] = error;
-      }
-    });
+  const fieldLabelMap = {
+    mobile: "Mobile",
+    emergencyContactPhone: "Emergency Contact Phone",
+    dob: "Date of Birth",
+    addressLine1: "Address Line 1",
+    addressLine2: "Address Line 2",
+    addressLine3: "Address Line 3",
+    fatherGuardianName: "Father/Guardian Name",
+    recommendedByName: "Recommended By",
+    emergencyContactName: "Emergency Contact Name",
+    emergencyContactRelationship: "Emergency Contact Relationship",
+    bloodGroup: "Blood Group",
+    gender: "Gender",
+  };
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      setStatusMessage("Please fix validation errors before saving.");
+  const handleSave = async () => {
+    // ✅ ENFORCE: Check for missing required fields - BLOCK SAVE if any are missing
+    const requiredFields = [
+      "memberName",
+      "email",
+      "mobile",
+      "dob",
+      "addressLine1",
+      "bloodGroup",
+      "gender",
+      "emergencyContactName",
+      "emergencyContactPhone",
+      "emergencyContactRelationship",
+    ];
+    const missingRequiredFields = requiredFields.filter(
+      (field) => !formData[field] || formData[field].trim() === "",
+    );
+    if (missingRequiredFields.length > 0) {
+      const missingFieldLabels = missingRequiredFields.map(
+        (field) => fieldLabelMap[field] || field,
+      );
+      const errorMessage = `Required fields must be filled: ${missingFieldLabels.join(", ")}.`;
+      setStatusMessage(errorMessage);
+      toast.error(errorMessage);
+      return;
+    }
+
+    // Check for any existing validation errors
+    if (Object.keys(errors).length > 0) {
+      const errorFields = Object.keys(errors).map(
+        (field) => fieldLabelMap[field] || field,
+      );
+      const validationMessage = "Please fix validation errors before saving.";
+      const detailedMessage = `${validationMessage} Fields with issues: ${errorFields.join(", ")}.`;
+
+      setStatusMessage(detailedMessage);
+      toast.warn(detailedMessage);
       return;
     }
 
@@ -305,7 +355,14 @@ const UserProfile = ({ memberID }) => {
         signatureURL: updatedSignatureUrl,
       };
 
-      await update(userRef, updatedFormData);
+      // Filter out undefined values to prevent Firebase update errors
+      const filteredFormData = Object.fromEntries(
+        Object.entries(updatedFormData).filter(
+          ([key, value]) => value !== undefined,
+        ),
+      );
+
+      await update(userRef, filteredFormData);
       setFormData(updatedFormData);
       setSelectedImage(null);
       setSelectedSignature(null);
@@ -313,7 +370,13 @@ const UserProfile = ({ memberID }) => {
       setStatusMessage("Profile updated successfully!");
     } catch (error) {
       console.error("Error updating profile:", error);
-      setStatusMessage("Error updating profile. Please try again.");
+      let errorMessage = "Error updating profile. Please try again.";
+      if (error.message && error.message.includes("undefined")) {
+        errorMessage =
+          "Some fields contain invalid data. Please check all fields and try again.";
+      }
+      setStatusMessage(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -543,9 +606,6 @@ const UserProfile = ({ memberID }) => {
           Edit to add your Profile Pic
         </div>
       )}
-
-      {/* ✅ Status Message */}
-      {statusMessage && <p className="status-message">{statusMessage}</p>}
 
       <table className="profile-table">
         <tbody>
@@ -1099,6 +1159,22 @@ const UserProfile = ({ memberID }) => {
           </button>
         )}
       </div>
+
+      {/* ✅ Status Message - Below Buttons */}
+      {statusMessage && (
+        <p
+          className={
+            statusMessage.toLowerCase().includes("error") ||
+            statusMessage.toLowerCase().includes("required") ||
+            statusMessage.toLowerCase().includes("invalid") ||
+            statusMessage.toLowerCase().includes("fix")
+              ? "status-message status-message--error"
+              : "status-message status-message--success"
+          }
+        >
+          {statusMessage}
+        </p>
+      )}
 
       <div className="button-container">
         <button onClick={handlePrintApplication}>Download Application</button>
