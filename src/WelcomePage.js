@@ -16,6 +16,13 @@ const WelcomePage = () => {
         <div>
           <button onClick={signInWithGoogle}>Sign in with Google</button>
         </div>
+        <br />
+        <p>
+          <i>
+            If you are under 18, you are welcome to join us without membership.
+            Just make sure your Parents/Guardian approves your activity.
+          </i>
+        </p>
       </div>
       <br />
       <br />
