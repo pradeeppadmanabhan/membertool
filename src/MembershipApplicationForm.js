@@ -22,6 +22,8 @@ import { validatePhoneNumber } from "./utils/PhoneNumberInput";
 import { logToCloud } from "./utils/CloudLogUtils";
 
 const STATUS_TIMEOUT = 2000; // 2 seconds in milliseconds
+const UNDERAGE_MESSAGE =
+  "We are glad you are interested in joining us. Membership is available for adults aged 18 and above. Please apply once you turn 18. Until then, your parents or guardians can apply for membership for themselves, and you can join them on the treks and activities.";
 
 const MembershipApplicationForm = () => {
   const { user, isLoading, logout, generateMemberID, updateUserData } =
@@ -83,6 +85,8 @@ const MembershipApplicationForm = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedSignature, setSelectedSignature] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUnderage, setIsUnderage] = useState(false);
+  const [showUnderageModal, setShowUnderageModal] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -164,15 +168,41 @@ const MembershipApplicationForm = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "dob") {
+      setFormData({
+        ...formData,
+        dob: value,
+        age: value ? calculateAge(value) : "",
+      });
+      if (!value) {
+        setIsUnderage(false);
+        setShowUnderageModal(false);
+        setErrors({ ...errors, dob: "" });
+        setStatusMessage("");
+      }
+      return;
+    }
+
     setFormData({ ...formData, [name]: value });
     setErrors({ ...errors, [name]: "" });
     setStatusMessage(""); // Clear the status message
   };
 
   const handleBlur = (e) => {
-    const enteredDate = new Date(e.target.value);
+    const dobValue = e.target.value;
+    const enteredDate = new Date(dobValue);
     const today = new Date();
     const minDate = new Date("1900-01-01");
+
+    if (!dobValue) {
+      setFormData({ ...formData, dob: "", age: "" });
+      setIsUnderage(false);
+      setShowUnderageModal(false);
+      setErrors({ ...errors, dob: "" });
+      setStatusMessage("");
+      return;
+    }
 
     if (isNaN(enteredDate) || enteredDate > today || enteredDate < minDate) {
       setFormData({ ...formData, dob: "" });
@@ -181,6 +211,18 @@ const MembershipApplicationForm = () => {
         dob: "Date of Birth cannot be invalid or in the future",
       });
       setStatusMessage("Date of Birth cannot be invalid or in the future");
+      return;
+    }
+
+    const age = calculateAge(dobValue);
+    const underAge = age < 18;
+    setFormData((prev) => ({ ...prev, dob: dobValue, age }));
+    setIsUnderage(underAge);
+    setErrors({ ...errors, dob: underAge ? UNDERAGE_MESSAGE : "" });
+    setStatusMessage(underAge ? UNDERAGE_MESSAGE : "");
+
+    if (underAge) {
+      setShowUnderageModal(true);
     }
   };
 
@@ -641,13 +683,19 @@ const MembershipApplicationForm = () => {
       <br />
       <br />
       <div className="button-container">
-        <button type="submit" disabled={!formData.consent || isSubmitting}>
+        <button
+          type="submit"
+          disabled={!formData.consent || isSubmitting || isUnderage}
+        >
           {isSubmitting ? "Submitting..." : "Submit"}
         </button>
         <button type="button" onClick={handleClear}>
           Clear
         </button>
       </div>
+      {/* Secondary safeguard: the DOB modal blocks underage applicants immediately;
+          this keeps submit disabled and shows the same message as a fallback if the modal path is bypassed. */}
+      {isUnderage && <p className="status-message error">{UNDERAGE_MESSAGE}</p>}
       {/* Conditional message for consent */}
       {!formData.consent && (
         <p className="consent-message">
@@ -662,6 +710,63 @@ const MembershipApplicationForm = () => {
         >
           {statusMessage}
         </p>
+      )}
+      {showUnderageModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            padding: "20px",
+          }}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              maxWidth: "520px",
+              width: "100%",
+              padding: "24px",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
+            }}
+          >
+            <h3 style={{ marginTop: 0, color: "#b22222" }}>
+              Under 18 Membership Not Allowed
+            </h3>
+            <p style={{ lineHeight: 1.6, marginBottom: "20px" }}>
+              {UNDERAGE_MESSAGE}
+            </p>
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowUnderageModal(false);
+                  setFormData((prev) => ({ ...prev, dob: "", age: "" }));
+                  setErrors((prev) => ({ ...prev, dob: UNDERAGE_MESSAGE }));
+                  await logout();
+                }}
+                style={{
+                  background: "#b22222",
+                  color: "#fff",
+                  border: "none",
+                  padding: "10px 18px",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                }}
+              >
+                I understand
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </form>
   );
