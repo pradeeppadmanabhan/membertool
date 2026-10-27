@@ -693,9 +693,6 @@ const MembershipApplicationForm = () => {
           Clear
         </button>
       </div>
-      {/* Secondary safeguard: the DOB modal blocks underage applicants immediately;
-          this keeps submit disabled and shows the same message as a fallback if the modal path is bypassed. */}
-      {isUnderage && <p className="status-message error">{UNDERAGE_MESSAGE}</p>}
       {/* Conditional message for consent */}
       {!formData.consent && (
         <p className="consent-message">
